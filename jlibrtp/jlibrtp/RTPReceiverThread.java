@@ -38,8 +38,7 @@ public class RTPReceiverThread extends Thread {
 	public void run()
 	{
 		int lastSeqNumRcvd = 0;
-		
-		while(this.session.isBYERcvd())
+		while(!this.session.isBYERcvd())
 		{
 	       byte[] rcvdByte = new byte[1036];
 	       packet = new DatagramPacket(rcvdByte, 1036);
@@ -55,8 +54,8 @@ public class RTPReceiverThread extends Thread {
 	    
 	       RtpPkt pkt = new RtpPkt(rcvdByte);
 
-	      String ss = new String(pkt.getPayload());
-	      System.out.println("The data I received is "+pkt.getPayloadLength());
+	       String ss = new String(pkt.getPayload());
+	       System.out.println("The data I received is "+ ss + " " + pkt.getPayloadLength());
 	       
 	       
 	       /* Only the basic implementation is beign done, where all the packets from one source are packed*/
@@ -66,8 +65,6 @@ public class RTPReceiverThread extends Thread {
 	       {
 	    	   rcvdTimeStamp = pkt.getTimeStamp();
 	       }
-	       
-	       
 	       
 	       if(!(pktBuffer.containsKey(new Long(pkt.getTimeStamp()))))
 	    	{
