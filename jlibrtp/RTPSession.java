@@ -37,7 +37,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		 recvThrd.start();
 	//	 sndThrd.start();
 		 
-       Timer t = new Timer(2000,this);
+       Timer t = new Timer(20,this);
        t.startTimer();
 		 
 	 }
@@ -242,13 +242,17 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		{
 				ByteBuffer p = (ByteBuffer)set.nextElement();
 				buff.put(p.array());
+				p.clear();
 		}	
 		byte[] tempSendBuf = new byte[buff.position()];
 		System.arraycopy(buff.array(), 0, tempSendBuf,0,buff.position());
+		if(tempSendBuf.length > 1)
+		{
+			appIntf.receiveData(tempSendBuf);
+		}
+		buff.clear();
 		
-		appIntf.receiveData(tempSendBuf);
-	
-		t = new Timer(2000,this);
+		t = new Timer(1,this);
 	       t.startTimer();
 	       
 	       

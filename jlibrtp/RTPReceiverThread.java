@@ -96,7 +96,7 @@ public class RTPReceiverThread extends Thread {
 							}
 						
 						session.addtoFrameBuffer(buff,pkt.getSsrc());
-						buff.clear();
+						//buff.clear();
 	    	   }
 					
 	       }
