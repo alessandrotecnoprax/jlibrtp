@@ -7,7 +7,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 public class RTPSession implements RTPSessionIntf, Signalable {
-	 final static public int rtpDebugLevel = 5;
+	 final static public int rtpDebugLevel = 0;
 	 LinkedList sendQueue = new LinkedList();
 	 Hashtable participantDB = new Hashtable();
 	 int participantCount=0;
@@ -35,7 +35,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		 recvThrd.start();
 		 sndThrd.start();
 		 
-       Timer t = new Timer(2,this);
+       Timer t = new Timer(2000,this);
        t.startTimer();
 		 
 	 }
@@ -65,7 +65,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 	{
 		 if(!sendQueue.isEmpty())
 		 {
-			 System.out.println("Inside tosend");
+			 //System.out.println("Inside tosend");
 			 return (RtpPkt)sendQueue.removeLast();
 		 }
 		 return null;
@@ -212,7 +212,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		
 		appIntf.receiveData(tempSendBuf);
 	
-		t = new Timer(2,this);
+		t = new Timer(2000,this);
 	       t.startTimer();
 	       
 	       

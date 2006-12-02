@@ -27,8 +27,10 @@ public class Timer
 			public void run()
 			{
 				try {
+					System.out.println("preTimeout");
 					Thread.sleep(timeout);
-				
+					System.out.println("postTimeout");
+					
 					signalable.signalTimeout();
 					synchronized(lock) {
 						lock.notifyAll();

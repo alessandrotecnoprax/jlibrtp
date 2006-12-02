@@ -26,7 +26,6 @@ public class TestRTPSession implements RTPAppIntf
 	public void receiveData(byte[] buff) {
 	String s = new String(buff);
 		System.out.println("The Data has been recieved = "+s.length());
-		
 	}
 	
 	public static void main(String[] args) {

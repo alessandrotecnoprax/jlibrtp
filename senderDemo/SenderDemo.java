@@ -11,6 +11,7 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import java.lang.String;
 import jlibrtp.*;
 
 public class SenderDemo extends Thread implements RTPAppIntf  {
@@ -21,9 +22,9 @@ public class SenderDemo extends Thread implements RTPAppIntf  {
 	
 	public SenderDemo(String CNAME,int recvPort,String recvAddr)  {
 		rtpSession = new RTPSession();
-		rtpSession.RTPSessionRegister(CNAME,recvPort,this);	
+		rtpSession.RTPSessionRegister(CNAME,4544,this);	
 		//public Participant(String sendingHost,int port,String CNAME)
-		Participant p = new Participant(recvAddr,recvPort, CNAME);
+		Participant p = new Participant(recvAddr,4545, CNAME);
 		p.setIsSender();
 		rtpSession.addParticipant(p);
 	}
@@ -75,9 +76,12 @@ public class SenderDemo extends Thread implements RTPAppIntf  {
 		try {
 			while (nBytesRead != -1) {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
-				if (nBytesRead >= 0)
+				if (nBytesRead >= 0) {
 					// This is where we send the buffer off to the recipient.
 					rtpSession.sendData(abData);
+					// String aTest = "test";
+					//rtpSession.sendData(aTest.getBytes());
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
