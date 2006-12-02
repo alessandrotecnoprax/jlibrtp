@@ -6,7 +6,7 @@ public interface RTPSessionIntf
 	
 	public void RTPSessionRegister(String CNAME,int recvPort,RTPAppIntf rtpApp);
 	
-	void sendData(byte[] buf);
+	public int sendData(byte[] buf);
 	
 	public void addParticipant(Participant p);
 	
