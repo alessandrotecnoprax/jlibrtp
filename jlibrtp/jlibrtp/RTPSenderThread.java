@@ -32,8 +32,9 @@ public class RTPSenderThread extends Thread
 					{
 						try
 						{
+							int i=0;
 							if(RTPSession.rtpDebugLevel > 4) {
-								System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length );
+								System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length + " The port="+p.getdestPort());
 							}
 							DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
 							p.getSocket().send(packet);
