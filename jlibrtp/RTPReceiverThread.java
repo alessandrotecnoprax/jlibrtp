@@ -94,9 +94,9 @@ public class RTPReceiverThread extends Thread {
 									ByteBuffer p = (ByteBuffer)set.nextElement();
 									buff.put(p.array());
 							}
-							
+						
 						session.addtoFrameBuffer(buff,pkt.getSsrc());
-		    	     
+						buff.clear();
 	    	   }
 					
 	       }
