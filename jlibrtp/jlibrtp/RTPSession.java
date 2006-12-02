@@ -1,5 +1,7 @@
 package jlibrtp;
 
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -40,7 +42,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		 
 	 }
 	 
-	 public void sendData(byte[] buf)
+	 public int sendData(byte[] buf)
 	 {
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("-> RTPSession.sendData(byte[])");
@@ -48,12 +50,46 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		 //RtpPkt pkt = new RtpPkt(buf);
 		 RtpPkt pkt = new RtpPkt(getTimeStamp(),getSSRCNum(),getNextSeqNum(),getPayLoadType(0),buf);
 		 
-		 addSendFrame(pkt);
+	//	 addSendFrame(pkt);
 		 
+		 Hashtable participantTable = getParticipantDB();
+		
+		
+				while( pkt != null)
+				{
+					Enumeration set = participantTable.elements();
+
+					while(set.hasMoreElements())
+					{
+						Participant p = (Participant)set.nextElement();
+						
+						if(p.isSender())
+						{
+							try
+							{
+								if(RTPSession.rtpDebugLevel > 4) {
+									System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length );
+								}
+								DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
+								p.getSocket().send(packet);
+							}
+							catch (Exception e) {
+								// TODO Auto-generated catch block
+								
+								e.printStackTrace();
+								return -1;
+							}
+						}
+						p = null;
+					}
+					pkt = null;
+				}
+			
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("<- RTPSession.sendData(byte[])");
 		}  
-		 
+			
+		 return 0;
 	 }
 	 
 	 void addSendFrame(RtpPkt pkt)
