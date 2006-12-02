@@ -9,7 +9,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 public class RTPSession implements RTPSessionIntf, Signalable {
-	 final static public int rtpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 5;
 	 LinkedList sendQueue = new LinkedList();
 	 Hashtable participantDB = new Hashtable();
 	 int participantCount=0;
@@ -31,11 +31,11 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 	 public void RTPSessionRegister(String CNAME,int recvPort,RTPAppIntf rtpApp)
 	 {
 		 RTPReceiverThread recvThrd = new RTPReceiverThread(this,recvPort);
-		 RTPSenderThread   sndThrd = new RTPSenderThread(this);
+	//	 RTPSenderThread   sndThrd = new RTPSenderThread(this);
 		 this.appIntf = rtpApp;
 		 
 		 recvThrd.start();
-		 sndThrd.start();
+	//	 sndThrd.start();
 		 
        Timer t = new Timer(2000,this);
        t.startTimer();
@@ -68,7 +68,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 							try
 							{
 								if(RTPSession.rtpDebugLevel > 4) {
-									System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length );
+									System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length + " The port="+p.getdestPort());
 								}
 								DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
 								p.getSocket().send(packet);

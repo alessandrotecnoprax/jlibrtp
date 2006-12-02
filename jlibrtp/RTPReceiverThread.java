@@ -38,7 +38,8 @@ public class RTPReceiverThread extends Thread {
 	public void run()
 	{
 		int lastSeqNumRcvd = 0;
-		while(!this.session.isBYERcvd())
+	//	while(!this.session.isBYERcvd())
+		while(true)
 		{
 	       byte[] rcvdByte = new byte[1036];
 	       packet = new DatagramPacket(rcvdByte, 1036);
@@ -87,7 +88,7 @@ public class RTPReceiverThread extends Thread {
 			    		Enumeration set = pktBuffer.elements();
 			
 						
-							ByteBuffer buff = ByteBuffer.allocate(100000);
+							ByteBuffer buff = ByteBuffer.allocate(1000000);
 							while(set.hasMoreElements())
 							{
 									ByteBuffer p = (ByteBuffer)set.nextElement();
