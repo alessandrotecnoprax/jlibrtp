@@ -62,6 +62,7 @@ public class RTPReceiverThread extends Thread {
 	       /* Only the basic implementation is beign done, where all the packets from one source are packed*/
 	       
 	       /* Here I am assuming that all packets arrive in-order*/
+	       System.out.println("The Pkt Timestamp="+pkt.getTimeStamp());
 	       if(rcvdTimeStamp == -1)
 	       {
 	    	   rcvdTimeStamp = pkt.getTimeStamp();
@@ -69,22 +70,54 @@ public class RTPReceiverThread extends Thread {
 	       
 	       if(!(pktBuffer.containsKey(new Long(pkt.getTimeStamp()))))
 	    	{
+	    	   System.out.println("The first if 1");
 	    	   ByteBuffer tempBuf = ByteBuffer.allocate(100000);
 	    	   pktBuffer.put(new Long(pkt.getTimeStamp()),tempBuf);
 	    	   
-	    	   ((ByteBuffer)(pktBuffer.get(new Long(pkt.getTimeStamp())))).put(rcvdByte); 
+	    	   ((ByteBuffer)(pktBuffer.get(new Long(pkt.getTimeStamp())))).put(rcvdByte);
+	    	   
+	       	   if(rcvdTimeStamp < pkt.getTimeStamp())
+	    	   {
+	    		   /* When I receive a pkt with a new time stamp, then it is pushed to the session*/
+	   	    	
+		  
+			    		Enumeration set = pktBuffer.elements();
+			
+						
+							ByteBuffer buff = ByteBuffer.allocate(1000000);
+							while(set.hasMoreElements())
+							{
+									ByteBuffer p = (ByteBuffer)set.nextElement();
+									System.out.println("The tot len recvd to be put="+p.position());
+									byte[] pp = new byte[p.position()];
+									System.arraycopy(p.array(),0, pp,0,p.position());
+									
+									//buff.put(p.array());
+									buff.put(pp);
+							}
+							ByteBuffer newbuff = ByteBuffer.allocate(buff.position());
+							byte[] newBuffArry = new byte[buff.position()];
+							newbuff.put(buff.array(),0,buff.position());
+						
+						//session.addtoFrameBuffer(buff,pkt.getSsrc());
+							session.addtoFrameBuffer(newbuff,pkt.getSsrc());
+						//buff.clear();
+	    	   }
+	       	   
 	    	}
 	       else
 	       {
+	    	   System.out.println("The first if 2");
 	    	   ((ByteBuffer)(pktBuffer.get(new Long(pkt.getTimeStamp())))).put(rcvdByte);
 	    	   
 	    	  
 				
-	    	   if(rcvdTimeStamp != pkt.getTimeStamp())
+	 //   	   if(rcvdTimeStamp != pkt.getTimeStamp())
+	       	   if(rcvdTimeStamp < pkt.getTimeStamp())
 	    	   {
 	    		   /* When I receive a pkt with a new time stamp, then it is pushed to the session*/
 	   	    	
-		    	  
+		  
 			    		Enumeration set = pktBuffer.elements();
 			
 						

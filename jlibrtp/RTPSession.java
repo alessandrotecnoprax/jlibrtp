@@ -38,7 +38,7 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 	//	 sndThrd.start();
 		 
        Timer t = new Timer(20,this);
-       t.startTimer();
+       //t.startTimer();
 		 
 	 }
 	 
@@ -157,17 +157,22 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 */	
 	public void addtoFrameBuffer(ByteBuffer buf,long ssrc)
 	{
-		if(!frameBuffer.containsKey(ssrc))
+		frameBuffer.put((new Long(ssrc)), buf);
+		
+		appIntf.receiveData(buf.array());
+/*		if(!frameBuffer.containsKey(ssrc))
 		{
-			frameBuffer.put((new Long(ssrc)), new HashMap());
-			((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
+		//	frameBuffer.put((new Long(ssrc)), new HashMap());
+		//	((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
+			
 		}
 		else
 		{
-			((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
+		//	((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
 				
 		}
-			
+			System.out.println("The Len of framebuffer="+frameBuffer.size());
+			*/
 	}
 	//TODO
 	void setBYERcvd(boolean istrue)
@@ -237,23 +242,24 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		Enumeration set = frameBuffer.elements();
 		
 		
-		ByteBuffer buff = ByteBuffer.allocate(100000);
+		ByteBuffer buff = ByteBuffer.allocate(10000000);
 		while(set.hasMoreElements())
 		{
 				ByteBuffer p = (ByteBuffer)set.nextElement();
+				System.out.println("The lenegth of array="+p.position());
 				buff.put(p.array());
-				p.clear();
+			//	p.clear();
 		}	
 		byte[] tempSendBuf = new byte[buff.position()];
 		System.arraycopy(buff.array(), 0, tempSendBuf,0,buff.position());
-		if(tempSendBuf.length > 1)
+		//if(tempSendBuf.length > 0)
 		{
 			appIntf.receiveData(tempSendBuf);
 		}
-		buff.clear();
+	//	buff.clear();
 		
 		t = new Timer(1,this);
-	       t.startTimer();
+	  //     t.startTimer();
 	       
 	       
 	      if(isBYERcvd())
