@@ -88,20 +88,24 @@ public class RTPReceiverThread extends Thread {
 							while(set.hasMoreElements())
 							{
 									ByteBuffer p = (ByteBuffer)set.nextElement();
-									System.out.println("The tot len recvd to be put="+p.position());
+								//	System.out.println("The tot len recvd to be put="+p.position());
 									byte[] pp = new byte[p.position()];
 									System.arraycopy(p.array(),0, pp,0,p.position());
 									
 									//buff.put(p.array());
 									buff.put(pp);
+									
+									ByteBuffer toApp = ByteBuffer.allocate(pp.length);
+									toApp.put(pp);
+									session.addtoFrameBuffer(toApp,pkt.getSsrc());
 							}
-							ByteBuffer newbuff = ByteBuffer.allocate(buff.position());
-							byte[] newBuffArry = new byte[buff.position()];
-							newbuff.put(buff.array(),0,buff.position());
-						
-						//session.addtoFrameBuffer(buff,pkt.getSsrc());
-							session.addtoFrameBuffer(newbuff,pkt.getSsrc());
-						//buff.clear();
+//							ByteBuffer newbuff = ByteBuffer.allocate(buff.position());
+//							byte[] newBuffArry = new byte[buff.position()];
+//							newbuff.put(buff.array(),0,buff.position());
+//						
+//						//session.addtoFrameBuffer(buff,pkt.getSsrc());
+//							session.addtoFrameBuffer(newbuff,pkt.getSsrc());
+//						//buff.clear();
 	    	   }
 	       	   
 	    	}
