@@ -19,7 +19,7 @@ public class PktBufValidator {
 		String str2 = "cd";
 		String str3 = "ef";
 		String str4 = "gh";
-		String str5 = "ih";
+		String str5 = "ij";
 		String str6 = "kl";
 		//String str7 = "mn";
 		
