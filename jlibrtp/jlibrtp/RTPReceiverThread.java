@@ -1,3 +1,7 @@
+/**
+ * The major flaw in this is that the PktBuffers should be connect to
+ * other threads, this thread should be dealing with the pkt / frame queue.
+ */
 package jlibrtp;
 
 import java.io.IOException;
@@ -5,142 +9,63 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Set;
+
 
 public class RTPReceiverThread extends Thread {
 	RTPSession session = null;
 	DatagramPacket packet = null;
 	DatagramSocket socket4 = null;
-	Hashtable pktBuffer = new Hashtable();
+	//Hashtable pktBuffer = new Hashtable();
+	PktBuffer pktBuffer = null;
 	int recvPort = 0;
-	 long rcvdTimeStamp = -1;
+	long rcvdTimeStamp = -1;
 	 
 	RTPReceiverThread(RTPSession session,int recvPort)
 	{
 		this.session = session;
-		this.session = session;
 		this.recvPort = recvPort;
-		try
-		{
-			
+		try {
 			this.socket4 = new DatagramSocket(this.recvPort);
-		} 
-		catch (Exception e) {
-			
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void run()
-	{
-		int lastSeqNumRcvd = 0;
-	//	while(!this.session.isBYERcvd())
-		while(true)
-		{
-	       byte[] rcvdByte = new byte[1036];
-	       packet = new DatagramPacket(rcvdByte, 1036);
-	       System.out.println("I am expecting on "+socket4.getLocalPort());
-	       try
-	       {
-			socket4.receive(packet);
-	       }
-	       catch (IOException e)
-	       {
-			e.printStackTrace();
-	       }
-	    
-	       RtpPkt pkt = new RtpPkt(rcvdByte);
-
-	       String ss = new String(pkt.getPayload());
-	       System.out.println("The data I received is "+ ss + " " + pkt.getPayloadLength());
+	public void run() {
+		if(RTPSession.rtpDebugLevel > 1) {
+			 System.out.println("-> RTPReceiverThread.run() listening on " + socket4.getLocalPort() );
+		}
+		
+		while(true) {
+	       byte[] rawPkt = new byte[2000];
+	       packet = new DatagramPacket(rawPkt, rawPkt.length);
 	       
-	       
-	       /* Only the basic implementation is beign done, where all the packets from one source are packed*/
-	       
-	       /* Here I am assuming that all packets arrive in-order*/
-	       System.out.println("The Pkt Timestamp="+pkt.getTimeStamp());
-	       if(rcvdTimeStamp == -1)
-	       {
-	    	   rcvdTimeStamp = pkt.getTimeStamp();
+	       try {
+	    	   socket4.receive(packet);
+	       } catch (IOException e) {
+	    	   e.printStackTrace();
 	       }
 	       
-	       if(!(pktBuffer.containsKey(new Long(pkt.getTimeStamp()))))
-	    	{
-	    	   System.out.println("The first if 1");
-	    	   ByteBuffer tempBuf = ByteBuffer.allocate(100000);
-	    	   pktBuffer.put(new Long(pkt.getTimeStamp()),tempBuf);
-	    	   
-	    	   ((ByteBuffer)(pktBuffer.get(new Long(pkt.getTimeStamp())))).put(rcvdByte);
-	    	   
-	       	   if(rcvdTimeStamp < pkt.getTimeStamp())
-	    	   {
-	    		   /* When I receive a pkt with a new time stamp, then it is pushed to the session*/
-	   	    	
-		  
-			    		Enumeration set = pktBuffer.elements();
-			
-						
-							ByteBuffer buff = ByteBuffer.allocate(1000000);
-							while(set.hasMoreElements())
-							{
-									ByteBuffer p = (ByteBuffer)set.nextElement();
-								//	System.out.println("The tot len recvd to be put="+p.position());
-									byte[] pp = new byte[p.position()];
-									System.arraycopy(p.array(),0, pp,0,p.position());
-									
-									//buff.put(p.array());
-									buff.put(pp);
-									
-									ByteBuffer toApp = ByteBuffer.allocate(pp.length);
-									toApp.put(pp);
-									session.addtoFrameBuffer(toApp,pkt.getSsrc());
-							}
-//							ByteBuffer newbuff = ByteBuffer.allocate(buff.position());
-//							byte[] newBuffArry = new byte[buff.position()];
-//							newbuff.put(buff.array(),0,buff.position());
-//						
-//						//session.addtoFrameBuffer(buff,pkt.getSsrc());
-//							session.addtoFrameBuffer(newbuff,pkt.getSsrc());
-//						//buff.clear();
-	    	   }
-	       	   
-	    	}
-	       else
-	       {
-	    	   System.out.println("The first if 2");
-	    	   ((ByteBuffer)(pktBuffer.get(new Long(pkt.getTimeStamp())))).put(rcvdByte);
-	    	   
-	    	  
-				
-	 //   	   if(rcvdTimeStamp != pkt.getTimeStamp())
-	       	   if(rcvdTimeStamp < pkt.getTimeStamp())
-	    	   {
-	    		   /* When I receive a pkt with a new time stamp, then it is pushed to the session*/
-	   	    	
-		  
-			    		Enumeration set = pktBuffer.elements();
-			
-						
-							ByteBuffer buff = ByteBuffer.allocate(1000000);
-							while(set.hasMoreElements())
-							{
-									ByteBuffer p = (ByteBuffer)set.nextElement();
-									buff.put(p.array());
-							}
-						
-						session.addtoFrameBuffer(buff,pkt.getSsrc());
-						//buff.clear();
-	    	   }
-					
+	       RtpPkt pkt = new RtpPkt(rawPkt);
+		
+	       if(RTPSession.rtpDebugLevel > 6) {
+	    	   System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
 	       }
 	       
-	       rcvdTimeStamp = pkt.getTimeStamp();
-	       rcvdByte = null;
-	       packet = null;
+	       if(RTPSession.rtpDebugLevel > 10) {
+	    	   String str = new String(pkt.getPayload());
+	    	   System.out.println("-> RTPReceiverThread.run() payload is " + str );
+	       }
+	       
+	       /* Temporarily we'll assume there is only one source */
+	       
+	       if(pktBuffer != null) {
+	    	   /* A buffer already exists, append to it */
+	    	   pktBuffer.addPkt(pkt);
+	       } else {
+	    	   /* Create a new packet/frame buffer */
+	    	   pktBuffer = new PktBuffer(pkt,1);
+	       }
 		}
 	}
 }

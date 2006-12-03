@@ -9,12 +9,10 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 public class RTPSession implements RTPSessionIntf, Signalable {
-	 final static public int rtpDebugLevel = 5;
+	 final static public int rtpDebugLevel = 10;
 	 LinkedList sendQueue = new LinkedList();
 	 Hashtable participantDB = new Hashtable();
 	 int participantCount=0;
-	 RTPSenderThread rtpSender = new RTPSenderThread(this);
-	 Hashtable frameBuffer = new Hashtable();
 	 int seqNum = 0;
 	 String CNAME = "";
 	 int timeStamp = 0;
@@ -22,69 +20,53 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 	 Timer t = null;
 	 boolean isBYERcvd = false;
 	 RTCPSession rtcpSession = null;
+	 RTPReceiverThread recvThrd = null;
 	 
-	 public RTPSession()
-	 {
+	 public RTPSession() {
 		 
-		
 	 }
-	 public void RTPSessionRegister(String CNAME,int recvPort,RTPAppIntf rtpApp)
-	 {
-		 RTPReceiverThread recvThrd = new RTPReceiverThread(this,recvPort);
-	//	 RTPSenderThread   sndThrd = new RTPSenderThread(this);
+	 
+	 public void RTPSessionRegister(String CNAME,int recvPort,RTPAppIntf rtpApp) {
+		 recvThrd = new RTPReceiverThread(this,recvPort);
 		 this.appIntf = rtpApp;
 		 
 		 recvThrd.start();
-	//	 sndThrd.start();
 		 
-       Timer t = new Timer(20,this);
-       //t.startTimer();
+		 Timer t = new Timer(20,this);
+		 t.startTimer();
 		 
 	 }
 	 
-	 public int sendData(byte[] buf)
-	 {
+	 public int sendData(byte[] buf) {
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("-> RTPSession.sendData(byte[])");
 		}  
-		 //RtpPkt pkt = new RtpPkt(buf);
-		 RtpPkt pkt = new RtpPkt(getTimeStamp(),getSSRCNum(),getNextSeqNum(),getPayLoadType(0),buf);
-		 
-	//	 addSendFrame(pkt);
-		 
-		 Hashtable participantTable = getParticipantDB();
-		
-		
-				while( pkt != null)
-				{
-					Enumeration set = participantTable.elements();
 
-					while(set.hasMoreElements())
-					{
-						Participant p = (Participant)set.nextElement();
-						
-						if(p.isSender())
-						{
-							try
-							{
-								if(RTPSession.rtpDebugLevel > 4) {
-									System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length + " The port="+p.getdestPort());
-								}
-								DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
-								p.getSocket().send(packet);
-							}
-							catch (Exception e) {
-								// TODO Auto-generated catch block
-								
-								e.printStackTrace();
-								return -1;
-							}
-						}
-						p = null;
-					}
-					pkt = null;
-				}
+		RtpPkt pkt = new RtpPkt(getTimeStamp(),getSSRCNum(),getNextSeqNum(),getPayLoadType(0),buf);
+		Hashtable participantTable = getParticipantDB();
+		
+		Enumeration set = participantTable.elements();
 			
+		while(set.hasMoreElements()) {
+			Participant p = (Participant)set.nextElement();
+			
+			// This must be wrong if(p.isSender()) {
+				try {
+					if(RTPSession.rtpDebugLevel > 4) {
+						System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length + " The port="+p.getdestPort());
+					}
+					
+					DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
+					p.getSocket().send(packet);
+				
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					return -1;
+				}
+			//}
+		}
+		
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("<- RTPSession.sendData(byte[])");
 		}  
@@ -155,25 +137,11 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 		
 	}
 */	
-	public void addtoFrameBuffer(ByteBuffer buf,long ssrc)
-	{
+	public void addtoFrameBuffer(ByteBuffer buf,long ssrc) {
 	
-		frameBuffer.put((new Long(ssrc)), buf);
+		//frameBuffer.put((new Long(ssrc)), buf);
 
 		appIntf.receiveData(buf.array());
-/*		if(!frameBuffer.containsKey(ssrc))
-		{
-		//	frameBuffer.put((new Long(ssrc)), new HashMap());
-		//	((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
-			
-		}
-		else
-		{
-		//	((HashMap) frameBuffer.get(new Long(ssrc))).put(ssrc,buf);
-				
-		}
-			System.out.println("The Len of framebuffer="+frameBuffer.size());
-			*/
 	}
 	//TODO
 	void setBYERcvd(boolean istrue)
@@ -240,27 +208,16 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 	public void signalTimeout()
 	{
 		/* In this method periodically the data will be sent over to the application*/
-		Enumeration set = frameBuffer.elements();
-		
-		
-		ByteBuffer buff = ByteBuffer.allocate(10000000);
-		while(set.hasMoreElements())
-		{
-				ByteBuffer p = (ByteBuffer)set.nextElement();
-				System.out.println("The lenegth of array="+p.position());
-				buff.put(p.array());
-			//	p.clear();
-		}	
-		byte[] tempSendBuf = new byte[buff.position()];
-		System.arraycopy(buff.array(), 0, tempSendBuf,0,buff.position());
-		//if(tempSendBuf.length > 0)
-		{
-			appIntf.receiveData(tempSendBuf);
+		if(recvThrd != null && recvThrd.pktBuffer != null && recvThrd.pktBuffer.frameIsReady()) {
+			DataFrame aFrame = recvThrd.pktBuffer.popOldestFrame();
+			
+			if(aFrame != null) {
+				appIntf.receiveData(aFrame.data);
+			}
 		}
-	//	buff.clear();
 		
-		t = new Timer(1,this);
-	  //     t.startTimer();
+		t = new Timer(50,this);
+	 	t.startTimer();
 	       
 	       
 	      if(isBYERcvd())
