@@ -20,6 +20,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	private final int EXTERNAL_BUFFER_SIZE = 1024; // 1 Kbyte
 	byte[] abData = null;
 	int nBytesRead = 0;
+	static int pktCount = 0;
 	SourceDataLine auline;
 	
 	enum Position {
@@ -27,10 +28,12 @@ public class ReceiverDemo implements RTPAppIntf {
 	};
 
 	public void receiveData(byte[] data) {
+		System.out.println("pktCount : " + pktCount);
 		//int test = (int) data[0] + data[5] + data[6] + data[102];
 		if(data != null && data.length > 0 && (data[0] + data[5] + data[6] + data[102] ) >0) {
 			abData = data;
 			nBytesRead = data.length;
+			pktCount++;	
 		}
 	}
 	
@@ -70,7 +73,7 @@ public class ReceiverDemo implements RTPAppIntf {
 		auline.start();
 		try {
 			while (nBytesRead != -1) {
-				System.out.println("n");
+				//System.out.println("n");
 				if(nBytesRead > 0) {
 					auline.write(abData, 0, nBytesRead);
 					nBytesRead = 0;

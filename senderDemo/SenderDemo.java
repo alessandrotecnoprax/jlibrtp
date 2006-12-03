@@ -16,7 +16,7 @@ import jlibrtp.*;
 
 public class SenderDemo extends Thread implements RTPAppIntf  {
 	RTPSessionIntf rtpSession = null;
-	
+	static int pktCount = 0;
 	private String filename;
 	private final int EXTERNAL_BUFFER_SIZE = 1024; // 1 kbyte
 	
@@ -38,6 +38,7 @@ public class SenderDemo extends Thread implements RTPAppIntf  {
 		SenderDemo aDemo = new SenderDemo("Test",45455,"127.0.0.1");
 		aDemo.filename = "/usr/share/sounds/login.wav";
 		aDemo.run();
+		System.out.println("pktCount: " + pktCount);
 	}
 	
 	public void receiveData(byte[] dummy) {
@@ -81,6 +82,7 @@ public class SenderDemo extends Thread implements RTPAppIntf  {
 					rtpSession.sendData(abData);
 					// String aTest = "test";
 					//rtpSession.sendData(aTest.getBytes());
+					pktCount++;
 				}
 			}
 		} catch (IOException e) {

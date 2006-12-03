@@ -18,8 +18,8 @@ public class TestRTPSession implements RTPAppIntf
 		rtpSession.sendData((new String("ABCD")).getBytes());
 		rtpSession.sendData((new String("EFGH")).getBytes());
 		
-		rtpSession.startRTCPSession(6000);
-	//	rtpSession.requestBYE("ABCD");
+		//rtpSession.startRTCPSession(6000);
+		//rtpSession.requestBYE("ABCD");
 	
 	}
 	
