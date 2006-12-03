@@ -39,7 +39,7 @@ public class PktBuffer {
 	 * Adds a packet, this happens in constant time if they arrive in order.
 	 * Optimized for the case where each pkt is a complete frame.
 	 */
-	public int addPkt(RtpPkt aPkt) {
+	public synchronized int addPkt(RtpPkt aPkt) {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> PktBuffer.addPkt() , length:" + length + " , timeStamp of Pkt: " + aPkt.getTimeStamp());
 		}
@@ -158,7 +158,7 @@ public class PktBuffer {
 	 * Checks the oldest frame, if there is one, sees whether it is complete.
 	 * @return Returns false if there are no complete frames available.
 	 */
-	public DataFrame popOldestFrame() {
+	public synchronized DataFrame popOldestFrame() {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> PktBuffer.popOldestFrame()");
 		}

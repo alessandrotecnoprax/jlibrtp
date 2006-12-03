@@ -7,22 +7,26 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.concurrent.locks.*;
 
 public class RTPSession implements RTPSessionIntf, Signalable {
 	 final static public int rtpDebugLevel = 10;
-	 LinkedList sendQueue = new LinkedList();
 	 Hashtable participantDB = new Hashtable();
 	 int participantCount=0;
-	 int seqNum = 0;
-	 String CNAME = "";
-	 int timeStamp = 0;
+	 String MyCNAME = "";
+	 long timeStamp = 0;
 	 RTPAppIntf appIntf = null;
-	 Timer t = null;
-	 boolean isBYERcvd = false;
+	 //Timer t = null;
+	 boolean endSession = false;
 	 RTCPSession rtcpSession = null;
 	 RTPReceiverThread recvThrd = null;
+	 AppCallerThread appCallerThrd = null;
+	 //Locks
+	 Lock dataAvailLock = new ReentrantLock();
+	 Lock partDbLock = new ReentrantLock();
 	 
 	 public RTPSession() {
+
 		 
 	 }
 	 
