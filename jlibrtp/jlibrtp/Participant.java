@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 public class Participant {
-	
 	String networkAdr;
 	private int destPort = 32000;
 	private boolean isSender = true;
@@ -15,7 +14,7 @@ public class Participant {
 	public int lastSentSeqNumber;
 	public int	lastRecvSeqNumber;
 	long lastTimeStamp;
-	private DatagramSocket socket;
+	//private DatagramSocket socket;
 	
 	public Participant(String networkAddress,int port,String CNAME) {
 		this.networkAdr = networkAddress;

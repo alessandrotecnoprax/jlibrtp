@@ -1,74 +1,95 @@
 package jlibrtp;
 
+
+import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
+import java.nio.*;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.concurrent.locks.*;
 
-public class RTPSession implements RTPSessionIntf, Signalable {
+public class RTPSession {
 	 final static public int rtpDebugLevel = 10;
-	 Hashtable participantDB = new Hashtable();
-	 int participantCount=0;
-	 String MyCNAME = "";
+	 
+	 Hashtable participantTable = new Hashtable();
+	 // Unique ID for hash, only incremented.
+	 int nextPartId = 0;
+	 
+	 String CNAME = "";
+	 DatagramSocket udpSock = null;
 	 long timeStamp = 0;
+	 int seqNum = 0;
+	 
 	 RTPAppIntf appIntf = null;
-	 //Timer t = null;
-	 boolean endSession = false;
+	
 	 RTCPSession rtcpSession = null;
 	 RTPReceiverThread recvThrd = null;
 	 AppCallerThread appCallerThrd = null;
-	 //Locks
-	 Lock dataAvailLock = new ReentrantLock();
-	 Lock partDbLock = new ReentrantLock();
-	 
-	 public RTPSession() {
 
-		 
+	 // Locks the participant database. May not be useful?
+	 final public Lock partDbLock = new ReentrantLock();
+	 
+	 // Locks all the packet buffers.
+	 final public Lock condLock = new ReentrantLock();
+	 final public Condition dataReady = condLock.newCondition();
+	 
+	 // Enough is enough, set to true when you want to quit.
+	 boolean endSession = false;
+	 
+	 /**
+	  * Constructor
+	  */
+	 public RTPSession(int aPort, String aCNAME) {
+		 try {
+			 udpSock = new DatagramSocket(aPort);
+		 } catch (Exception e) {
+			 System.out.println("RTPSession failed to obtain port: " + aPort);
+		 }
+		 endSession = true;
+		 CNAME = aCNAME;
 	 }
 	 
-	 public void RTPSessionRegister(String CNAME,int recvPort,RTPAppIntf rtpApp) {
-		 recvThrd = new RTPReceiverThread(this,recvPort);
+	 public void RTPSessionRegister(RTPAppIntf rtpApp) {
+		 //recvThrd = new RTPReceiverThread(this);
 		 this.appIntf = rtpApp;
 		 
-		 recvThrd.start();
-		 
-		 Timer t = new Timer(20,this);
-		 t.startTimer();
-		 
+		 //recvThrd.start();
 	 }
 	 
 	 public int sendData(byte[] buf) {
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("-> RTPSession.sendData(byte[])");
 		}  
-
-		RtpPkt pkt = new RtpPkt(getTimeStamp(),getSSRCNum(),getNextSeqNum(),getPayLoadType(0),buf);
-		Hashtable participantTable = getParticipantDB();
 		
+		// All this has to be changed to get from the participant table.
+		RtpPkt pkt = new RtpPkt(getTimeStamp(),getSSRCNum(),getNextSeqNum(),getPayLoadType(0),buf);
+		
+		byte[] data = pkt.encode();
 		Enumeration set = participantTable.elements();
 			
 		while(set.hasMoreElements()) {
 			Participant p = (Participant)set.nextElement();
 			
-			// This must be wrong if(p.isSender()) {
+			if(p.isReceiver()) {
 				try {
 					if(RTPSession.rtpDebugLevel > 4) {
-						System.out.println("RTPSenderThread: pkt.encode().length  ="+pkt.encode().length + " The port="+p.getdestPort());
+						System.out.println("RTPSenderThread: pkt.encode().length  ="+data.length + " The port="+p.getdestPort());
 					}
 					
-					DatagramPacket packet = new DatagramPacket(pkt.encode(),pkt.encode().length , InetAddress.getByName(p.sendingHost), p.getdestPort());
-					p.getSocket().send(packet);
+					DatagramPacket packet = new DatagramPacket(data,data.length , InetAddress.getByName(p.networkAdr), p.getdestPort());
+					udpSock.send(packet);
 				
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
+					System.out.println("RTPSession.sendData() - Possibly lost socket.");
 					e.printStackTrace();
 					return -1;
 				}
-			//}
+			}
+	
 		}
 		
 		if(RTPSession.rtpDebugLevel > 3) {
@@ -77,156 +98,71 @@ public class RTPSession implements RTPSessionIntf, Signalable {
 			
 		 return 0;
 	 }
+	
 	 
-	 void addSendFrame(RtpPkt pkt)
-	{
-		sendQueue.add(pkt);
+	public void addParticipant(Participant p) {
+		participantTable.put(nextPartId++, p);
 	}
 	
-	 RtpPkt getFrameToSend()
-	{
-		 if(!sendQueue.isEmpty())
-		 {
-			 //System.out.println("Inside tosend");
-			 return (RtpPkt)sendQueue.removeLast();
-		 }
-		 return null;
-	}
-	
-	
-	public void addParticipant(Participant p)
-	{
-		participantDB.put(new Integer(participantCount++), p);
-	}
-	
-	 void removeParticipant(Participant p)
-	{
-		participantDB.remove(p);
-		
-		
+	 void removeParticipant(Participant p) {
+		participantTable.remove(p);
 	}
 	 public void startRTCPSession(int rtcpPort)
 	 {
 		 rtcpSession = new RTCPSession(rtcpPort,this);
 	 }
-	 public void requestBYE(String CNAME)
-	 {
-		 if(rtcpSession == null)
-		 {
+	 public void requestBYE(String CNAME) {
+		 if(rtcpSession == null) {
 			 System.out.println("The RTCPSession is null");
 			 return;
 		 }
-		 
-		 rtcpSession.requestBYE(CNAME.hashCode());
-		 
+		 rtcpSession.requestBYE(CNAME.hashCode()); 
 	 }
 	 
-	 Hashtable getParticipantDB()
-	 {
-		 return participantDB;
-	 }
-	
-/*	public void addtoFrameBuffer(RtpPkt pkt,int frameNumber)
-	{
-		if(!frameBuffer.containsKey(pkt.getTimeStamp()))
-		{
-			frameBuffer.put((new Long(pkt.getTimeStamp())), new HashMap());
-			((HashMap) frameBuffer.get(new Long(pkt.getTimeStamp()))).put(frameNumber,pkt);
-		}
-		else
-		{
-			((HashMap) frameBuffer.get(new Long(pkt.getTimeStamp()))).put(frameNumber,pkt);
-			
-		}
-		
-	}
-*/	
-	public void addtoFrameBuffer(ByteBuffer buf,long ssrc) {
-	
-		//frameBuffer.put((new Long(ssrc)), buf);
+	 // Who wants this? Should provide functions to query.
+	 //Hashtable getParticipantDB()  {
+	 //	 return participantDB;
+	 //}
 
-		appIntf.receiveData(buf.array());
-	}
-	//TODO
-	void setBYERcvd(boolean istrue)
-	{
-		this.isBYERcvd = istrue;
+	void endSession() {
+		this.endSession = true;
 	}
 	
-	boolean isBYERcvd()
-	{
-		return this.isBYERcvd;
-	}
-	public static void main(String args[])
-	{
-	//	RTPSession session = new RTPSession("ABCD");
-	//	session.RTPSessionRegister("ABCD");
+	boolean isEnding() {
+		return this.endSession;
 	}
 
 	public void setCNAME(String cname) {
-		// TODO Auto-generated method stub
-		
 		this.CNAME = cname;
 	}
 	
-	int getNextSeqNum()
-	{
-		if(seqNum < 10000)
-		{
+	int getNextSeqNum() {
+		if(seqNum < 10000) {
 			seqNum++;
 			return seqNum;
-		}
-		else
-		{
+		} else {
 			seqNum = 1;
 			return seqNum;
 		}
 	}
 	
-	int getSSRCNum()
-	{
+	long getSSRCNum() {
 		return this.CNAME.hashCode();
 	}
 	
-	int getTimeStamp()
-	{
-		if(timeStamp < 10000)
-		{
+	long getTimeStamp() {
+		if(timeStamp < 10000) {
 			timeStamp++;
 			return timeStamp;
-		}
-		else
-		{
+		} else {
 			timeStamp = 1;
 			return timeStamp;
 		}
 	}
 	
 	/* A mapping of the payload type to the payload number has to be provided*/
-	int getPayLoadType(int payLoad)
-	{
+	int getPayLoadType(int payLoad) {
 		int payLd = 0;
 		return payLd;
-	}
-	
-	public void signalTimeout()
-	{
-		/* In this method periodically the data will be sent over to the application*/
-		if(recvThrd != null && recvThrd.pktBuffer != null && recvThrd.pktBuffer.frameIsReady()) {
-			DataFrame aFrame = recvThrd.pktBuffer.popOldestFrame();
-			
-			if(aFrame != null) {
-				appIntf.receiveData(aFrame.data);
-			}
-		}
-		
-		t = new Timer(50,this);
-	 	t.startTimer();
-	       
-	       
-	      if(isBYERcvd())
-	      {
-	    	  t.stopTimer();
-	      }
 	}
 }
