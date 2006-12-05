@@ -9,7 +9,7 @@ package jlibrtp;
  * have a max waiting period equal to how often we need to push data.
  */
 import java.util.Enumeration;
-import java.util.concurrent.locks.*;
+
 
 public class AppCallerThread extends Thread {
 	RTPSession session;
