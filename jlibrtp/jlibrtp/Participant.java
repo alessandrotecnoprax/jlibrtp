@@ -19,7 +19,7 @@ public class Participant {
 	public PktBuffer pktBuffer;
 	
 	// Known contact, but we don't know their ssrc yet.
-	public Participant(String networkAddress,int port,String CNAME) {
+	public Participant(String networkAddress,int aDestPort,String CNAME) {
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("New participant created: " + CNAME + "@" + networkAddress);
 		}
@@ -31,7 +31,7 @@ public class Participant {
 			System.out.println("Couldn't resolve " + networkAddress);
 		}
 		cname = CNAME;
-
+		destPort = aDestPort;
 	}
 	// Incomplete insert, we got a packet, but we don't know this person yet.
 	public Participant(InetAddress adr, int port, long SSRC) {

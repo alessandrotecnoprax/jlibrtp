@@ -35,8 +35,8 @@ public class RTPSession {
 	 final public Lock partDbLock = new ReentrantLock();
 	 
 	 // Locks all the packet buffers.
-	 final public Lock condLock = new ReentrantLock();
-	 final public Condition dataReady = condLock.newCondition();
+	 final public Lock pktBufLock = new ReentrantLock();
+	 final public Condition pktBufDataReady = pktBufLock.newCondition();
 	 
 	 // Enough is enough, set to true when you want to quit.
 	 boolean endSession = false;
