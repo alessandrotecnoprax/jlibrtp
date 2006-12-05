@@ -96,7 +96,7 @@ public class ReceiverDemo implements RTPAppIntf {
 					auline.write(abData, 0, nBytesRead);
 					nBytesRead = 0;
 				}
-				try { 
+				try {
 					Thread.currentThread().sleep(1000);
 				} catch(Exception e) {
 					System.out.println("ah. disaster.");

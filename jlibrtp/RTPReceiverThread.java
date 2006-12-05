@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Enumeration;
 
 
 public class RTPReceiverThread extends Thread {
@@ -72,6 +73,15 @@ public class RTPReceiverThread extends Thread {
 	    		   part.pktBuffer = pktBuffer;
 	    	   }
 	       }
+	       
+			if(RTPSession.rtpDebugLevel > 15) {
+				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
+			}
+	       // Signal the thread that pushes data to application
+			session.pktBufLock.lock();
+		    try { session.pktBufDataReady.signalAll(); } finally {
+		       session.pktBufLock.unlock();
+		     }
 		}
 	}
 }

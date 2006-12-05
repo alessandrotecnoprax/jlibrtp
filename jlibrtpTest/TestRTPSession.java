@@ -30,7 +30,7 @@ public class TestRTPSession implements RTPAppIntf {
 	
 	public void receiveData(byte[] buff, String Cname, long time) {
 	String s = new String(buff);
-		System.out.println("The Data has been recieved = "+s);
+		System.out.println("The Data has been received: "+s+ " , thank you " + Cname);
 	}
 	
 	public static void main(String[] args) {

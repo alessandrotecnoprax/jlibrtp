@@ -8,6 +8,7 @@ package jlibrtp;
  * Optionally, if we do jitter-control, the condition variable should
  * have a max waiting period equal to how often we need to push data.
  */
+import java.util.Enumeration;
 import java.util.concurrent.locks.*;
 
 public class AppCallerThread extends Thread {
@@ -25,29 +26,35 @@ public class AppCallerThread extends Thread {
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 3) {
 			System.out.println("-> AppCallerThread.run()");
-		}  
+		}
+		
 		while(session.endSession == false) {
-			if(RTPSession.rtpDebugLevel > 15) {
-				System.out.println("<-> AppCallerThread looooooop");
-			}  
 			
-			// Wait until there is at least data available in one of the queues
-		    // session.dataAvail.lock();
-		    // try {
-		    //	 
-		    //	 while(moreData) {
-		    //		 
-		    //	 }
-		    //} finally {
-		    //     l.unlock();
-		    // }
-			String str = "abcdefg";
-			appl.receiveData(str.getBytes(),"someone",40);
-			try {
-				Thread.sleep(100000);
-			} catch(Exception e) {
-				//Do nothing :)
-			}
+			session.pktBufLock.lock();
+		    try {
+				if(RTPSession.rtpDebugLevel > 15) {
+					System.out.println("<-> AppCallerThread going to Sleep");
+				}
+		    	// We can add timeout to this
+		    	try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+				if(RTPSession.rtpDebugLevel > 15) {
+					System.out.println("<-> AppCallerThread waking up");
+				}
+		    	// Next loop over all participants and check whether they have anything for us.
+				Enumeration set = session.participantTable.elements();
+				while(set.hasMoreElements()) {
+					Participant p = (Participant)set.nextElement();
+					
+					if(p.isSender() && p.pktBuffer != null && p.pktBuffer.frameIsReady()) {
+						DataFrame aFrame = p.pktBuffer.popOldestFrame();
+						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+					}
+				}
+		    
+		     } finally {
+		       session.pktBufLock.unlock();
+		     }
+			
 		}
 		if(RTPSession.rtpDebugLevel > 3) {
 			System.out.println("<- AppCallerThread.run()");
