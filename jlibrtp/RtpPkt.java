@@ -312,12 +312,7 @@ public class RtpPkt {
 		// TODO Extension
 
 		//Payload
-		for(int i=0; i<bytes; i++) {
-			rawPkt[i+headerLen]  = payload[i];
-		}
-		
-		//System.out.println("writePkt timeStamp post payload:" + rawPkt[7]);
-		//System.out.println("writePkt ssrc post payload:" + rawPkt[11]);
+		System.arraycopy(payload, 0, rawPkt, headerLen, bytes);
 		rawPktCurrent = true;
 	}
 	
@@ -368,8 +363,6 @@ public class RtpPkt {
 		payload = new byte[bytes];
 		int headerLen = getHeaderLength();
 		
-		for(int i=0; i<bytes; i++) {
-			payload[i]= rawPkt[headerLen + i];
-		}
+		System.arraycopy(rawPkt, headerLen, payload, 0, bytes);
 	}
 }	
