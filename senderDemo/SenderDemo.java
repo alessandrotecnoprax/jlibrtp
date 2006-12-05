@@ -3,8 +3,6 @@ package senderDemo;
 import jlibrtp.Participant;
 import jlibrtp.RTPAppIntf;
 import jlibrtp.RTPSession;
-import jlibrtp.RTPSessionIntf;
-
 import java.io.File;
 import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
@@ -14,18 +12,18 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import java.lang.String;
 import jlibrtp.*;
 
-public class SenderDemo extends Thread implements RTPAppIntf  {
-	RTPSessionIntf rtpSession = null;
+public class SenderDemo implements RTPAppIntf  {
+	RTPSession rtpSession = null;
 	static int pktCount = 0;
 	private String filename;
 	private final int EXTERNAL_BUFFER_SIZE = 1024; // 1 kbyte
 	
-	public SenderDemo(String CNAME,int recvPort,String recvAddr)  {
-		rtpSession = new RTPSession();
-		rtpSession.RTPSessionRegister(CNAME,4544,this);	
+	public SenderDemo()  {
+		rtpSession = new RTPSession(4545,"myNameIS");
+		rtpSession.RTPSessionRegister(this);
+		
 		//public Participant(String sendingHost,int port,String CNAME)
-		Participant p = new Participant(recvAddr,4545, CNAME);
-		p.setIsSender();
+		Participant p = new Participant("127.0.0.1", 4546, "part1");
 		rtpSession.addParticipant(p);
 	}
 	
@@ -35,7 +33,7 @@ public class SenderDemo extends Thread implements RTPAppIntf  {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		System.out.println("Setup");
-		SenderDemo aDemo = new SenderDemo("Test",45455,"127.0.0.1");
+		SenderDemo aDemo = new SenderDemo();
 		aDemo.filename = "/usr/share/sounds/login.wav";
 		aDemo.run();
 		System.out.println("pktCount: " + pktCount);

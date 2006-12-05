@@ -1,7 +1,3 @@
-/**
- * The major flaw in this is that the PktBuffers should be connect to
- * other threads, this thread should be dealing with the pkt / frame queue.
- */
 package jlibrtp;
 
 import java.io.IOException;
@@ -13,35 +9,31 @@ import java.net.SocketException;
 
 public class RTPReceiverThread extends Thread {
 	RTPSession session = null;
-	DatagramPacket packet = null;
-	DatagramSocket socket4 = null;
-	//Hashtable pktBuffer = new Hashtable();
-	PktBuffer pktBuffer = null;
-	int recvPort = 0;
 	long rcvdTimeStamp = -1;
 	 
-	RTPReceiverThread(RTPSession session,int recvPort)
-	{
+	RTPReceiverThread(RTPSession session) {
 		this.session = session;
-		this.recvPort = recvPort;
-		try {
-			this.socket4 = new DatagramSocket(this.recvPort);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		//udpSock = session.udpSock;
+		if(RTPSession.rtpDebugLevel > 1) {
+			System.out.println("<-> RTPReceiverThread created");
+		} 
 	}
 	
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
-			 System.out.println("-> RTPReceiverThread.run() listening on " + socket4.getLocalPort() );
+			 System.out.println("-> RTPReceiverThread.run() listening on " + session.udpSock.getLocalPort() );
 		}
 		
-		while(true) {
+		while(!session.endSession) {
 	       byte[] rawPkt = new byte[2000];
-	       packet = new DatagramPacket(rawPkt, rawPkt.length);
+	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
+	       
+	       if(RTPSession.rtpDebugLevel > 1) {
+	    	   System.out.println("-> RTPReceiverThread.run() waiting for packet on " + session.udpSock.getLocalPort() );
+	       }
 	       
 	       try {
-	    	   socket4.receive(packet);
+	    	   session.udpSock.receive(packet);
 	       } catch (IOException e) {
 	    	   e.printStackTrace();
 	       }
@@ -57,14 +49,28 @@ public class RTPReceiverThread extends Thread {
 	    	   System.out.println("-> RTPReceiverThread.run() payload is " + str );
 	       }
 	       
-	       /* Temporarily we'll assume there is only one source */
+	       Participant part = session.lookupSsrc(pkt.getSsrc());
 	       
-	       if(pktBuffer != null) {
-	    	   /* A buffer already exists, append to it */
-	    	   pktBuffer.addPkt(pkt);
-	       } else {
-	    	   /* Create a new packet/frame buffer */
-	    	   pktBuffer = new PktBuffer(pkt,1);
+	       if(part == null) {
+	    	   System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
+	    	   part = new Participant(packet.getAddress(),packet.getPort(),pkt.getSsrc());
+	    	   session.addParticipant(part);
+	       }
+	       
+	       // Do checks on whether the datagram came from the right source.
+	       if(true && part != null) {
+	    	   PktBuffer pktBuffer  = part.pktBuffer;
+	       
+	    	   /* Temporarily we'll assume there is only one source */
+	    	   if(pktBuffer != null) {
+	    		   /* A buffer already exists, append to it (sync) */
+	    		   pktBuffer.addPkt(pkt);
+	    	   } else {
+	    		   /* Create a new packet/frame buffer */
+	    		   // Need to lookup the frame-size based on payloadType.
+	    		   pktBuffer = new PktBuffer(pkt,1);
+	    		   part.pktBuffer = pktBuffer;
+	    	   }
 	       }
 		}
 	}

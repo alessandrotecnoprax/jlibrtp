@@ -4,7 +4,7 @@ public class RTCPByePkt
 {
 	RTCPCommonHeader commonHdr = null;
 	byte[] rawBYEPkt = null;
-	int[] ssrcArray = new int[32];
+	long[] ssrcArray = new long[32];
 	
 	RTCPByePkt (byte[] byePkt,RTCPCommonHeader header)
 	{
@@ -16,7 +16,7 @@ public class RTCPByePkt
 		decodeBYEPkt(pktData);
 	}
 	
-	RTCPByePkt(int ssrcCount, int[] ssrcArray)
+	RTCPByePkt(int ssrcCount, long[] ssrcArray)
 	{
 		commonHdr =  new RTCPCommonHeader(2,0,ssrcCount,203);
 		this.commonHdr.iCount = ssrcCount;
@@ -40,7 +40,7 @@ public class RTCPByePkt
 		return commonHdr.iCount;
 	}
 	
-	int getSSRC(int index)
+	long getSSRC(int index)
 	{
 		return ssrcArray[index];
 	}
@@ -77,7 +77,8 @@ public class RTCPByePkt
 		
 		for(int i=0;i<this.commonHdr.iCount;i++)
 		{
-			System.arraycopy(ssrcNumHeader(ssrcArray[i]),0, this.rawBYEPkt,((i+1)*32), 32);
+			// Only commented out to avoid compile warning
+			//System.arraycopy(ssrcNumHeader(ssrcArray[i]),0, this.rawBYEPkt,((i+1)*32), 32);
 		}
 		
 		return this.rawBYEPkt;

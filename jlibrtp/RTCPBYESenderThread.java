@@ -23,8 +23,8 @@ public class RTCPBYESenderThread extends Thread implements Signalable
 	
 		public void signalTimeout() 
 		{
-			 Hashtable participantTable = this.rtcpSession.getRTPSession().getParticipantDB();
-			 int[] ssrcArray = new int[32];
+			 Hashtable participantTable = this.rtcpSession.rtpSession.participantTable;
+			 long[] ssrcArray = new long[32];
 			 int ssrcArrayCount = 0;
 			 
 					Enumeration set = participantTable.elements();
@@ -63,7 +63,7 @@ public class RTCPBYESenderThread extends Thread implements Signalable
 								Timer t = new Timer(800,this);
 								t.startTimer();
 								
-								if(rtcpSession.rtpSession.isBYERcvd)
+								if(rtcpSession.rtpSession.isEnding())
 								{
 									t.stopTimer();
 								}

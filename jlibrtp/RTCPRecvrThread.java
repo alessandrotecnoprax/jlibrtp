@@ -4,21 +4,18 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class RTCPRecvrThread extends Thread  
-{
+public class RTCPRecvrThread extends Thread   {
+	
 	RTCPSession session = null;
 	int rtcpPort = 0;
 	
-	RTCPRecvrThread(int rtcpPort,RTCPSession session)
-	{
+	RTCPRecvrThread(int rtcpPort,RTCPSession session) {
 		this.rtcpPort = rtcpPort;
 		this.session = session;
 	}
 	
-	public void run()
-	{
-		while(!this.session.getRTPSession().isBYERcvd())
-		{
+	public void run() {
+		while(!this.session.rtpSession.endSession) {
 			int port = this.rtcpPort;
 			String group = "225.4.5.6";
 			try
@@ -35,10 +32,9 @@ public class RTCPRecvrThread extends Thread
 				System.out.println("The data recvd="+ss);
 				RTCPCommonHeader header = new RTCPCommonHeader(buf);
 			
-				if(header.getPktType() == 203)
-				{
+				if(header.getPktType() == 203) {
 					System.out.println("Inside the if");
-					this.session.getRTPSession().setBYERcvd(true);
+					this.session.rtpSession.endSession = true;
 				}
 				
 				s.leaveGroup(InetAddress.getByName(group));
