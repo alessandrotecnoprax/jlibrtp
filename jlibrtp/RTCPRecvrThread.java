@@ -20,7 +20,7 @@ public class RTCPRecvrThread extends Thread   {
 			String group = "225.4.5.6";
 			try
 			{
-				System.out.println("INSIDE RTCPRecvThread 1");
+				System.out.println("INSIDE RTCPRecvThread 1 the port="+this.rtcpPort);
 				MulticastSocket s = new MulticastSocket(port);
 		
 				s.joinGroup(InetAddress.getByName(group));
@@ -36,7 +36,13 @@ public class RTCPRecvrThread extends Thread   {
 					System.out.println("Inside the if");
 					this.session.rtpSession.endSession = true;
 				}
-				
+				else if(header.getPktType() == 201)
+				{
+					System.out.println("The RR Packet received");
+					RTCPRRPkt rrPkt = new RTCPRRPkt();
+					rrPkt.decodeRRPkt(buf);
+					
+				}
 				s.leaveGroup(InetAddress.getByName(group));
 				s.close();
 			}

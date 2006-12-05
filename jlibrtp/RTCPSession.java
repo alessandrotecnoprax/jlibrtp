@@ -6,6 +6,7 @@ public class RTCPSession implements Signalable
 	RTPSession rtpSession = null;
 	RTCPBYESenderThread byeThread = null;
 	RTCPRecvrThread recvThread = null;
+	RTCPRRSendThread rrSendThread = null;
 	
 	RTCPSession(int rtcpPort,RTPSession rtpSession) {
 		this.rtcpPort = rtcpPort;
@@ -13,7 +14,11 @@ public class RTCPSession implements Signalable
 		byeThread = new RTCPBYESenderThread(rtcpPort,this);
 		this.recvThread = new RTCPRecvrThread(rtcpPort,this);
 		
+		this.rrSendThread = new RTCPRRSendThread(rtcpPort,this);
+		
 		this.recvThread.start();
+		
+		
 	}
 	
 	RTPSession getRTPSession()

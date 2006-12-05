@@ -51,7 +51,8 @@ public class RTPSession {
 		 CNAME = aCNAME;
 		 // SSRC can't be based on CNAME since CNAME is too likely to be reused
 		 Random r = new Random(System.currentTimeMillis());
-		 ssrc = r.nextLong();
+		/////////// ssrc = r.nextLong(); //////////////////vaishnav confirm
+		 ssrc = CNAME.hashCode();
 	 }
 	 
 	public int RTPSessionRegister(RTPAppIntf rtpApp) {
@@ -113,10 +114,18 @@ public class RTPSession {
 	
 	 
 	public void addParticipant(Participant p) {
-		participantTable.put(nextPartId++, p);
+		System.out.println(" P ="+p+" p.cname="+p.cname);
+		p.setSSRC(p.cname.hashCode());
+		//participantTable.put(nextPartId++, p);
+		participantTable.put(new Long(p.ssrc), p);
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPSession.addParticipant( " + p.getInetAddress().toString() + ")");
 		}
+		
+		RTCPRRPkt partReport = new RTCPRRPkt(p.ssrc);
+		
+		System.out.println("VVVVVVVVVVVVVVVVVVV the put SSRC="+p.ssrc);
+		this.recvThrd.RTCPRecvRptTable.put(new Long(p.ssrc), partReport);
 	}
 	
 	 void removeParticipant(Participant p) {
@@ -132,6 +141,12 @@ public class RTPSession {
 		 }
 		 return null;
 	 }
+	 ////Method that have been added //////////////////////////////////////////////
+	 public int numofParticipants()
+	 {
+		 return participantTable.size();
+	 }
+	 
 	 
 	 public void startRTCPSession(int rtcpPort){
 		 rtcpSession = new RTCPSession(rtcpPort,this);

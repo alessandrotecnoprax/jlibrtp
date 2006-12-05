@@ -88,7 +88,7 @@ public class RTCPCommonHeader
 		firstLine[6] = iCByte[3];
 		firstLine[7] = iCByte[4];
 		
-		this.pktType = 203;
+	//	this.pktType = 203;
 		byte[] PkT = pkType(this.pktType);
 				
 		for(int i=0;i<8;i++)
