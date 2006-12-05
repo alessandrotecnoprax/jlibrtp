@@ -3,10 +3,13 @@ package jlibrtp;
  * A PktBuffer stores packets either for buffering purposes,
  * or because they need to be assimilated to create a complete frame.
  * 
+ * It also drops duplicate packets.
+ * 
  * Note that newest is the most recently received, i.e. highest timeStamp
  * Next means new to old (recently received to previously received)
  * 
  *  All this stuff needs to be adjusted for rollovers!!!
+ * 
  * 
  * @author Arne Kepp
  */
@@ -77,6 +80,7 @@ public class PktBuffer {
 					if(RTPSession.rtpDebugLevel > 8) {
 						System.out.println("   Found pkt with existing timeStamp: " + timeStamp);
 					}
+					
 					// Node has same timeStamp, assume pkt belongs to frame
 					int seqNumber = aPkt.getSeqNumber();
 					if(tmpNode.seqNum < seqNumber) {
@@ -85,8 +89,16 @@ public class PktBuffer {
 						// Find the right spot
 						while( tmpNode.nextFrameNode != null && tmpNode.nextFrameNode.seqNum < seqNumber) {
 							tmpNode = tmpNode.nextFrameNode;
-							System.out.println("hepp");
 						}
+						
+						// Check whether packet is duplicate.
+						if(tmpNode.nextFrameNode.seqNum == seqNumber) {
+							if(RTPSession.rtpDebugLevel > 2) {
+								System.out.println("PktBuffer.addPkt Dropped a duplicate packet!");
+							}
+							return -2;
+						}
+						
 						newNode.nextFrameNode = tmpNode.nextFrameNode;
 						tmpNode.nextFrameNode = newNode;
 						

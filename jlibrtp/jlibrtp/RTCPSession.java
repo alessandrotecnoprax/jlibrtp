@@ -7,8 +7,7 @@ public class RTCPSession implements Signalable
 	RTCPBYESenderThread byeThread = null;
 	RTCPRecvrThread recvThread = null;
 	
-	RTCPSession(int rtcpPort,RTPSession rtpSession)
-	{
+	RTCPSession(int rtcpPort,RTPSession rtpSession) {
 		this.rtcpPort = rtcpPort;
 		this.rtpSession = rtpSession;
 		byeThread = new RTCPBYESenderThread(rtcpPort,this);
@@ -25,11 +24,12 @@ public class RTCPSession implements Signalable
 	void requestBYE(int ssrc)
 	{
 		System.out.println("BYE Request rcvd");
-		int [] ssrcArray = new int[1];
+		long [] ssrcArray = new long[1];
 		ssrcArray[0] = ssrc;
 		
 		RTCPByePkt byePkt = new RTCPByePkt(1,ssrcArray);
-		byePkt.setSSRCCount(this.getRTPSession().getSSRCNum());
+		// Just to avoid compile complaints
+		//byePkt.setSSRCCount(this.rtpSession.ssrc);
 		
 		byeThread.sendBYEMsg(byePkt);
 	}
