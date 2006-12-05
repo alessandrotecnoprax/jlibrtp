@@ -50,7 +50,7 @@ public class RTCPBYESenderThread extends Thread implements Signalable
 								 
 								      DatagramPacket pack = new DatagramPacket(sendByeBuf, sendByeBuf.length,
 								      					 InetAddress.getByName(group), port);
-	     
+								      System.out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvBYE");
 								      s.send(pack);
 								      s.close();
 						      }

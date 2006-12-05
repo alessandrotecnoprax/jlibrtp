@@ -20,10 +20,11 @@ public class TestRTPSession implements RTPAppIntf {
 		
 		//rtpSession.RTPSessionRegister("ABCD",4448,this);	
 		Participant p = new Participant("127.0.0.1",4545,"someone");
+		p.setSSRC(CNAME.hashCode());
 		//p.setIsSender();
 		rtpSession.addParticipant(p);		
-		//rtpSession.startRTCPSession(6000);
-		//rtpSession.requestBYE("ABCD");
+		rtpSession.startRTCPSession(6000);
+		rtpSession.requestBYE("ABCD");
 	
 	}
 	

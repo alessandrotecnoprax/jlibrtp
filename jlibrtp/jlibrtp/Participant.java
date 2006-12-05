@@ -72,8 +72,8 @@ public class Participant {
 		return this.ssrc;
 	}
 	
-	int setSSRC(long anSSRC) {
-		if(ssrc > 0) {
+	public int setSSRC(long anSSRC) {
+		if(ssrc < 0) {
 			return -1;
 		} else {
 			ssrc = anSSRC;

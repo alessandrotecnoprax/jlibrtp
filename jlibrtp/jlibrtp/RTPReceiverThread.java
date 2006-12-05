@@ -6,11 +6,14 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.Hashtable;
 
 
 public class RTPReceiverThread extends Thread {
 	RTPSession session = null;
 	long rcvdTimeStamp = -1;
+	 
+	Hashtable RTCPRecvRptTable = new Hashtable();
 	 
 	RTPReceiverThread(RTPSession session) {
 		this.session = session;
@@ -18,6 +21,7 @@ public class RTPReceiverThread extends Thread {
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPReceiverThread created");
 		} 
+	
 	}
 	
 	public void run() {
@@ -73,7 +77,16 @@ public class RTPReceiverThread extends Thread {
 	    		   part.pktBuffer = pktBuffer;
 	    	   }
 	       }
+	       /////////////////////////////////////////////////////////
+	       RTCPRRPkt rr = (RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc);
+	       if(pkt.getSeqNumber() != (rr.getExtHighSeqNumRcvd()+1))
+	       {
+	    	   rr.incPktLostCount();
+	       }
+	       rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
 	       
+	       
+	       ///////////////////////////////////////////////////////////
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
