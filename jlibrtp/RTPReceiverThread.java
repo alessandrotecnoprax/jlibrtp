@@ -29,7 +29,7 @@ public class RTPReceiverThread extends Thread {
 	       byte[] rawPkt = new byte[2000];
 	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
 	       
-	       if(RTPSession.rtpDebugLevel > 1) {
+	       if(RTPSession.rtpDebugLevel > 6) {
 	    	   System.out.println("-> RTPReceiverThread.run() waiting for packet on " + session.udpSock.getLocalPort() );
 	       }
 	       

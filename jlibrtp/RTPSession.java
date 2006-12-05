@@ -13,7 +13,7 @@ import java.util.concurrent.locks.*;
 import java.util.Random;
 
 public class RTPSession {
-	 final static public int rtpDebugLevel = 20;
+	 final static public int rtpDebugLevel = 3;
 	 // This thing ought to be indexed by SSRC, since that is what we'll be getting constantly.
 	 Hashtable participantTable = new Hashtable();
 	 
