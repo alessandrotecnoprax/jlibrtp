@@ -19,12 +19,12 @@ public class TestRTPSession implements RTPAppIntf {
 		}
 		
 		//rtpSession.RTPSessionRegister("ABCD",4448,this);	
-		Participant p = new Participant("127.0.0.1",4545,"someone");
-		p.setSSRC(CNAME.hashCode());
+		Participant p = new Participant("127.0.0.1",4545,"test");
+		//p.setSSRC(CNAME.hashCode());
 		//p.setIsSender();
 		rtpSession.addParticipant(p);		
 		rtpSession.startRTCPSession(6000);
-		rtpSession.requestBYE("ABCD");
+	//	rtpSession.requestBYE("ABCD");
 	
 	}
 	
@@ -38,10 +38,10 @@ public class TestRTPSession implements RTPAppIntf {
 		TestRTPSession test = new TestRTPSession();
 		try { Thread.currentThread().sleep(100); } catch (Exception e) {  };
 		String str = "abcd";
-		test.rtpSession.sendData(str.getBytes());
+	//	test.rtpSession.sendData(str.getBytes());
 		str = "efgh";
 		try { Thread.currentThread().sleep(100); } catch (Exception e) {  };
-		test.rtpSession.sendData(str.getBytes());
+	//	test.rtpSession.sendData(str.getBytes());
 	}
 
 
