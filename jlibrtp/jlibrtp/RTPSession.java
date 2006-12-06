@@ -52,7 +52,7 @@ public class RTPSession {
 		 // SSRC can't be based on CNAME since CNAME is too likely to be reused
 		 Random r = new Random(System.currentTimeMillis());
 		/////////// ssrc = r.nextLong(); //////////////////vaishnav confirm
-		 ssrc = CNAME.hashCode();
+		// ssrc = CNAME.hashCode();
 	 }
 	 
 	public int RTPSessionRegister(RTPAppIntf rtpApp) {
@@ -115,16 +115,17 @@ public class RTPSession {
 	 
 	public void addParticipant(Participant p) {
 		System.out.println(" P ="+p+" p.cname="+p.cname);
-		p.setSSRC(p.cname.hashCode());
-		//participantTable.put(nextPartId++, p);
-		participantTable.put(new Long(p.ssrc), p);
+	//	p.setSSRC(p.cname.hashCode());
+	//	participantTable.put(nextPartId++, p);
+		participantTable.put(new String(p.cname), p);
+	//	participantTable.put(new Long(p.ssrc), p);
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPSession.addParticipant( " + p.getInetAddress().toString() + ")");
 		}
 		
 		RTCPRRPkt partReport = new RTCPRRPkt(p.ssrc);
 		
-		System.out.println("VVVVVVVVVVVVVVVVVVV the put SSRC="+p.ssrc);
+	//	System.out.println("VVVVVVVVVVVVVVVVVVV the put SSRC="+p.ssrc);
 		this.recvThrd.RTCPRecvRptTable.put(new Long(p.ssrc), partReport);
 	}
 	
@@ -147,6 +148,25 @@ public class RTPSession {
 		 return participantTable.size();
 	 }
 	 
+	 public Participant lookUPCNAME(String CNAME)
+	 {
+		/* Enumeration set = participantTable.elements();
+		 while(set.hasMoreElements()) {
+			 Participant p = (Participant)set.nextElement();
+			 System.out.println("The Participant CNAME="+p.cname+" The ssrc="+p.ssrc);
+			 if(p.cname.equalsIgnoreCase(CNAME) && (p.ssrc != 0)) {
+				 return p;
+			 }
+		 }
+		 return null;
+		 */
+		 
+		 if(participantTable.contains(new String(CNAME)))
+		 {
+			 return (Participant) participantTable.get(new String(CNAME));
+		 }
+		 return null;
+	 }
 	 
 	 public void startRTCPSession(int rtcpPort){
 		 rtcpSession = new RTCPSession(rtcpPort,this);

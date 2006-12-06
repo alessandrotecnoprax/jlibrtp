@@ -17,7 +17,10 @@ public class Participant {
 	boolean unknown = true;
 	//Store the packets received from this participant
 	public PktBuffer pktBuffer;
-	
+/*	Participant()
+	{
+		
+	}*/
 	// Known contact, but we don't know their ssrc yet.
 	public Participant(String networkAddress,int aDestPort,String CNAME) {
 		if(RTPSession.rtpDebugLevel > 6) {
