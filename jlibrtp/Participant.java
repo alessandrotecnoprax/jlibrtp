@@ -10,7 +10,7 @@ public class Participant {
 	private boolean isReceiver = true;
 	private InetAddress address = null;
 	long ssrc = -1;
-	String cname;
+	public String cname;
 	public int lastSentSeqNumber;
 	public int	lastRecvSeqNumber;
 	long lastTimeStamp;
@@ -66,17 +66,18 @@ public class Participant {
 	InetAddress getInetAddress() {
 		return address;
 	}
-	String getCNAME() {
+	
+	public String getCNAME() {
 		return cname;
-	};
+	}
 	
 	
-	long getSSRC() {
+	public long getSSRC() {
 		return this.ssrc;
 	}
 	
 	public int setSSRC(long anSSRC) {
-		if(ssrc < 0) {
+		if(anSSRC < 0) {
 			return -1;
 		} else {
 			ssrc = anSSRC;

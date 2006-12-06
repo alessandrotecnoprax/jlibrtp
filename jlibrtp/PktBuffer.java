@@ -58,11 +58,12 @@ public class PktBuffer {
 				newNode.nextFrameQueueNode = newest;
 				newest.prevFrameQueueNode = newNode;
 				newest = newNode;
+				length++;
 			} else {
-				if(oldest.timeStamp > timeStamp) {
+				if(oldest.timeStamp > timeStamp || oldest.seqNum > aPkt.getSeqNumber()) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
-						System.out.println("PktBuffer.addPkt Dropped a packet!");
+						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " + timeStamp + " vs "+ oldest.timeStamp);
 					}
 					return -1;
 				}
