@@ -3,7 +3,7 @@ import jlibrtp.*;
 
 public class TestRTPSession implements RTPAppIntf {
 	public RTPSession rtpSession = null;
-	String CNAME = "test";
+	String CNAME = "testsalkdfjldsakjflkdsj";
 	int recvPort = 4545;
 	
 	TestRTPSession() {	
@@ -19,10 +19,13 @@ public class TestRTPSession implements RTPAppIntf {
 		}
 		
 		//rtpSession.RTPSessionRegister("ABCD",4448,this);	
-		Participant p = new Participant("127.0.0.1",4545,"test");
+		//Participant p = new Participant("127.0.0.1",4545,"test");
+		
+		int i =0;
+		Participant p = new Participant("127.0.0.1",4545,"testsalkdfjldsakjflkdsj");
 		//p.setSSRC(CNAME.hashCode());
 		//p.setIsSender();
-		rtpSession.addParticipant(p);		
+	long x =	rtpSession.addParticipant(p);		
 		rtpSession.startRTCPSession(6000);
 	//	rtpSession.requestBYE("ABCD");
 	
@@ -37,11 +40,19 @@ public class TestRTPSession implements RTPAppIntf {
 	public static void main(String[] args) {
 		TestRTPSession test = new TestRTPSession();
 		try { Thread.currentThread().sleep(100); } catch (Exception e) {  };
+		int i=0,j=0;
+		while(i<100000)
+		{
+			i++;
+			j=0;
+			while(j<10000)
+				j++;
+		}
 		String str = "abcd";
-	//	test.rtpSession.sendData(str.getBytes());
+		test.rtpSession.sendData(str.getBytes());
 		str = "efgh";
 		try { Thread.currentThread().sleep(100); } catch (Exception e) {  };
-	//	test.rtpSession.sendData(str.getBytes());
+		test.rtpSession.sendData(str.getBytes());
 	}
 
 
