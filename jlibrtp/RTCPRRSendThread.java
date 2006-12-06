@@ -30,11 +30,13 @@ public class RTCPRRSendThread implements Signalable
 	
 			 if(rrRpt.containsKey(new Long(p.ssrc)))
 			 {
-				 RTCPRRPkt rrPkt= (RTCPRRPkt) rrRpt.get(new Long(p.ssrc));
+				// System.out.println("I am Sending out the RR packet");
+				 //RTCPRRPkt rrPkt= (RTCPRRPkt) rrRpt.get(new Long(p.ssrc));
+				 RTCPRRPkt rrPkt= (RTCPRRPkt) rtcpSession.rtpSession.recvThrd.RTCPRecvRptTable.get(new Long(p.ssrc));
 		//	 RTCPRRPkt rrPkt= new RTCPRRPkt(p.ssrc);
-				 byte[] rawRRPkt = rrPkt.encodeRRPkt();
+				 byte[] rawRRPkt = rrPkt.encodeRRPkt(rtcpSession.rtpSession.ssrc);
 	//			 System.out.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-	//			 System.out.println("The RR DAta is being sent to SSRC of the participant="+p.ssrc);	 
+		//		 System.out.println("The RR DAta is being sent to SSRC of the participant="+p.ssrc);	 
 				 //////////////////////////////////////////////////////////////////////////
 				 
 					

@@ -61,18 +61,18 @@ public class RTCPRRPkt
 		return this.packetslost;
 	}
 	
-	byte[] encodeRRPkt()
+	byte[] encodeRRPkt(long reporteeSSRC)
 	{
 		 
 		byte[] firstLine = commonHdr.writeFristLine();
 		
 		System.arraycopy(firstLine, 0, this.rawRRPkt,0,32);
 		
-		
+		System.out.println("The Session SSRC="+this.ssrc+" The Participant SSRC="+reporteeSSRC);
 		byte[] reporterSSRCArry = longToBin(this.ssrc);
 		System.arraycopy(reporterSSRCArry, 0, this.rawRRPkt, 32, 32);
 		
-		byte[] reporteeSSRCArry = longToBin(this.ssrc);
+		byte[] reporteeSSRCArry = longToBin(reporteeSSRC);
 		System.arraycopy(reporteeSSRCArry, 0, this.rawRRPkt, 64, 32);
 		
 		//// Left the calculation of the loss fraction. The pkt Lost is full 32 bits
@@ -144,9 +144,9 @@ public class RTCPRRPkt
 	       }
 	       v = v / 2;
 	    }
-	    for(int i=0;i<ccount;i++)
+	   /* for(int i=0;i<ccount;i++)
 	    	System.out.print(bd[i]);
-	    
+	    */
 
 		
 		if(ccount<32)

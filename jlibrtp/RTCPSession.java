@@ -29,7 +29,7 @@ public class RTCPSession implements Signalable
 	
 	void requestBYE(int ssrc)
 	{
-		System.out.println("BYE Request rcvd");
+	//	System.out.println("BYE Request rcvd");
 		long [] ssrcArray = new long[1];
 		ssrcArray[0] = ssrc;
 		
