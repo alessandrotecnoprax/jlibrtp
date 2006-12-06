@@ -25,12 +25,13 @@ public class RTPReceiverThread extends Thread {
 	}
 	
 	public void run() {
+		int pktCount = 0;
 		if(RTPSession.rtpDebugLevel > 1) {
 			 System.out.println("-> RTPReceiverThread.run() listening on " + session.udpSock.getLocalPort() );
 		}
 		
 		while(!session.endSession) {
-	       byte[] rawPkt = new byte[2000];
+	       byte[] rawPkt = new byte[1500];
 	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
 	       
 	       if(RTPSession.rtpDebugLevel > 6) {
@@ -42,9 +43,13 @@ public class RTPReceiverThread extends Thread {
 	       } catch (IOException e) {
 	    	   e.printStackTrace();
 	       }
-	       
-	       RtpPkt pkt = new RtpPkt(rawPkt);
+	       byte[] slicedPkt = new byte[packet.getLength()];
+	       System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
+	       RtpPkt pkt = new RtpPkt(slicedPkt);
 		
+	       //System.out.println("" + pkt.getTimeStamp());
+	       //session.appIntf.receiveData(pkt.getPayload(), "junk", 1);
+	       
 	       if(RTPSession.rtpDebugLevel > 6) {
 	    	   System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
 	       }
@@ -63,20 +68,23 @@ public class RTPReceiverThread extends Thread {
 	       }
 	       
 	       // Do checks on whether the datagram came from the right source.
-	       if(true && part != null) {
+	      	if(true && part != null) {
 	    	   PktBuffer pktBuffer  = part.pktBuffer;
 	       
-	    	   /* Temporarily we'll assume there is only one source */
+	    	   //Temporarily we'll assume there is only one source
 	    	   if(pktBuffer != null) {
-	    		   /* A buffer already exists, append to it (sync) */
+	    		   //A buffer already exists, append to it (sync)
 	    		   pktBuffer.addPkt(pkt);
 	    	   } else {
-	    		   /* Create a new packet/frame buffer */
+	    		   // Create a new packet/frame buffer
 	    		   // Need to lookup the frame-size based on payloadType.
 	    		   pktBuffer = new PktBuffer(pkt,1);
 	    		   part.pktBuffer = pktBuffer;
 	    	   }
 	       }
+	       
+	       //System.out.println("-->" + pkt.getSeqNumber() + " " + packet.getLength() + " " + pktCount++ +" " + part.pktBuffer.length);
+	       
 	       /////////////////////////////////////////////////////////
 	       RTCPRRPkt rr = (RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc);
 	       if(pkt.getSeqNumber() != (rr.getExtHighSeqNumRcvd()+1))
@@ -87,6 +95,7 @@ public class RTPReceiverThread extends Thread {
 	       //rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
 	       ((RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc)).setExtHighSeqNumRcvd(pkt.getSeqNumber());
 	       
+	       
 	       ///////////////////////////////////////////////////////////
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
@@ -96,6 +105,7 @@ public class RTPReceiverThread extends Thread {
 		    try { session.pktBufDataReady.signalAll(); } finally {
 		       session.pktBufLock.unlock();
 		     }
+		 
 		}
 	}
 }
