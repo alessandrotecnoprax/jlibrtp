@@ -81,10 +81,11 @@ public class RTPReceiverThread extends Thread {
 	       RTCPRRPkt rr = (RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc);
 	       if(pkt.getSeqNumber() != (rr.getExtHighSeqNumRcvd()+1))
 	       {
-	    	   rr.incPktLostCount();
+	    	   //rr.incPktLostCount();
+	    	   ((RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc)).incPktLostCount();
 	       }
-	       rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
-	       
+	       //rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
+	       ((RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc)).setExtHighSeqNumRcvd(pkt.getSeqNumber());
 	       
 	       ///////////////////////////////////////////////////////////
 			if(RTPSession.rtpDebugLevel > 15) {

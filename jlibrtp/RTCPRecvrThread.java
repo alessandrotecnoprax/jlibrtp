@@ -43,6 +43,26 @@ public class RTCPRecvrThread extends Thread   {
 					rrPkt.decodeRRPkt(buf);
 					
 				}
+				else if(header.getPktType() == 202)
+				{
+					System.out.println("The SDES pkt has been received");
+					RTCPSDESHeader sdesPkt = new RTCPSDESHeader(buf);
+					sdesPkt.decode();
+					System.out.println("The CNAME rcvd is ="+sdesPkt.CNAME);
+					System.out.println("The SSRC rcvd is ="+sdesPkt.ssrc);
+				
+					Participant P = (Participant) session.rtpSession.participantTable.get(new String(sdesPkt.CNAME));
+					if(P != null && P.ssrc !=  -1)
+					{
+						System.out.println("The Newly selected Participant CNAME="+P.cname);
+						//P.setSSRC(sdesPkt.ssrc);
+						((Participant) session.rtpSession.participantTable.get(new String(sdesPkt.CNAME))).setSSRC(sdesPkt.ssrc);
+						
+					}
+					
+					
+					
+				}
 				s.leaveGroup(InetAddress.getByName(group));
 				s.close();
 			}

@@ -15,7 +15,7 @@ public class RTCPRRSendThread implements Signalable
 	{
 		this.rtcpSession = rtcpSession;
 		this.rtcpPort = rtcpPort;
-		Timer t = new Timer(3000,this);
+		Timer t = new Timer(8000,this);
 		t.startTimer();
 	}
 	
@@ -27,14 +27,14 @@ public class RTCPRRSendThread implements Signalable
 		 while(set.hasMoreElements()) 
 		 {
 			 Participant p = (Participant)set.nextElement();
-			
-			 System.out.println("The SSRC in RR Thread SSRC="+p.ssrc);
+	
 			 if(rrRpt.containsKey(new Long(p.ssrc)))
 			 {
 				 RTCPRRPkt rrPkt= (RTCPRRPkt) rrRpt.get(new Long(p.ssrc));
-				 
-				 byte[] rawRRPkt = rrPkt.encodeRRPkt(rtcpSession.rtpSession.ssrc);
-				 System.out.println("The RR DAta is being sent to SSRC of the participant="+p.ssrc);	 
+		//	 RTCPRRPkt rrPkt= new RTCPRRPkt(p.ssrc);
+				 byte[] rawRRPkt = rrPkt.encodeRRPkt();
+	//			 System.out.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+	//			 System.out.println("The RR DAta is being sent to SSRC of the participant="+p.ssrc);	 
 				 //////////////////////////////////////////////////////////////////////////
 				 
 					
@@ -66,7 +66,7 @@ public class RTCPRRSendThread implements Signalable
 		 }
 		 
 		 
-		Timer t = new Timer(30,this);
+		Timer t = new Timer(8000,this);
 		t.startTimer();
 	}
 

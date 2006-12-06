@@ -61,14 +61,15 @@ public class RTCPRRPkt
 		return this.packetslost;
 	}
 	
-	byte[] encodeRRPkt(long reporterSSRC)
+	byte[] encodeRRPkt()
 	{
+		 
 		byte[] firstLine = commonHdr.writeFristLine();
 		
 		System.arraycopy(firstLine, 0, this.rawRRPkt,0,32);
 		
 		
-		byte[] reporterSSRCArry = longToBin(reporterSSRC);
+		byte[] reporterSSRCArry = longToBin(this.ssrc);
 		System.arraycopy(reporterSSRCArry, 0, this.rawRRPkt, 32, 32);
 		
 		byte[] reporteeSSRCArry = longToBin(this.ssrc);
@@ -82,7 +83,8 @@ public class RTCPRRPkt
 		byte[] lsrArry = longToBin(this.getLSR());
 		System.arraycopy(lsrArry, 0, this.rawRRPkt, 128, 32);
 		
-		byte[] dlsrArry = longToBin(this.getDLSR());
+//		byte[] dlsrArry = longToBin(this.getDLSR());
+		byte[] dlsrArry = longToBin(32323232);
 		System.arraycopy(dlsrArry, 0, this.rawRRPkt, 160, 32);
 		
 		return this.rawRRPkt;
@@ -94,7 +96,20 @@ public class RTCPRRPkt
 	{
 		byte[] reporterSSRCArry = new byte[32]; 
 			System.arraycopy(rcvdPkt,32,reporterSSRCArry, 0, 32);
+		
 		System.out.println("The Reported SSRC="+longBin2Dec(reporterSSRCArry));
+		
+		byte[] reporteeSSRCArry = new byte[32];
+		System.arraycopy(rcvdPkt,64,reporteeSSRCArry, 0, 32);
+		System.out.println("The Reportee SSRC="+longBin2Dec(reporteeSSRCArry));
+		
+		byte[] cumPktLostArry = new byte[32];
+		System.arraycopy(rcvdPkt,96,cumPktLostArry, 0, 32);
+		System.out.println("The Cumulative Packet lost="+intBin2Dec(cumPktLostArry));
+		
+		byte[] lsrArry = new byte[32];
+		System.arraycopy(rcvdPkt,128,lsrArry, 0, 32);
+		System.out.println("The Last time Receiver Report sent="+longBin2Dec(lsrArry));
 	}
 	
 	public static byte[] longToBin(long srcPort)
