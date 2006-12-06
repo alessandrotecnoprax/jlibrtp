@@ -13,7 +13,7 @@ import java.util.concurrent.locks.*;
 import java.util.Random;
 
 public class RTPSession {
-	 final static public int rtpDebugLevel = 3;
+	 final static public int rtpDebugLevel = 1;
 	 // This thing ought to be indexed by SSRC, since that is what we'll be getting constantly.
 	 Hashtable participantTable = new Hashtable();
 	 
@@ -69,7 +69,12 @@ public class RTPSession {
 			appCallerThrd = new AppCallerThread(this, rtpApp);
 			recvThrd.start();
 		 	appCallerThrd.start();
-		 	
+		 	Random r = new Random();
+		 	this.ssrc = r.nextInt() % 1000;
+			 if(this.ssrc < 0)
+			 {
+				 this.ssrc = this.ssrc * -1;
+			 }
 		 	return 0;
 		}
 	}
@@ -113,20 +118,35 @@ public class RTPSession {
 	 }
 	
 	 
-	public void addParticipant(Participant p) {
-		System.out.println(" P ="+p+" p.cname="+p.cname);
+	public long addParticipant(Participant p) {
+		if(RTPSession.rtpDebugLevel > 1) {
+		System.out.println("While Adding Participant P ="+p+" p.ssrc="+p.ssrc);
+		}
 	//	p.setSSRC(p.cname.hashCode());
-	//	participantTable.put(nextPartId++, p);
-		participantTable.put(new String(p.cname), p);
-	//	participantTable.put(new Long(p.ssrc), p);
+		nextPartId++;
+		Random r = new Random();
+		
+		//p.ssrc =nextPartId ;
+		 p.ssrc = r.nextInt()%1000;
+		 if(p.ssrc < 0)
+		 {
+			 p.ssrc = p.ssrc * -1;
+		 }
+		// this.ssrc = p.ssrc;
+		participantTable.put(p.ssrc, p);
+
+		//	participantTable.put(new String(p.cname), p);
+		participantTable.put(new Long(p.ssrc), p);
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPSession.addParticipant( " + p.getInetAddress().toString() + ")");
 		}
 		
-		RTCPRRPkt partReport = new RTCPRRPkt(p.ssrc);
+		RTCPRRPkt partReport = new RTCPRRPkt(new Long(p.ssrc));
 		
 	//	System.out.println("VVVVVVVVVVVVVVVVVVV the put SSRC="+p.ssrc);
 		this.recvThrd.RTCPRecvRptTable.put(new Long(p.ssrc), partReport);
+		
+		return p.ssrc;
 	}
 	
 	 void removeParticipant(Participant p) {

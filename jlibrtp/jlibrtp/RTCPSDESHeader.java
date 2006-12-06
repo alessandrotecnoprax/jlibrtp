@@ -37,7 +37,7 @@ public class RTCPSDESHeader implements Signalable
 	
 		sendSDESPkt();
 		
-		Timer t = new Timer(1000,this);
+		Timer t = new Timer(10000,this);
 		t.startTimer();
 	
 	}
@@ -49,7 +49,7 @@ public class RTCPSDESHeader implements Signalable
 		byte[] firstLine = commonHdr.writeFristLine();
 		
 		System.arraycopy(firstLine, 0, this.rawSDESPkt,0,32);
-		
+		System.out.println("The SSRC in SDES Msg is SSRC="+this.ssrc);
 		byte[] reporteeSSRCArry = longToBin(this.ssrc);
 		System.arraycopy(reporteeSSRCArry, 0, this.rawSDESPkt, 32, 32);
 		
@@ -75,7 +75,9 @@ public class RTCPSDESHeader implements Signalable
 			      					 InetAddress.getByName(group), port);
 
 			      s.send(pack);
+			      if(RTPSession.rtpDebugLevel > 1) {
 			      System.out.println("The SDES packet has been sent out port"+port);
+			      }
 			      s.close();
 	      }
 	      catch(Exception e)
@@ -209,7 +211,7 @@ public class RTCPSDESHeader implements Signalable
 	public void signalTimeout() {
 
 		sendSDESPkt();
-		Timer t = new Timer(1000,this);
+		Timer t = new Timer(10000,this);
 		t.startTimer();
 
 		

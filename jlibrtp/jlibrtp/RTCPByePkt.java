@@ -117,9 +117,9 @@ public class RTCPByePkt
 	       }
 	       v = v / 2;
 	    }
-	    for(int i=0;i<ccount;i++)
-	    	System.out.print(bd[i]);
-	    
+	    for(int i=0;i<ccount;i++){
+	    //	System.out.print(bd[i]);
+	    }
 	 //   System.out.println("The ccount="+ccount);
 		
 		if(ccount<32)

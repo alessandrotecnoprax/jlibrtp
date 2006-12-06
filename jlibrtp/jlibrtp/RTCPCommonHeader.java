@@ -18,7 +18,7 @@ public class RTCPCommonHeader
 		byte[] pktypebuf = new byte[8];
 		System.arraycopy(rtcpPktbuf,8, pktypebuf,0,8);
 		this.pktType = bin2dec(pktypebuf);
-		System.out.println("The data decoded in construct ="+pktypebuf[0]+" "+pktypebuf[1]+" "+pktypebuf[2]+" "+pktypebuf[3]+pktypebuf[4]+" "+pktypebuf[5]+" "+pktypebuf[6]+" "+pktypebuf[7]);
+	//	System.out.println("The data decoded in construct ="+pktypebuf[0]+" "+pktypebuf[1]+" "+pktypebuf[2]+" "+pktypebuf[3]+pktypebuf[4]+" "+pktypebuf[5]+" "+pktypebuf[6]+" "+pktypebuf[7]);
 		
 		byte[] pkLen = new byte[16];
 		System.arraycopy(rtcpPktbuf,16, pkLen,0,16);
@@ -197,9 +197,9 @@ public class RTCPCommonHeader
 	       }
 	       v = v / 2;
 	    }
-	    for(int i=0;i<ccount;i++)
+	   /* for(int i=0;i<ccount;i++)
 	    	System.out.print(bd[i]);
-	    
+	    */
 
 		
 		if(ccount<5)
@@ -225,7 +225,7 @@ public class RTCPCommonHeader
 	
 	public  byte[] pkType(int srcPort)
 	{
-		System.out.println("The Pkt Type ="+srcPort);
+	//	System.out.println("The Pkt Type ="+srcPort);
 //		srcPort = 20;
 		byte srcPortByte[] = new byte[8];
 		for(int i=0;i<8;i++)
@@ -257,9 +257,9 @@ public class RTCPCommonHeader
 	       }
 	       v = v / 2;
 	    }
-	    for(int i=0;i<ccount;i++)
+	   /* for(int i=0;i<ccount;i++)
 	    	System.out.print(bd[i]);
-	    
+	    */
 
 		
 		if(ccount<8)
@@ -278,7 +278,9 @@ public class RTCPCommonHeader
 				srcPortByte[i]=bd[i];
 			}
 		}
+		if(RTPSession.rtpDebugLevel > 1) {
 		System.out.println("The data  PkT sent ="+srcPortByte[0]+" "+srcPortByte[1]+" "+srcPortByte[2]+" "+srcPortByte[3]+srcPortByte[4]+" "+srcPortByte[5]+" "+srcPortByte[6]+" "+srcPortByte[7]);
+		}
 	    return srcPortByte;
 	
 	}

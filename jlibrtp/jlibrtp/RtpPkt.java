@@ -256,7 +256,6 @@ public class RtpPkt {
 	
 	public int setCsrcs(long[] contributors) {
 		if(contributors.length <= 16) {
-			rawPktCurrent = false;
 			csrcArray = contributors;
 			return 0;
 		} else {
