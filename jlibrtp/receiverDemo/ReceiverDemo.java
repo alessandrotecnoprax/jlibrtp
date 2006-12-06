@@ -10,6 +10,8 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import java.util.concurrent.locks.*;
+
 import jlibrtp.*;
 
 
@@ -20,17 +22,29 @@ public class ReceiverDemo implements RTPAppIntf {
 	private final int EXTERNAL_BUFFER_SIZE = 1024; // 1 Kbyte
 	byte[] abData = null;
 	int nBytesRead = 0;
-	static int pktCount = 0;
+	int pktCount = 0;
+	int offsetCount = 0;
 	SourceDataLine auline;
 	
-	enum Position {
+	final public Lock dataLock = new ReentrantLock();
+	final public Condition dataReady = dataLock.newCondition();
+	
+	 enum Position {
 		LEFT, RIGHT, NORMAL
 	};
 
 	public void receiveData(byte[] data, String cname, long time) {
-		String str = new String(data);
-		System.out.println("Received data! + + pktCount : " + pktCount);
+		//System.out.println("pktCount:" + pktCount + " length:"  + data.length + " hash:" + data[0] + data[2]);
+		auline.write(data, 0, data.length);
 		pktCount++;
+		//System.out.println("pktcount:" + pktCount + "  " + auline.getBufferSize() + " " + auline.available() );
+		//if(pktCount == 1562) {
+		//	System.out.println("Received 1562 packets");
+		//}
+		//dataLock.lock();
+	    //try { dataReady.signalAll(); } finally {
+	    //	dataLock.unlock();
+	    //}
 	}
 	
 	public ReceiverDemo(String CNAME,int recvPort)  {
@@ -63,7 +77,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	public void doStuff() {
 		System.out.println("-> ReceiverDemo.doStuff()");
 		AudioFormat.Encoding encoding =  new AudioFormat.Encoding("PCM_SIGNED");
-		AudioFormat format = new AudioFormat(encoding,((float) 44100.0), 16, 2, 4, ((float) 44100.0) ,false);
+		AudioFormat format = new AudioFormat(encoding,((float) 8000.0), 16, 1, 2, ((float) 8000.0) ,false);
 		System.out.println(format.toString());
 		auline = null;
 		DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
@@ -91,15 +105,15 @@ public class ReceiverDemo implements RTPAppIntf {
 		auline.start();
 		try {
 			while (nBytesRead != -1) {
-				//System.out.println("n");
-				if(nBytesRead > 0) {
-					auline.write(abData, 0, nBytesRead);
-					nBytesRead = 0;
+				if(abData != null) {
+					auline.write(abData, 0, abData.length);
+					abData = null;
 				}
 				try {
-					Thread.currentThread().sleep(1000);
-				} catch(Exception e) {
-					System.out.println("ah. disaster.");
+					dataLock.lock();
+					try { dataReady.await(); } catch (Exception e) {};
+				} finally {
+					dataLock.unlock();
 				}
 			}
 		} finally {

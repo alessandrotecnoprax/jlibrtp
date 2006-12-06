@@ -9,7 +9,7 @@ package jlibrtp;
  * have a max waiting period equal to how often we need to push data.
  */
 import java.util.Enumeration;
-
+import java.util.concurrent.TimeUnit;
 
 public class AppCallerThread extends Thread {
 	RTPSession session;
@@ -36,7 +36,7 @@ public class AppCallerThread extends Thread {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
 		    	// We can add timeout to this
-		    	try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+		    	try { session.pktBufDataReady.await(5, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
 				if(RTPSession.rtpDebugLevel > 15) {
 					System.out.println("<-> AppCallerThread waking up");
 				}
@@ -45,7 +45,7 @@ public class AppCallerThread extends Thread {
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					if(p.isSender() && p.pktBuffer != null && p.pktBuffer.frameIsReady()) {
+					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
 					}
