@@ -26,7 +26,7 @@ public class TestRTPSession implements RTPAppIntf {
 		//p.setSSRC(CNAME.hashCode());
 		//p.setIsSender();
 	long x =	rtpSession.addParticipant(p);		
-		rtpSession.startRTCPSession(6000);
+		rtpSession.startRTCPSession(6001);
 	//	rtpSession.requestBYE("ABCD");
 	
 	}
