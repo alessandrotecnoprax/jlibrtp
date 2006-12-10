@@ -1,5 +1,24 @@
 package jlibrtp;
 /**
+ * Java RTP Library
+ * Copyright (C) 2006 Arne Kepp
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+/**
  * These functions are ridiculously expensive, better way?
  * 
  * Thought: Only return array for the specific character, combine arrays once outside of these functions.
@@ -38,44 +57,15 @@ public class StaticProcs {
 		arr[1] = lowMidOrder;
 		arr[2] = highMidOrder;
 		arr[3] = highOrder;
-		int start = 0;
 		
-		// From http://www.captain.at/howto-java-convert-binary-data.php
-		int i = 0;
-		int len = 4;
-		int cnt = 0;
-		byte[] tmp = new byte[len];
-		for (i = start; i < (start + len); i++) {
-			tmp[cnt] = arr[i];
-			cnt++;
-		}
 		long accum = 0;
-		i = 0;
-		for ( int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
-			accum |= ( (long)( tmp[i] & 0xff ) ) << shiftBy;
+		int i = 0;
+		for (int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
+			accum |= ( (long)( arr[i] & 0xff ) ) << shiftBy;
 			i++;
 		}
 		return accum;
-		
-		/** This can have issues.
-		System.out.println("test");
-		long temp = highOrder;
-		System.out.println(temp);
-		temp = (temp << 8);
-		System.out.println(temp);
-		temp |= highMidOrder;
-		System.out.println(temp);
-		temp = (temp << 8);
-		System.out.println(temp);
-		temp |= lowMidOrder;
-		System.out.println(temp);
-		temp = (temp << 8);
-		System.out.println(temp);
-		temp |= lowOrder;
-		System.out.println(temp);
-		return temp;
-		**/
-		}
+	}
 
 		
 	public static long combineChars(char highOrder, char lowOrder) {
