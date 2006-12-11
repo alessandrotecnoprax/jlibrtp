@@ -22,19 +22,12 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Enumeration;
 import java.util.Hashtable;
 
 
 public class RTPReceiverThread extends Thread {
 	RTPSession session = null;
-	long rcvdTimeStamp = -1;
-	 
-	Hashtable RTCPRecvRptTable = new Hashtable();
-	 
+	
 	RTPReceiverThread(RTPSession session) {
 		this.session = session;
 		//udpSock = session.udpSock;
@@ -45,9 +38,8 @@ public class RTPReceiverThread extends Thread {
 	}
 	
 	public void run() {
-		int pktCount = 0;
 		if(RTPSession.rtpDebugLevel > 1) {
-			 System.out.println("-> RTPReceiverThread.run() listening on " + session.udpSock.getLocalPort() );
+			 System.out.println("-> RTPReceiverThread.run() listening on " + session.rtpSock.getLocalPort() );
 		}
 		
 		while(!session.endSession) {
@@ -55,20 +47,17 @@ public class RTPReceiverThread extends Thread {
 	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
 	       
 	       if(RTPSession.rtpDebugLevel > 6) {
-	    	   System.out.println("-> RTPReceiverThread.run() waiting for packet on " + session.udpSock.getLocalPort() );
+	    	   System.out.println("-> RTPReceiverThread.run() waiting for packet on " + session.rtpSock.getLocalPort() );
 	       }
 	       
 	       try {
-	    	   session.udpSock.receive(packet);
+	    	   session.rtpSock.receive(packet);
 	       } catch (IOException e) {
 	    	   e.printStackTrace();
 	       }
 	       byte[] slicedPkt = new byte[packet.getLength()];
 	       System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
 	       RtpPkt pkt = new RtpPkt(slicedPkt);
-		
-	       //System.out.println("" + pkt.getTimeStamp());
-	       //session.appIntf.receiveData(pkt.getPayload(), "junk", 1);
 	       
 	       if(RTPSession.rtpDebugLevel > 6) {
 	    	   System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
@@ -79,12 +68,13 @@ public class RTPReceiverThread extends Thread {
 	    	   System.out.println("-> RTPReceiverThread.run() payload is " + str );
 	       }
 	       
-	       Participant part = session.lookupSsrc(pkt.getSsrc());
+	       Participant part = session.partDb.getParticipant(pkt.getSsrc());
 	       
 	       if(part == null) {
 	    	   System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
 	    	   part = new Participant(packet.getAddress(),packet.getPort(),pkt.getSsrc());
 	    	   session.addParticipant(part);
+	    	   part.lastRecvSeqNumber = pkt.getSeqNumber();
 	       }
 	       
 	       // Do checks on whether the datagram came from the right source.
@@ -102,29 +92,22 @@ public class RTPReceiverThread extends Thread {
 	    		   part.pktBuffer = pktBuffer;
 	    	   }
 	       }
-	       
-	       //System.out.println("-->" + pkt.getSeqNumber() + " " + packet.getLength() + " " + pktCount++ +" " + part.pktBuffer.length);
-	       
-	       /////////////////////////////////////////////////////////
-	       RTCPRRPkt rr = (RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc);
-	       if(pkt.getSeqNumber() != (rr.getExtHighSeqNumRcvd()+1))
-	       {
-	    	   //rr.incPktLostCount();
-	    	   ((RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc)).incPktLostCount();
-	       }
-	       //rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
-	       ((RTCPRRPkt)RTCPRecvRptTable.get(part.ssrc)).setExtHighSeqNumRcvd(pkt.getSeqNumber());
-	       
-	       
-	       ///////////////////////////////////////////////////////////
+	      
+	      	// Statistics for receiver report.
+	      	part.lostPktCount += pkt.getSeqNumber() - part.lastRecvSeqNumber;
+	      	part.octetCount += pkt.getPayloadLength();
+	      	part.lastRecvSeqNumber = pkt.getSeqNumber();
+	      	part.lastRecvTimeStamp = pkt.getTimeStamp();
+
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
+			
 	       // Signal the thread that pushes data to application
 			session.pktBufLock.lock();
 		    try { session.pktBufDataReady.signalAll(); } finally {
 		       session.pktBufLock.unlock();
-		     }
+		    }
 		 
 		}
 	}

@@ -32,14 +32,14 @@ import java.lang.String;
 import jlibrtp.*;
 
 public class SenderDemo implements RTPAppIntf  {
-	RTPSession rtpSession = null;
+	public RTPSession rtpSession = null;
 	static int pktCount = 0;
 	private String filename;
 	private final int EXTERNAL_BUFFER_SIZE = 320; // 1 kbyte
 	
 	public SenderDemo(String CNAME,int recvPort)  {
 		try {
-			rtpSession = new RTPSession(recvPort, CNAME);
+			rtpSession = new RTPSession(recvPort, recvPort +1, CNAME);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port: " + recvPort);
 		}
@@ -49,21 +49,28 @@ public class SenderDemo implements RTPAppIntf  {
 			System.out.println("Couldn't register");
 		}
 		//public Participant(String sendingHost,int port,String CNAME)
-		Participant p = new Participant("127.0.0.1", 4545, "Receiver");
-		rtpSession.addParticipant(p);
 	}
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		for(int i=0;i<args.length;i++) {
+			System.out.println("args["+i+"]" + args[i]);
+		}
+		if(args.length < 4) {
+			System.out.println("Please specify filename, ip-address and ports.");
+		} else {
 		// TODO Auto-generated method stub
 		System.out.println("Setup");
-		SenderDemo aDemo = new SenderDemo("Sender",4546);
+		SenderDemo aDemo = new SenderDemo("Sender",4547);
+		Participant p = new Participant(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]), "Receiver");
+		aDemo.rtpSession.addParticipant(p);
 		//aDemo.filename = "/usr/share/sounds/login.wav";
-		aDemo.filename = "/home/ak/test.wav";
+		aDemo.filename = args[0];
 		aDemo.run();
 		System.out.println("pktCount: " + pktCount);
+		}
 	}
 	
 	public void receiveData(byte[] dummy1, String dummy2, long dummy3) {

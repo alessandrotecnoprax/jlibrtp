@@ -89,22 +89,22 @@ public class RTCPRRPkt
 		System.arraycopy(firstLine, 0, this.rawRRPkt,0,32);
 		
 		System.out.println("The Session SSRC="+this.ssrc+" The Participant SSRC="+reporteeSSRC);
-		byte[] reporterSSRCArry = longToBin(this.ssrc);
+		byte[] reporterSSRCArry = StaticProcs.longToBin(this.ssrc);
 		System.arraycopy(reporterSSRCArry, 0, this.rawRRPkt, 32, 32);
 		
-		byte[] reporteeSSRCArry = longToBin(reporteeSSRC);
+		byte[] reporteeSSRCArry = StaticProcs.longToBin(reporteeSSRC);
 		System.arraycopy(reporteeSSRCArry, 0, this.rawRRPkt, 64, 32);
 		
 		//// Left the calculation of the loss fraction. The pkt Lost is full 32 bits
-		byte[] cumPktLostArry = intToBin(this.getPktLostCount());
+		byte[] cumPktLostArry = StaticProcs.intToBin(this.getPktLostCount());
 		System.arraycopy(cumPktLostArry, 0, this.rawRRPkt, 96, 32);
 		
 		//// Left out Interval Jitter for now
-		byte[] lsrArry = longToBin(this.getLSR());
+		byte[] lsrArry = StaticProcs.longToBin(this.getLSR());
 		System.arraycopy(lsrArry, 0, this.rawRRPkt, 128, 32);
 		
-//		byte[] dlsrArry = longToBin(this.getDLSR());
-		byte[] dlsrArry = longToBin(32323232);
+		// byte[] dlsrArry = longToBin(this.getDLSR());
+		byte[] dlsrArry = StaticProcs.longToBin(32323232);
 		System.arraycopy(dlsrArry, 0, this.rawRRPkt, 160, 32);
 		
 		return this.rawRRPkt;
@@ -117,191 +117,18 @@ public class RTCPRRPkt
 		byte[] reporterSSRCArry = new byte[32]; 
 			System.arraycopy(rcvdPkt,32,reporterSSRCArry, 0, 32);
 		
-		System.out.println("The Reported SSRC="+longBin2Dec(reporterSSRCArry));
+		System.out.println("The Reported SSRC="+StaticProcs.longBin2Dec(reporterSSRCArry));
 		
 		byte[] reporteeSSRCArry = new byte[32];
 		System.arraycopy(rcvdPkt,64,reporteeSSRCArry, 0, 32);
-		System.out.println("The Reportee SSRC="+longBin2Dec(reporteeSSRCArry));
+		System.out.println("The Reportee SSRC="+StaticProcs.longBin2Dec(reporteeSSRCArry));
 		
 		byte[] cumPktLostArry = new byte[32];
 		System.arraycopy(rcvdPkt,96,cumPktLostArry, 0, 32);
-		System.out.println("The Cumulative Packet lost="+intBin2Dec(cumPktLostArry));
+		System.out.println("The Cumulative Packet lost="+StaticProcs.intBin2Dec(cumPktLostArry));
 		
 		byte[] lsrArry = new byte[32];
 		System.arraycopy(rcvdPkt,128,lsrArry, 0, 32);
-		System.out.println("The Last time Receiver Report sent="+longBin2Dec(lsrArry));
-	}
-	
-	public static byte[] longToBin(long srcPort)
-	{
-		byte srcPortByte[] = new byte[32];
-		for(int i=0;i<32;i++)
-			srcPortByte[i]=0;
-
-	
-	
-	
-	    long N = Long.parseLong((new Long(srcPort)).toString());
-	    int ccount=0;
-	    byte bd[]= new byte[32];
-	    // find largest power of two that is less than or equal to N
-	    int v = 1;
-	    while (v <= N/2)
-	        v = v * 2;
-	
-	    // cast out powers of 2 
-	    while (v > 0) {
-	       if (N < v)
-	       {
-	    	//   System.out.print(0);
-	    	   bd[ccount++]=(byte) 0;
-	       }
-	       else
-	       {
-	    	//   System.out.print(1); 
-	    	   N = N - v;
-	    	   bd[ccount++]=(byte) 1;
-	       }
-	       v = v / 2;
-	    }
-	   /* for(int i=0;i<ccount;i++)
-	    	System.out.print(bd[i]);
-	    */
-
-		
-		if(ccount<32)
-		{
-
-			for(int i=(32-ccount),cc=0;i<32;i++)
-			{
-			//	srcPortByte[i]=bd[i-1];
-				srcPortByte[i]=bd[cc++];
-			}
-		}
-		else
-		{
-			for(int i=0;i<32;i++)
-			{
-				srcPortByte[i] = bd[i];
-			}
-		}
-		
-	    return srcPortByte;
-	
-	}
-	
-	
-	static long longBin2Dec(byte[] bin)   
-	{
-	  int  b, k, m, n;
-	  int  len;
-	  long sum = 0;
-	 
-	  len = bin.length - 1;
-	  for(k = 0; k <= len; k++) 
-	  {
-	    //n = (bin[k] - '0'); // char to numeric value
-		  n = (bin[k] ); // char to numeric value
-	    if ((n > 1) || (n < 0)) 
-	    {
-	      System.out.println("\n\n ERROR! BINARY has only 1 and 0!\n");
-	      return (0);
-	    }
-	    for(b = 1, m = len; m > k; m--) 
-	    {
-	      // 1 2 4 8 16 32 64 ... place-values, reversed here
-	      b *= 2;
-	    }
-	    // sum it up
-	    sum = sum + n * b;
-	    //printf("%d*%d + ",n,b);  // uncomment to show the way this works
-	  }
-	  return(sum);
-	}
-
-	public static byte[] intToBin(int srcPort)
-	{
-		byte srcPortByte[] = new byte[32];
-		for(int i=0;i<32;i++)
-			srcPortByte[i]=0;
-
-	
-	
-	
-	    int N = Integer.parseInt((new Integer(srcPort)).toString());
-	    int ccount=0;
-	    byte bd[]= new byte[32];
-	    // find largest power of two that is less than or equal to N
-	    int v = 1;
-	    while (v <= N/2)
-	        v = v * 2;
-	
-	    // cast out powers of 2 
-	    while (v > 0) {
-	       if (N < v)
-	       {
-	    	//   System.out.print(0);
-	    	   bd[ccount++]=(byte) 0;
-	       }
-	       else
-	       {
-	    	//   System.out.print(1); 
-	    	   N = N - v;
-	    	   bd[ccount++]=(byte) 1;
-	       }
-	       v = v / 2;
-	    }
-	    for(int i=0;i<ccount;i++)
-	    	System.out.print(bd[i]);
-	    
-
-		
-		if(ccount<32)
-		{
-
-			for(int i=(32-ccount),cc=0;i<32;i++)
-			{
-			//	srcPortByte[i]=bd[i-1];
-				srcPortByte[i]=bd[cc++];
-			}
-		}
-		else
-		{
-			for(int i=0;i<32;i++)
-			{
-				srcPortByte[i] = bd[i];
-			}
-		}
-		
-	    return srcPortByte;
-	
-	}
-	
-	static int intBin2Dec(byte[] bin)   
-	{
-	  int  b, k, m, n;
-	  int  len;
-	  int sum = 0;
-	 
-	  len = bin.length - 1;
-	  for(k = 0; k <= len; k++) 
-	  {
-	    //n = (bin[k] - '0'); // char to numeric value
-		  n = (bin[k] ); // char to numeric value
-	    if ((n > 1) || (n < 0)) 
-	    {
-	      System.out.println("\n\n ERROR! BINARY has only 1 and 0!\n");
-	      return (0);
-	    }
-	    for(b = 1, m = len; m > k; m--) 
-	    {
-	      // 1 2 4 8 16 32 64 ... place-values, reversed here
-	      b *= 2;
-	    }
-	    // sum it up
-	    sum = sum + n * b;
-	    //printf("%d*%d + ",n,b);  // uncomment to show the way this works
-	  }
-	  return(sum);
+		System.out.println("The Last time Receiver Report sent="+StaticProcs.longBin2Dec(lsrArry));
 	}
 }

@@ -35,19 +35,7 @@ public class RtpPkt {
 	// Contains the actual data (eventually)
 	private byte[] rawPkt = null;
 	private byte[] payload = null;
-	/// BIG QUESTIONS
-	// -2 How to deal when buffer has not been parsed
-	// force it under instanciation? YES
-	// How do we deal with padding internally in Java.
-	// Are all codecs using complete bytes? Fixed length?
-	// 1) Should padding be calculated dynamically
-	// 2) Payload types, should it be more than a integer here?
-	// 3) Which ones of these should be smaller?
-	// bool is actually a 32 bit integer, using only one bit
-	// byte is 8 bit, 2s complement, short is 16 bit, int is 32 bit
-	// Could use char for 16 bit unsigned, lots of casting though
-	// 4) Offer to do sequence number and time internally?
-	//
+
 	/**
 	 * Construct an empty packet.
 	 *  @return An empty packet.
@@ -230,15 +218,9 @@ public class RtpPkt {
 			marker = 0;
 		}
 	}
-	
 	//public int setHeaderExtension() {
 	//TODO
-	//}
-	
-	//public int settCsrcCount() {
-	// Dynamically set
-	//}
-	
+	//}	
 	public int setPayloadType(int plType) {
 		int temp = (plType & 0x0000007F); // 7 bits
 		//System.out.println("PayloadType: " + plType + " temp:" + temp);
@@ -363,16 +345,12 @@ public class RtpPkt {
 		seqNumber += (int) rawPkt[3];
 	}
 	private void sliceTimeStamp() {
-		//System.out.println("sliceTimeStamp:" + rawPkt[7]);
 		timeStamp = StaticProcs.combineBytes(rawPkt[4],rawPkt[5],rawPkt[6],rawPkt[7]);
 	}
 	private void sliceSSRC() {
-		//System.out.println("sliceSSRC:" + rawPkt[11]);
 		ssrc = StaticProcs.combineBytes(rawPkt[8],rawPkt[9],rawPkt[10],rawPkt[11]);
-
 	}
 	private void  sliceCSRCs() {
-		// TODO add checks that the buffer is big enough
 		for(int i=0; i< csrcArray.length; i++) {
 			ssrc = StaticProcs.combineBytes(rawPkt[i*4 + 12],rawPkt[i*4 + 13],rawPkt[i*4 + 14],rawPkt[i*4 + 15]);
 		}

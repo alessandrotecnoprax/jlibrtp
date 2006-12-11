@@ -18,39 +18,45 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.MulticastSocket;
 
 public class RTCPSession {
-	int rtcpPort = 0;
 	RTPSession rtpSession = null;
+	DatagramSocket rtcpSock = null;
+	MulticastSocket mcsocket = null;
+	boolean useMulticast = false;
 	
-	RTCPBYESenderThread byeThread = null;
+	
+	//RTCPBYESenderThread byeThread = null;
 	RTCPRecvrThread recvThread = null;
 	RTCPRRSendThread rrSendThread = null;
-	RTCPSDESHeader sdesThread = null;
+	//RTCPSDESHeader sdesThread = null;
 	
-	RTCPSession(int rtcpPort, RTPSession rtpSession) {
-		this.rtcpPort = rtcpPort;
+	RTCPSession(RTPSession rtpSession) {
+		//this.rtcpPort = rtcpPort;
 		this.rtpSession = rtpSession;
-		byeThread = new RTCPBYESenderThread(rtcpPort,this);
-		this.recvThread = new RTCPRecvrThread(rtcpPort,this);
-		
-		this.rrSendThread = new RTCPRRSendThread(rtcpPort,this);
-		this.sdesThread = new RTCPSDESHeader(rtcpPort,this);
-		
-		this.recvThread.start();	
+		this.rtcpSock = rtpSession.rtcpSock;
+		// We don't need a bye-thread running constantly.
+		// byeThread = new RTCPBYESenderThread(rtcpPort,this);
+		this.recvThread = new RTCPRecvrThread(this);
+		this.rrSendThread = new RTCPRRSendThread(this);
+		//this.sdesThread = new RTCPSDESHeader(this);
+		this.recvThread.start();
+		this.rrSendThread.start();
 	}
 	
-	RTPSession getRTPSession() {
-		return this.rtpSession;
-	}
-	
-	void requestBYE(int ssrc) {
-		System.out.println("BYE Request rcvd");
-		long [] ssrcArray = new long[1];
-		ssrcArray[0] = ssrc;
-		
-		RTCPByePkt byePkt = new RTCPByePkt(1,ssrcArray);		
-		byeThread.sendBYEMsg(byePkt);
+	// Arne: Not sure what this does, should loop over database and send byes.
+	//void requestBYE(int ssrc) {
+	//	System.out.println("BYE Request rcvd");
+	//	long [] ssrcArray = new long[1];
+	//	ssrcArray[0] = ssrc;
+
+	//	RTCPByePkt byePkt = new RTCPByePkt(1,ssrcArray);		
+	//	byeThread.sendBYEMsg(byePkt);
+	//}
+	synchronized void sendPkt(Participant p, byte[] rawPkt) {
+		//Do nothing.
 	}
 }
