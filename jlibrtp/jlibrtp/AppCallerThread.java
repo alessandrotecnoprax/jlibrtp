@@ -55,12 +55,24 @@ public class AppCallerThread extends Thread {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
 		    	// We can add timeout to this
-		    	try { session.pktBufDataReady.await(5, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+		    	//try { session.pktBufDataReady.await(5, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+				try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
 				if(RTPSession.rtpDebugLevel > 15) {
 					System.out.println("<-> AppCallerThread waking up");
 				}
 		    	// Next loop over all participants and check whether they have anything for us.
-				Enumeration set = session.participantTable.elements();
+				Enumeration set = session.partDb.getSenders();
+				while(set.hasMoreElements()) {
+					Participant p = (Participant)set.nextElement();
+					
+					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
+						DataFrame aFrame = p.pktBuffer.popOldestFrame();
+						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+					}
+				}
+		    	
+				// For now we accept data from unkown senders as well.
+				set = session.partDb.getUnknownSenders();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					

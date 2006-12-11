@@ -68,7 +68,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	
 	public ReceiverDemo(String CNAME,int recvPort)  {
 		try {
-			rtpSession = new RTPSession(recvPort, CNAME);
+			rtpSession = new RTPSession(recvPort, recvPort + 1, CNAME);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port: " + recvPort);
 		}

@@ -19,29 +19,28 @@ package jlibrtp;
  */
 
 
-
 import java.net.DatagramSocket;
+import java.net.MulticastSocket;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.nio.*;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.concurrent.locks.*;
 import java.util.Random;
 
 public class RTPSession {
 	 final static public int rtpDebugLevel = 1;
 	 // This thing ought to be indexed by SSRC, since that is what we'll be getting constantly.
-	 Hashtable participantTable = new Hashtable();
+	 //Hashtable participantTable = new Hashtable();
+	 
+	 ParticipantDatabase partDb = new ParticipantDatabase();
 	 
 	 // Unique ID for hash, only incremented.
 	 int nextPartId = 0;
 	 String CNAME = "";
-	 DatagramSocket udpSock = null;
+	 DatagramSocket rtpSock = null;
+	 DatagramSocket rtcpSock = null;
+	 MulticastSocket mcsocket = null;
 	 long ssrc;
-	 long timeStamp = 0;
+	 long lastTimestamp = 0;
 	 int seqNum = 0;
 	 
 	 RTPAppIntf appIntf = null;
@@ -62,19 +61,19 @@ public class RTPSession {
 	 
 	 // Only one registered application, please
 	 boolean registered = false;
+	 
 	 /**
-	  * Constructor
+	  * Constructors
 	  */
-	 public RTPSession(int aPort, String aCNAME) throws Exception {
-		 udpSock = new DatagramSocket(aPort);
+	 public RTPSession(int rtpPort, int rtcpPort, String aCNAME) throws Exception {
+		 rtpSock = new DatagramSocket(rtpPort);
+		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
-		 // SSRC can't be based on CNAME since CNAME is too likely to be reused
-		 Random r = new Random(System.currentTimeMillis());
-		/////////// ssrc = r.nextLong(); //////////////////vaishnav confirm
-		// ssrc = CNAME.hashCode();
 	 }
 	 
-	public int RTPSessionRegister(RTPAppIntf rtpApp) {
+	 // Add separate constructor for multicast
+	 
+	 public int RTPSessionRegister(RTPAppIntf rtpApp) {
 		if(registered) {
 			System.out.println("RTPSessionRegister(): Can\'t register another application!");
 			return -1;
@@ -88,12 +87,13 @@ public class RTPSession {
 			appCallerThrd = new AppCallerThread(this, rtpApp);
 			recvThrd.start();
 		 	appCallerThrd.start();
+		 	
+		 	// Set an SSRC
 		 	Random r = new Random();
-		 	this.ssrc = r.nextInt() % 1000;
-			 if(this.ssrc < 0)
-			 {
+		 	this.ssrc = r.nextInt();
+			if(this.ssrc < 0) {
 				 this.ssrc = this.ssrc * -1;
-			 }
+			}
 		 	return 0;
 		}
 	}
@@ -104,21 +104,21 @@ public class RTPSession {
 		}  
 		
 		// All this has to be changed to get from the participant table.
-		RtpPkt pkt = new RtpPkt(getTimeStamp(),ssrc,getNextSeqNum(),getPayLoadType(0),buf);
+		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),ssrc,getNextSeqNum(),getPayLoadType(0),buf);
 		
 		byte[] pktBytes = pkt.encode();
-		Enumeration set = participantTable.elements();
+		Enumeration set = partDb.getReceivers();
 			
 		while(set.hasMoreElements()) {
 			Participant p = (Participant)set.nextElement();
 
 			if(p.isReceiver()) {
 				if(RTPSession.rtpDebugLevel > 8) {
-					System.out.println("RTPSenderThread.sendData() Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getDestPort());
+					System.out.println("RTPSenderThread.sendData() Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
 				}
 				try {	
-					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getDestPort());
-					udpSock.send(packet);
+					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getRtpDestPort());
+					rtpSock.send(packet);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					System.out.println("RTPSession.sendData() - Possibly lost socket.");
@@ -137,91 +137,51 @@ public class RTPSession {
 	 }
 	
 	 
-	public long addParticipant(Participant p) {
+	public void addParticipant(Participant p) {
 		if(RTPSession.rtpDebugLevel > 1) {
-		System.out.println("While Adding Participant P ="+p+" p.ssrc="+p.ssrc);
-		}
-	//	p.setSSRC(p.cname.hashCode());
-		nextPartId++;
-		Random r = new Random();
+			System.out.println("<-> RTPSession.addParticipant("+p.cname+ ","+p.ssrc+")");
+		}		
 		
-		//p.ssrc =nextPartId ;
-		 p.ssrc = r.nextInt()%1000;
-		 if(p.ssrc < 0)
-		 {
-			 p.ssrc = p.ssrc * -1;
-		 }
-		// this.ssrc = p.ssrc;
-		participantTable.put(p.ssrc, p);
-
-		//	participantTable.put(new String(p.cname), p);
-		participantTable.put(new Long(p.ssrc), p);
-		if(RTPSession.rtpDebugLevel > 1) {
-			System.out.println("<-> RTPSession.addParticipant( " + p.getInetAddress().toString() + ")");
+		Participant tmp = null;
+		if(p.ssrc > 0) {
+			tmp = partDb.getParticipant(ssrc);
+			if(tmp != null) {
+				tmp.ssrc = p.ssrc;
+				tmp.isReceiver = p.isReceiver;
+				tmp.isSender = p.isSender;
+				
+				partDb.updateParticipant(tmp);
+			}
 		}
 		
-		RTCPRRPkt partReport = new RTCPRRPkt(new Long(p.ssrc));
+		// 
+		Participant tmp2 = null;
+		if(p.cname != null) {
+			tmp2 = partDb.getParticipant(p.cname);
+			if(tmp2 != null) {
+				tmp.cname = p.cname;
+				tmp.isReceiver = p.isReceiver;
+				tmp.isSender = p.isSender;
+				
+				partDb.updateParticipant(tmp2);
+			}
+		}
 		
-	//	System.out.println("VVVVVVVVVVVVVVVVVVV the put SSRC="+p.ssrc);
-		this.recvThrd.RTCPRecvRptTable.put(new Long(p.ssrc), partReport);
-		
-		return p.ssrc;
+		// This is actually a new one.
+		if(tmp == null && tmp2 == null) {
+			partDb.addParticipant(p);
+			
+			// Send messages with SDES.
+		}
 	}
 	
 	 void removeParticipant(Participant p) {
-		participantTable.remove(p);
+		partDb.removeParticipant(p);
 	}
-	 public Participant lookupSsrc(long ssrc) {
-		 Enumeration set = participantTable.elements();
-		 while(set.hasMoreElements()) {
-			 Participant p = (Participant)set.nextElement();
-			 if(p.ssrc == ssrc) {
-				 return p;
-			 }
-		 }
-		 return null;
-	 }
-	 ////Method that have been added //////////////////////////////////////////////
-	 public int numofParticipants()
-	 {
-		 return participantTable.size();
-	 }
 	 
-	 public Participant lookUPCNAME(String CNAME)
-	 {
-		/* Enumeration set = participantTable.elements();
-		 while(set.hasMoreElements()) {
-			 Participant p = (Participant)set.nextElement();
-			 System.out.println("The Participant CNAME="+p.cname+" The ssrc="+p.ssrc);
-			 if(p.cname.equalsIgnoreCase(CNAME) && (p.ssrc != 0)) {
-				 return p;
-			 }
-		 }
-		 return null;
-		 */
-		 
-		 if(participantTable.contains(new String(CNAME)))
-		 {
-			 return (Participant) participantTable.get(new String(CNAME));
-		 }
-		 return null;
+	 public void startRTCPSession() {
+		 rtcpSession = new RTCPSession(this);
 	 }
-	 
-	 public void startRTCPSession(int rtcpPort){
-		 rtcpSession = new RTCPSession(rtcpPort,this);
-	 }
-	 public void requestBYE(String CNAME) {
-		 if(rtcpSession == null) {
-			 System.out.println("The RTCPSession is null");
-			 return;
-		 }
-		 rtcpSession.requestBYE(CNAME.hashCode()); 
-	 }
-	 
-	 // Who wants this? Should provide functions to query.
-	 //Hashtable getParticipantDB()  {
-	 //	 return participantDB;
-	 //}
 
 	void endSession() {
 		this.endSession = true;
@@ -236,23 +196,11 @@ public class RTPSession {
 	}
 	
 	int getNextSeqNum() {
-		if(seqNum < 10000) {
-			seqNum++;
-			return seqNum;
-		} else {
-			seqNum = 1;
-			return seqNum;
+		seqNum++;
+		if(seqNum < 0) { 
+			seqNum = 0;
 		}
-	}
-	
-	long getTimeStamp() {
-		if(timeStamp < 10000) {
-			timeStamp++;
-			return timeStamp;
-		} else {
-			timeStamp = 1;
-			return timeStamp;
-		}
+		return seqNum;
 	}
 	
 	/* A mapping of the payload type to the payload number has to be provided*/

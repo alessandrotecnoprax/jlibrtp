@@ -24,8 +24,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class RTCPSDESHeader implements Signalable
-{
+public class RTCPSDESHeader {
 	int sdesid;
 	int length;
 	RTCPSession rtcpSession = null;
@@ -33,18 +32,17 @@ public class RTCPSDESHeader implements Signalable
 	byte[] rawSDESPkt = null;
 	String CNAME = null;
 	long ssrc = 0;
-	int rtcpPort = 0;
-	RTCPSDESHeader(byte[] buf)
-	{
+	
+	// For received packet, to be decoded
+	RTCPSDESHeader(byte[] buf) {
 		this.rawSDESPkt = buf;
 	}
 	
-	RTCPSDESHeader(int rtcpPort,RTCPSession session)
-	{
+	// For new packet, that we want to send.
+	RTCPSDESHeader(int rtcpPort, RTCPSession session) {
 		this.rtcpSession = session;
 		CNAME = this.rtcpSession.rtpSession.CNAME;
 		ssrc = this.rtcpSession.rtpSession.ssrc;
-		this.rtcpPort = rtcpPort;
 		
 		rawSDESPkt = new byte[32+32+CNAME.length()+32];
 		
@@ -55,74 +53,44 @@ public class RTCPSDESHeader implements Signalable
 		this.commonHdr.padding = 0;
 		this.commonHdr.pktLen = 32+32+CNAME.length()+32;
 	
-		sendSDESPkt();
-		
-		Timer t = new Timer(10000,this);
-		t.startTimer();
-	
 	}
 	
 	
-	void sendSDESPkt()
-	{
+	void sendSDESPkt(Participant p) {
 		 
 		byte[] firstLine = commonHdr.writeFristLine();
 		
 		System.arraycopy(firstLine, 0, this.rawSDESPkt,0,32);
 		System.out.println("The SSRC in SDES Msg is SSRC="+this.ssrc);
-		byte[] reporteeSSRCArry = longToBin(this.ssrc);
+		byte[] reporteeSSRCArry = StaticProcs.longToBin(this.ssrc);
 		System.arraycopy(reporteeSSRCArry, 0, this.rawSDESPkt, 32, 32);
 		
-		byte[] cnameLenArry = RTCPRRPkt.intToBin(CNAME.length());
+		byte[] cnameLenArry = StaticProcs.intToBin(CNAME.length());
 		System.arraycopy(cnameLenArry, 0, this.rawSDESPkt, 64,32);
 		
 		byte[] cnameArry = CNAME.getBytes();
 		System.arraycopy(cnameArry, 0, this.rawSDESPkt, 96, cnameArry.length);
 		
+		rtcpSession.sendPkt(p, rawSDESPkt);
 		
-
-		int port = this.rtcpPort;
-
-	      String group = "225.4.5.6";
-
-	    
-	      try
-	      {
-			      MulticastSocket s = new MulticastSocket();
-
-			 
-			      DatagramPacket pack = new DatagramPacket(this.rawSDESPkt, this.rawSDESPkt.length,
-			      					 InetAddress.getByName(group), port);
-
-			      s.send(pack);
-			      if(RTPSession.rtpDebugLevel > 1) {
-			      System.out.println("The SDES packet has been sent out port"+port);
-			      }
-			      s.close();
-	      }
-	      catch(Exception e)
-	      {
-	    	  e.printStackTrace();
-	      }
-	
-		
+		if(RTPSession.rtpDebugLevel > 6) {
+			System.out.println("The SDES packet has been sent...");
+		}
 	}
 	
-	byte[] encodeSDES()
-	{
+	byte[] encodeSDES() {
 		return this.rawSDESPkt;
 	}
 	
-	void decode()
-	{
+	void decode() {
 		byte[] ssrcArry = new byte[32]; 
 			System.arraycopy(this.rawSDESPkt, 32, ssrcArry, 0, 32);
 			
-	   this.ssrc = longBin2Dec(ssrcArry);
+	   this.ssrc = StaticProcs.longBin2Dec(ssrcArry);
 	
 	   byte[] cnameLenArry = new byte[32];
 	   		System.arraycopy(this.rawSDESPkt, 64, cnameLenArry, 0, 32);
-	   	int cnameLen = RTCPRRPkt.intBin2Dec(cnameLenArry);
+	   	int cnameLen = StaticProcs.intBin2Dec(cnameLenArry);
 	   	
 	   	byte[] cnameArry = new byte[cnameLen];
 	   		System.arraycopy(this.rawSDESPkt, 96, cnameArry, 0, cnameLen);
@@ -131,110 +99,11 @@ public class RTCPSDESHeader implements Signalable
 		
 	}
 	
-	long getSSRC()
-	{
+	long getSSRC() {
 		return this.ssrc;
 	}
 	
-	String getCNAME()
-	{
+	String getCNAME() {
 		return this.CNAME;
 	}
-	
-	public static byte[] longToBin(long srcPort)
-	{
-		byte srcPortByte[] = new byte[32];
-		for(int i=0;i<32;i++)
-			srcPortByte[i]=0;
-
-	
-	
-	
-	    long N = Long.parseLong((new Long(srcPort)).toString());
-	    int ccount=0;
-	    byte bd[]= new byte[32];
-	    // find largest power of two that is less than or equal to N
-	    int v = 1;
-	    while (v <= N/2)
-	        v = v * 2;
-	
-	    // cast out powers of 2 
-	    while (v > 0) {
-	       if (N < v)
-	       {
-	    	//   System.out.print(0);
-	    	   bd[ccount++]=(byte) 0;
-	       }
-	       else
-	       {
-	    	//   System.out.print(1); 
-	    	   N = N - v;
-	    	   bd[ccount++]=(byte) 1;
-	       }
-	       v = v / 2;
-	    }
-	    for(int i=0;i<ccount;i++)
-	    	System.out.print(bd[i]);
-	    
-
-		
-		if(ccount<32)
-		{
-
-			for(int i=(32-ccount),cc=0;i<32;i++)
-			{
-			//	srcPortByte[i]=bd[i-1];
-				srcPortByte[i]=bd[cc++];
-			}
-		}
-		else
-		{
-			for(int i=0;i<32;i++)
-			{
-				srcPortByte[i] = bd[i];
-			}
-		}
-		
-	    return srcPortByte;
-	
-	}
-	
-	
-	static long longBin2Dec(byte[] bin)   
-	{
-	  int  b, k, m, n;
-	  int  len;
-	  long sum = 0;
-	 
-	  len = bin.length - 1;
-	  for(k = 0; k <= len; k++) 
-	  {
-	    //n = (bin[k] - '0'); // char to numeric value
-		  n = (bin[k] ); // char to numeric value
-	    if ((n > 1) || (n < 0)) 
-	    {
-	      System.out.println("\n\n ERROR! BINARY has only 1 and 0!\n");
-	      return (0);
-	    }
-	    for(b = 1, m = len; m > k; m--) 
-	    {
-	      // 1 2 4 8 16 32 64 ... place-values, reversed here
-	      b *= 2;
-	    }
-	    // sum it up
-	    sum = sum + n * b;
-	    //printf("%d*%d + ",n,b);  // uncomment to show the way this works
-	  }
-	  return(sum);
-	}
-
-	public void signalTimeout() {
-
-		sendSDESPkt();
-		Timer t = new Timer(10000,this);
-		t.startTimer();
-
-		
-	}
-
 }

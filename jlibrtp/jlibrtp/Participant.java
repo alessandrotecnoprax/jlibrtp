@@ -19,48 +19,44 @@ package jlibrtp;
  */
 
 
-
-
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 
 public class Participant {
-	private int destPort = 32000;
-	private boolean isSender = true;
-	private boolean isReceiver = true;
+	private int rtpDestPort = 0;
+	private int rtcpDestPort = 0;
+	public boolean isSender = true;
+	public boolean isReceiver = true;
 	private InetAddress address = null;
 	long ssrc = -1;
-	public String cname;
-	public int lastSentSeqNumber;
-	public int	lastRecvSeqNumber;
-	long lastTimeStamp;
-	boolean unknown = true;
+	public String cname = null;
+	public int	lastRecvSeqNumber = 0;
+	public int	lostPktCount = 0;
+	public int	octetCount = 0;
+	long lastRecvTimeStamp;
+	
+	
 	//Store the packets received from this participant
-	public PktBuffer pktBuffer;
-/*	Participant()
-	{
-		
-	}*/
+	public PktBuffer pktBuffer = null;
+
 	// Known contact, but we don't know their ssrc yet.
-	public Participant(String networkAddress,int aDestPort,String CNAME) {
+	public Participant(String networkAddress, int rtpPort, int rtcpPort, String CNAME) {
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("New participant created: " + CNAME + "@" + networkAddress);
 		}
-		// Shouldnt we be getting this from them?
-		this.unknown = false;
+		
 		try {
 			address = InetAddress.getByName(networkAddress);
 		} catch (Exception e) {
 			System.out.println("Couldn't resolve " + networkAddress);
 		}
 		cname = CNAME;
-		destPort = aDestPort;
+		rtpDestPort = rtpPort;
+		rtcpDestPort = rtcpPort;
 	}
 	// Incomplete insert, we got a packet, but we don't know this person yet.
-	public Participant(InetAddress adr, int port, long SSRC) {
+	public Participant(InetAddress adr, int rtpPort, long SSRC) {
 		address = adr;
-		destPort = port;
+		rtpDestPort = rtpPort;
 		ssrc = SSRC;
 	}
 	
@@ -80,8 +76,12 @@ public class Participant {
 		return isReceiver;
 	}
 	
-	int getDestPort() {
-		return destPort;
+	int getRtpDestPort() {
+		return rtpDestPort;
+	}
+	
+	int getRtcpDestPort() {
+		return rtcpDestPort;
 	}
 	
 	InetAddress getInetAddress() {
@@ -98,11 +98,20 @@ public class Participant {
 	}
 	
 	public int setSSRC(long anSSRC) {
-		if(anSSRC < 0) {
+		if(ssrc < 0) {
 			return -1;
 		} else {
 			ssrc = anSSRC;
 			return 0;
+		}
+	}
+	// Check ParticipantDatabase.java if you change this!
+	public long simpleHash() {
+		if(ssrc > 0) {
+			return ssrc;
+		} else {
+			// This is a bit pricey
+			return cname.hashCode();
 		}
 	}
 	
