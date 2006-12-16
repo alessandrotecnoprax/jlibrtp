@@ -59,6 +59,10 @@ public class RTPReceiverThread extends Thread {
 	       System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
 	       RtpPkt pkt = new RtpPkt(slicedPkt);
 	       
+	       if(pkt == null) {
+	    	   System.out.println("Received invalid packet. Ignoring");
+	    	   continue;
+	       }
 	       if(RTPSession.rtpDebugLevel > 6) {
 	    	   System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
 	       }
