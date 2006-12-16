@@ -38,7 +38,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	//test
 	RTPSession rtpSession = null;
 	private Position curPosition;
-	private final int EXTERNAL_BUFFER_SIZE = 1024; // 1 Kbyte
+	private final int EXTERNAL_BUFFER_SIZE = 320; // 1 Kbyte
 	byte[] abData = null;
 	int nBytesRead = 0;
 	int pktCount = 0;
@@ -53,7 +53,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	};
 
 	public void receiveData(byte[] data, String cname, long time) {
-		//System.out.println("pktCount:" + pktCount + " length:"  + data.length + " hash:" + data[0] + data[2]);
+		//System.out.println("receiveData, time:" + time );
 		auline.write(data, 0, data.length);
 		pktCount++;
 		//System.out.println("pktcount:" + pktCount + "  " + auline.getBufferSize() + " " + auline.available() );

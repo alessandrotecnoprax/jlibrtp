@@ -104,7 +104,7 @@ public class RTPSession {
 		}  
 		
 		// All this has to be changed to get from the participant table.
-		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),ssrc,getNextSeqNum(),getPayLoadType(0),buf);
+		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),ssrc,getNextSeqNum(),getPayLoadType(8),buf);
 		
 		byte[] pktBytes = pkt.encode();
 		Enumeration set = partDb.getReceivers();

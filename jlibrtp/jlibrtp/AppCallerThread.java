@@ -55,17 +55,17 @@ public class AppCallerThread extends Thread {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
 		    	// We can add timeout to this
-		    	//try { session.pktBufDataReady.await(5, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
-				try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
-				if(RTPSession.rtpDebugLevel > 15) {
-					System.out.println("<-> AppCallerThread waking up");
-				}
+		    	try { session.pktBufDataReady.await(13, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+				//try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
+				//if(RTPSession.rtpDebugLevel > 15) {
+				//	System.out.println("<-> AppCallerThread waking up");
+				//}
 		    	// Next loop over all participants and check whether they have anything for us.
 				Enumeration set = session.partDb.getSenders();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
+					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 4) {
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
 					}
@@ -75,10 +75,16 @@ public class AppCallerThread extends Thread {
 				set = session.partDb.getUnknownSenders();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
-					
-					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
+					//System.out.println("check it.");
+					//while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
+					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 4) {
+						//System.out.println("yap");
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
-						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+						if(aFrame != null) {
+							appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+						} else {
+							System.out.println("Dropping frame!");
+						}
 					}
 				}
 		    

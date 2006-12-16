@@ -42,6 +42,7 @@ public class PktBuffer {
 	int compLen = 0;
 	PktBufNode oldest = null;
 	PktBufNode newest = null;
+	String lastOp = null;
 	
 	/** 
 	 * Creates a new PktBuffer, a linked list of PktBufNode
@@ -63,6 +64,19 @@ public class PktBuffer {
 	 * Optimized for the case where each pkt is a complete frame.
 	 */
 	public synchronized int addPkt(RtpPkt aPkt) {
+		// remove me.
+		if(oldest == null) {
+			PktBufNode tmpNode = newest;
+			while(tmpNode.nextFrameQueueNode != null) {
+				tmpNode = tmpNode.nextFrameQueueNode;
+			}
+			oldest = tmpNode;
+			System.out.println("oldest was null");
+		}
+		if(aPkt == null) {
+			System.out.println("aPkt null");
+		}
+		
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> PktBuffer.addPkt() , length:" + length + " , timeStamp of Pkt: " + aPkt.getTimeStamp());
 		}
@@ -79,19 +93,22 @@ public class PktBuffer {
 				newest.prevFrameQueueNode = newNode;
 				newest = newNode;
 				length++;
+				lastOp = "simpleAdd";
 			} else {
+
 				if(oldest.timeStamp > timeStamp || oldest.seqNum > aPkt.getSeqNumber()) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
 						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " + timeStamp + " vs "+ oldest.timeStamp);
 					}
+					lastOp = "late packet";
 					return -1;
 				}
 				
 				//Need to do some real work
 				PktBufNode tmpNode = newest;
 				
-				System.out.println("newest.timeStamp: " + newest.timeStamp);
+				//System.out.println("newest.timeStamp: " + newest.timeStamp);
 				// Find our place in the queue from the back
 				while(tmpNode.timeStamp > timeStamp) {
 					tmpNode = tmpNode.nextFrameQueueNode;
@@ -100,6 +117,7 @@ public class PktBuffer {
 				if(tmpNode.timeStamp == timeStamp) {
 					if(RTPSession.rtpDebugLevel > 8) {
 						System.out.println("   Found pkt with existing timeStamp: " + timeStamp);
+						lastOp = "dupe timestamp";
 					}
 					
 					// Node has same timeStamp, assume pkt belongs to frame
@@ -113,7 +131,7 @@ public class PktBuffer {
 						}
 						
 						// Check whether packet is duplicate.
-						if(tmpNode.nextFrameNode.seqNum == seqNumber) {
+						if(tmpNode.nextFrameNode != null && tmpNode.nextFrameNode.seqNum == seqNumber) {
 							if(RTPSession.rtpDebugLevel > 2) {
 								System.out.println("PktBuffer.addPkt Dropped a duplicate packet!");
 							}
@@ -143,7 +161,7 @@ public class PktBuffer {
 				} else {
 					// Update the length of this buffer
 					length++;
-					
+					lastOp = "sorted in somewhere";
 					// Insert into buffer
 					newNode.nextFrameQueueNode = tmpNode;
 					newNode.prevFrameQueueNode = tmpNode.prevFrameQueueNode;
@@ -179,13 +197,13 @@ public class PktBuffer {
 	 * Checks the oldest frame, if there is one, sees whether it is complete.
 	 * @return Returns false if there are no complete frames available.
 	 */
-	public boolean frameIsReady() {
-		if(oldest == null || oldest.pktCount != compLen) {
-			return false;
-		} else {
-			return true;
-		}
-	}
+	//public boolean frameIsReady() {
+	//	if(oldest == null || oldest.pktCount != compLen) {
+	//		return false;
+	//	} else {
+	//		return true;
+	//	}
+	//}
 	
 	/** 
 	 * Checks the oldest frame, if there is one, sees whether it is complete.
@@ -199,7 +217,17 @@ public class PktBuffer {
 			this.debugPrint();
 		}
 		PktBufNode tmpNode = oldest;
-		if(tmpNode != null) {
+		
+		// remove me.
+		if(tmpNode == null) {
+			tmpNode = newest;
+			while(tmpNode.nextFrameQueueNode != null) {
+				tmpNode = tmpNode.nextFrameQueueNode;
+			}
+			oldest = tmpNode;
+		}
+		
+		if(oldest != null) {
 			// Pop it off, null all references.
 			if(length == 1) {
 				//There's only one frame
@@ -212,15 +240,18 @@ public class PktBuffer {
 			}
 			
 			length--;
-			if(tmpNode.pktCount == compLen) {
-				if(RTPSession.rtpDebugLevel > 7) {
-					System.out.println("<- PktBuffer.popOldestFrame() returns frame");
-				}
+			//if(tmpNode.pktCount == compLen) {
+			//	if(RTPSession.rtpDebugLevel > 7) {
+			//		System.out.println("<- PktBuffer.popOldestFrame() returns frame");
+			//	}
 				return new DataFrame(tmpNode, compLen);
-			}
+			//} else {
+			//	System.out.println("pop returns null, lastOp: " + lastOp);
+			//	return null;
+			//}
 		}
 		// If we get here we have little to show for.
-		if(RTPSession.rtpDebugLevel > 7) {
+		if(RTPSession.rtpDebugLevel > 2) {
 			System.out.println("<- PktBuffer.popOldestFrame() returns null");
 		}
 		return null;

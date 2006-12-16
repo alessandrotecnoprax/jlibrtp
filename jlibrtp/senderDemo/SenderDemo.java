@@ -27,17 +27,32 @@ import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
 import java.lang.String;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import jlibrtp.*;
 
 public class SenderDemo implements RTPAppIntf  {
 	public RTPSession rtpSession = null;
 	static int pktCount = 0;
 	private String filename;
-	private final int EXTERNAL_BUFFER_SIZE = 320; // 1 kbyte
+	private final int EXTERNAL_BUFFER_SIZE = 320;
+	SourceDataLine auline;
+	private Position curPosition;
+	boolean local;
+	 enum Position {
+		LEFT, RIGHT, NORMAL
+	};
 	
-	public SenderDemo(String CNAME,int recvPort)  {
+	public SenderDemo(String CNAME,int recvPort, boolean isLocal)  {
 		try {
 			rtpSession = new RTPSession(recvPort, recvPort +1, CNAME);
 		} catch (Exception e) {
@@ -48,6 +63,7 @@ public class SenderDemo implements RTPAppIntf  {
 		} else {
 			System.out.println("Couldn't register");
 		}
+		this.local = isLocal;
 		//public Participant(String sendingHost,int port,String CNAME)
 	}
 	
@@ -63,7 +79,11 @@ public class SenderDemo implements RTPAppIntf  {
 		} else {
 		// TODO Auto-generated method stub
 		System.out.println("Setup");
-		SenderDemo aDemo = new SenderDemo("Sender",4547);
+		boolean local = true;
+		//if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
+		//	local = false;
+		//}
+		SenderDemo aDemo = new SenderDemo("Sender",4547, local);
 		Participant p = new Participant(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]), "Receiver");
 		aDemo.rtpSession.addParticipant(p);
 		//aDemo.filename = "/usr/share/sounds/login.wav";
@@ -102,7 +122,36 @@ public class SenderDemo implements RTPAppIntf  {
 		AudioFormat.Encoding encoding =  new AudioFormat.Encoding("PCM_SIGNED");
 		AudioFormat format = new AudioFormat(encoding,((float) 8000.0), 16, 1, 2, ((float) 8000.0) ,false);
 		System.out.println(format.toString());
+		
+		
+		if(! this.local) {
+			// To time the output correctly, we also play at the input:
+			auline = null;
+			DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
 
+			try {
+				auline = (SourceDataLine) AudioSystem.getLine(info);
+				auline.open(format);
+			} catch (LineUnavailableException e) {
+				e.printStackTrace();
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+
+			if (auline.isControlSupported(FloatControl.Type.PAN)) {
+				FloatControl pan = (FloatControl) auline
+				.getControl(FloatControl.Type.PAN);
+				if (this.curPosition == Position.RIGHT)
+					pan.setValue(1.0f);
+				else if (this.curPosition == Position.LEFT)
+					pan.setValue(-1.0f);
+			}
+
+			auline.start();
+		}
+		
 		int nBytesRead = 0;
 		byte[] abData = new byte[EXTERNAL_BUFFER_SIZE];
 		long start = System.currentTimeMillis();
@@ -111,8 +160,12 @@ public class SenderDemo implements RTPAppIntf  {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
 				if (nBytesRead >= 0) {
 					rtpSession.sendData(abData);
+					if(!this.local) {	
+						auline.write(abData, 0, abData.length);
 					//System.out.println("pktCount:" + pktCount + " length:"  + abData.length + " hash:" + abData[0] + abData[2] + " nbytes: " + nBytesRead);
-					try { Thread.sleep(13);} catch(Exception e) {}
+					} else {
+						try { Thread.sleep(14);} catch(Exception e) {}
+					}
 					pktCount++;
 				}
 			}
