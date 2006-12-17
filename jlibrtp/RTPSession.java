@@ -21,7 +21,12 @@ package jlibrtp;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.nio.*;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.concurrent.locks.*;
 import java.util.Random;
 
@@ -34,6 +39,7 @@ import java.util.Random;
  */
 public class RTPSession {
 	 final static public int rtpDebugLevel = 1;
+	 Hashtable participantTable = new Hashtable();
 	 
 	 // Is this a multicast session?
 	 boolean mcSession = false;
@@ -49,8 +55,8 @@ public class RTPSession {
 	 protected long lastTimestamp = 0;
 	 protected int seqNum = 0;
 	 protected String CNAME = "";
-	 protected int	sentOctetCount = 0;
-	 protected int	sentPktCount = 0;
+	 int sentPktCount = 0;
+	 int sentOctetCount = 0;
 	 
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(); 
 	 // Handle to application
@@ -84,6 +90,7 @@ public class RTPSession {
 		 rtpSock = new DatagramSocket(rtpPort);
 		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
+		 this.rtcpSession = new RTCPSession(rtcpPort,this);
 
 	 }
 	 
@@ -168,6 +175,8 @@ public class RTPSession {
 				try {	
 					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getRtpDestPort());
 					rtpSock.send(packet);
+					this.sentPktCount++;
+					this.sentOctetCount++;
 				} catch (Exception e) {
 					System.out.println("RTPSession.sendData() - Possibly lost socket.");
 					e.printStackTrace();
