@@ -26,18 +26,16 @@ import java.net.InetAddress;
 public class Participant {
 	private int rtpDestPort = 0;
 	private int rtcpDestPort = 0;
-	public boolean isSender = true;
-	public boolean isReceiver = true;
+	protected boolean isSender = true;
+	protected boolean isReceiver = true;
 	private InetAddress address = null;
-	long ssrc = -1;
-	public String cname = null;
-	public int	lastRecvSeqNumber = 0;
-	public int	lostPktCount = 0;
-	public int	recvOctetCount = 0;
-	public int  recvPktCount = 0;
-	public int	sendOctetCount = 0;
-	public int  sendPktCount = 0;
-	long lastRecvTimeStamp;
+	protected long ssrc = -1;
+	protected String cname = null;
+	protected int	lastRecvSeqNumber = -1;
+	protected int	lostPktCount = 0;
+	protected int	recvOctetCount = 0;
+	protected int	recvPktCount = 0;
+	protected long lastRecvTimeStamp = -1;
 	
 	//Store the packets received from this participant
 	public PktBuffer pktBuffer = null;
@@ -46,8 +44,6 @@ public class Participant {
 	/**
 	 * Create a basic participant. If this is a <b>unicast</b> session you must provide network address (ipv4 or ipv6) and ports for RTP and RTCP, 
 	 * as well as a cname for this contact. These things should be negotiated through SIP or a similar protocol.
-	 * 
-	 * If this is a <b>multicast</b> session you should set the ports and networkAddress to 0, 0, 127.0.0.1 (they will be ignored). 
 	 * 
 	 * jlibrtp will listen for RTCP packets to obtain a matching SSRC for this participant, based on cname.
 	 * @param networkAddress string representation of network address (ipv4 or ipv6). Use "127.0.0.1" for multicast session.
@@ -71,7 +67,7 @@ public class Participant {
 	}
 	
 	// Incomplete insert, we got a packet, but we don't know this person yet.
-	public Participant(InetAddress adr, int rtpPort, long SSRC) {
+	protected Participant(InetAddress adr, int rtpPort, long SSRC) {
 		address = adr;
 		rtpDestPort = rtpPort;
 		ssrc = SSRC;
@@ -158,12 +154,8 @@ public class Participant {
 		return this.ssrc;
 	}
 	
-	/**
-	 * SSRC for participant, determined through RTCP SDES
-	 * 
-	 * @return SSRC (32 bit unsigned integer)
-	 */
-	public int setSSRC(long anSSRC) {
+	// Set the SSRC, for internal use only, public only for convenience.
+	protected int setSSRC(long anSSRC) {
 		if(ssrc < 0) {
 			return -1;
 		} else {
@@ -173,7 +165,7 @@ public class Participant {
 	}
 
 	// Check ParticipantDatabase.java if you change this!
-	public long simpleHash() {
+	protected long simpleHash() {
 		if(ssrc > 0) {
 			return ssrc;
 		} else {
