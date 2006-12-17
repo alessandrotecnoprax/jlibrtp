@@ -8,7 +8,7 @@ public class TestRTPSession implements RTPAppIntf {
 	
 	TestRTPSession() {	
 		try {
-			rtpSession = new RTPSession(recvPort, CNAME);
+			rtpSession = new RTPSession(recvPort,6002, CNAME);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port: " + recvPort);
 		}
@@ -22,12 +22,12 @@ public class TestRTPSession implements RTPAppIntf {
 		//Participant p = new Participant("127.0.0.1",4545,"test");
 		
 		int i =0;
-		Participant p = new Participant("127.0.0.1",4545,"testsalkdfjldsakjflkdsj");
+		Participant p = new Participant("127.0.0.1",6000,4545,"testsalkdfjldsakjflkdsj");
 		//p.setSSRC(CNAME.hashCode());
 		//p.setIsSender();
-	long x =	rtpSession.addParticipant(p);		
-		rtpSession.startRTCPSession(6001);
-	//	rtpSession.requestBYE("ABCD");
+
+		rtpSession.addParticipant(p);		
+
 	
 	}
 	
@@ -45,12 +45,16 @@ public class TestRTPSession implements RTPAppIntf {
 		{
 			i++;
 			j=0;
+			if(i%1000 == 0)
+			{
+				String str = "abcd";
+				test.rtpSession.sendData(str.getBytes());
+			}
 			while(j<10000)
 				j++;
 		}
-		String str = "abcd";
-		test.rtpSession.sendData(str.getBytes());
-		str = "efgh";
+
+		String str = "efgh";
 		try { Thread.currentThread().sleep(100); } catch (Exception e) {  };
 		test.rtpSession.sendData(str.getBytes());
 	}
