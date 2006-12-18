@@ -20,7 +20,9 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-
+//Added 06-12-18 from Vaishnav's tree
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /**
  * The RTP receiver thread waits on the designated UDP socket for new packets.
@@ -34,6 +36,9 @@ import java.net.DatagramPacket;
  */
 public class RTPReceiverThread extends Thread {
 	RTPSession rtpSession = null;
+	
+	//Added 06-12-18 from Vaishnav's tree
+	Hashtable RTCPRecvRptTable = new Hashtable();
 	
 	RTPReceiverThread(RTPSession session) {
 		rtpSession = session;
@@ -132,4 +137,19 @@ public class RTPReceiverThread extends Thread {
 		 
 		}
 	}
+//	Added 06-12-18 from Vaishnav's tree
+	void updateRRStatistics(RtpPkt pkt) {		
+			long curr_ssrc = pkt.getSsrc();
+	       //System.out.println("-->" + pkt.getSeqNumber() + " " + packet.getLength() + " " + pktCount++ +" " + part.pktBuffer.length);
+	       
+	       RTCPRRPkt rr = (RTCPRRPkt)RTCPRecvRptTable.get(new Long(curr_ssrc));
+	       if(pkt.getSeqNumber() != (rr.getExtHighSeqNumRcvd()+1)) {
+	    	   //rr.incPktLostCount();
+	    	   ((RTCPRRPkt)RTCPRecvRptTable.get(new Long(curr_ssrc))).incPktLostCount();
+	       }
+	       //rr.setExtHighSeqNumRcvd(pkt.getSeqNumber());
+	       ((RTCPRRPkt)RTCPRecvRptTable.get(new Long(curr_ssrc))).setExtHighSeqNumRcvd(pkt.getSeqNumber());
+	       //System.out.println("The stats update for "+pkt.getSsrc());
+	}
+
 }
