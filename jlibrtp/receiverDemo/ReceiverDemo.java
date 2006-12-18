@@ -55,6 +55,7 @@ public class ReceiverDemo implements RTPAppIntf {
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port: " + recvPort);
 		}
+		rtpSession.setNaivePktReception(true);
 		if(rtpSession != null) {
 			rtpSession.RTPSessionRegister(this);
 		} else {
