@@ -161,7 +161,108 @@ packets should be rejected, which is de default, or handed to the application.
 </p>
 
 </p><h4><a name="architecture_rtcp">RTCP</a></h4>
-<p></p>
+<p>RTCP is the control protocol associated with RTP protocol. RTCP provides support for periodic reporting reporting of reception
+of quality, participant identification and other source description information, notification on changes in session membership.<p>
+
+<p><b>RTCP implementation has three parts:</b></br>
+	1. The 4 different packet formats.</br>
+	2. Sending and receiving formats.</br>	
+	3. Participant database and statistics collection.<p>
+
+
+		<img src="vaish1.png" /></br>
+
+
+<p>Here in the RTCP module there is only one receiver thread, which will start to listen on the RTCP port and receive all the 
+RTCP packets meant for that particular participant. Once the packet is received the packet will be decoded and appopriate 
+information will be displayed to the user. On the similar lines, the RTCP will send the packets periodically when ever the 
+appropriate timer fires to all the participants in the participant database. The sender thread for any of the RTCP packet 
+format will build a packet with the statistics information and send the collected statistics to every participant in the
+RTCP session. In this particular model, the transport port and the statistics for every participant will be maintained in the
+Participant database. RTCP session is the main class of the RTCP session which will start all the different RTCP threads and
+also RTCP receiver thread for receiving of the messages.<p>
+
+<p>Totally 4 different send threads have been implemented which will be started by the RTCP session class. These four different 
+threads will send out their respective packets periodically when the timer fires. When the timer fires the statistics till that
+moment will be encapsulated in the packet and sent to all the participants.</p>
+
+<p>RTCP will transport the packets through the unicast socket to the rtcp port of the RTP session participant. Usually the RTCP
+port should be configured to be a port number one more than the RTP session. The RTCP socket will be initialised only once and
+the same socket will be used to send the data to all the participants.</p>
+
+<p><b>Different RTCP messages:</b></br>
+RTCP protocol defines a total of 5 different messages, but in this particular model only 4 different messages have
+been implemented. The Application defined message has been ommited. The general RTCP packet format is common for all the four
+different messages. The general packet format is as given below.</p>
+
+<b>RTCP Common Header</b></br>
+<img src="vaish2.png" /></br>
+
+Here</br>
+Version: Identifies the RTP version which is the same for all the RTCP packets</br>
+P-Padding: When set, this RTCP packet contains some additional padding octets in the end.</br>
+RC-Reception report count: The number of reception report blocks being sent in this packet.</br>
+Packet Type: Packet type will define the type of the RTCP message that is being transmitted.</br>
+Length: The length of the RTCP packet being sent.</br>
+
+<p>The entire RTCP packet header is abstracted in the class RTCPCommonHeader class. All the different messages will have to
+create one instance of this RTCP header by providing the information like the type of the packet and the length of the packet
+being sent. This class will encapsulate the information in a 32 bit value and return the first common header 4 byte header for
+all the RTCP packets.<p>
+
+<b>1. Receiver Report Message (RR Message):</b></br>
+<img src="vaish3.png" /></br>
+
+<p>One of the primary uses of RTCP is reception quality reporting. The reception quality reporting is done through the RR report
+message. This RR message is sent to all the participants who receive data from this sender.</p>
+
+<p>RR message also follows the common header structure as followed by all other RTCP messages. The Packet type for the RTCP message will be of value 201. A receiver report packet will cotain the SSRC of the participant who is sending the report. As in our implementaion there could be only one sender for each instance of the library, the SSRC of the RTP session will be used.</p>
+
+<p>In the report block the reception quality of a single synchronization source from which the reporter has received RTP packets
+during the current reporting interval. The reportee SSRC identifies the participant to whom this report block pertains. The
+statistics in the report block denote the quality of reception for the reportee synchronization source, as received at the
+participant generating the RR packet.</p>
+
+<p>The cumulative number of the packet lost count will give the total number of packets lost from that particular source over the
+interval of the time since the last RR packet was sent. Here only 24 bits are being used for the sending of the cumulative number
+of packet lost. The packet lost count is calculated at the RTPSession class where the statistics of the total number of packets 
+lost will be maintained for every participant.</p>
+
+<p>The extended sequence number is the highest sequence number received in the RTP data packet from that SSRC. Latest received 
+sequence number will be maintained from the latest packet received from that particular source SSRC.</p>
+
+<p>The Last Sender report (LSR) timestamp is the timestamp value of the last RTCP SR packet received from the reportee SSRC.
+The delay since last sender report(DLSR) is the delay, expressed in the units of time between the last SR packet from the reportee
+SSRC.</p>
+
+<p>The RR message packet has been abstracted in the class RTCPRRPkt and the sender thread for sending of the RR packet is 
+RTCPRRSendThread class. This RTCPRRSendThread will send the packets at the interval of 8 seconds.</p>
+
+<b>2. Sender Report Message (SR Message):</b></br>
+<img src="vaish4.png" /></br>
+
+<p>In addition to the sending of the report about the receivers, RTCP also sends packets about itself to other participants.
+The SR packet format is very simple interms of the data transmitted. The common RTCP header is created using RTCPCommonHeader class and the Packet type for the sR message is 200. As there could be only one sender for every instance of the library, there will be only one Sender Report block.
+
+<p>The Reporter SSRC will have the SSRC number of the session that is sending out the SR packet. The NTP timestamp indicates
+the absloute time at which the packet was sent. The RTP timestamp corresponds to the same value of the RTP timestamp as the next sending RTP message would have posssibly had in it's header. The value is not of the previous packet sent, but the value of the next possibly sent RTP packet.</p>
+
+<p>The sender packet count and sender octet count will have the total number of the packets sent since the last time, the
+SR report message was sent out to the participants.</p>
+
+<p>The SR RTCP packet is abstracted in the form of class RTCPSenderReport, where all the statistics of the sent data will be
+collected and periodically the data will be sent out using RTCPSRSendThread class.</p>
+
+<b>3. RTCP SDES message:</b></br>
+<p>RTCP convey the Source description (SDES) packets that provide participant identification and supplementary details, such
+as the CNAMe, e-mail addresses and other details. SDES packet also contains the common header format as followed by other RTCP
+messages. The content part in this implementation will only carry the CNAME corresponding the sender in the RTP session along with
+the matching sSRC number of the sender. In our implementaion of the RTP library, we will accept the packets from all unknown sources. As the packets are not from known sources, the SSRC of these packets will not be there in the Participant database. So by sending in the SDES message periodically, the participant database of all the participants will be maintained. The SDES mesage will be sent out to all the participants in the group once every 10 seconds. The SDES message is abstracted in the form of the RTCPSDESHeader class, where the CNAME of the sender is encapsulated in the format of Tag Length Value. Where the Tag specifies that this is of content type CNAME and the next 32 bits will convey the lenght of the CNAME.</p>
+
+<b>4. RTCP BYE message:</b></br>
+<p>As RTCP is a session control protocol, it will maintain the states of the session between the participanting entities. 
+A BYE packet is generated when a participant leaves the session, or when it changes its SSRC number due to a collision. An interface has been provided in the RTPSession class for the application to send BYE message to any of the know participants.The structure of the BYE message is very simple, it follows the common header format as followed by other RTCP messages. The Packet
+Type value for the BYE message is 203. The length of the encapsulated packet will be number of SSRC values that it will be sent in the packet. BYE message will encapsulate the SSRC values of the sessions to be closed.</p>
 
 <h3><a name="api">Advanced Programming Interface (API)</a></h3>
 Please refer to the <a href="API">automatically generated JavaDocs</a>.
