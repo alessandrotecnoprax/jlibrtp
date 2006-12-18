@@ -36,11 +36,16 @@ import java.util.Random;
  * @author Arne Kepp
  */
 public class RTPSession {
-	 final static public int rtpDebugLevel = 10;
+	 /**
+	  * The debug level is final to avoid compilation of if-statements.</br>
+	  * 0 provides no debugging information, 20 provides everything </br>
+	  * Debug output is written to System.out</br>
+	  */
+	 final static public int rtpDebugLevel = 0;
 	 Hashtable participantTable = new Hashtable();
 	 
 	 // Is this a multicast session?
-	 boolean mcSession = false;
+	 protected boolean mcSession = false;
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
 	 protected DatagramSocket rtcpSock = null;
@@ -74,9 +79,9 @@ public class RTPSession {
 
 	 
 	 // Locks
-	 final public Lock partDbLock = new ReentrantLock();
-	 final public Lock pktBufLock = new ReentrantLock();
-	 final public Condition pktBufDataReady = pktBufLock.newCondition();
+	 final protected Lock partDbLock = new ReentrantLock();
+	 final protected Lock pktBufLock = new ReentrantLock();
+	 final protected Condition pktBufDataReady = pktBufLock.newCondition();
 	 
 	 // Enough is enough, set to true when you want to quit.
 	 protected boolean endSession = false;
@@ -88,16 +93,14 @@ public class RTPSession {
 	  * Following this you should register your application.
 	  * 
 	  * @param	rtpPort a free port for RTP communication
-	  * @param	rctpPort a free port for RTCP communication
+	  * @param	rtcpPort a free port for RTCP communication
 	  * @param	aCNAME the character string that identifies you, example username@hostname.
-	  * @return	an instance of RTPSession
 	  */
 	 public RTPSession(int rtpPort, int rtcpPort, String aCNAME) throws Exception {
 		 rtpSock = new DatagramSocket(rtpPort);
 		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
 		 this.rtcpSession = new RTCPSession(this);
-
 	 }
 	 
 	 /**
@@ -105,9 +108,8 @@ public class RTPSession {
 	  * Following this you should register your application.
 	  * 
 	  * @param	rtpSock a multicast socket for RTP communication
-	  * @param	rctpSock a multicast socket for RTCP communication
+	  * @param	rtcpSock a multicast socket for RTCP communication
 	  * @param	aCNAME the character string that identifies you, example username@hostname.
-	  * @return	an instance of RTPSession
 	  */
 	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, String aCNAME) throws Exception {
 		 MulticastSocket rtpMCSock =rtpSock;
@@ -251,7 +253,7 @@ public class RTPSession {
 		if(tmp == null && tmp2 == null) {
 			partDb.addParticipant(p);
 			
-			// Send messages with SDES.
+			// Send SDES message
 		}
 	}
 	
