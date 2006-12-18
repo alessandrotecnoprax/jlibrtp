@@ -22,37 +22,46 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 
+
 /**
  * Datastructure that holds threads and structures used for RTCP
  * 
  * @author Vaishnav Janardhan
  */
 public class RTCPSession {
+
 	RTPSession rtpSession = null;
 	DatagramSocket rtcpSock = null;
 	MulticastSocket mcsocket = null;
 	boolean useMulticast = false;
-	
-	
-	//RTCPBYESenderThread byeThread = null;
+	int rtcpPort = 0;
+	RTCPBYESenderThread byeThread = null;
 	RTCPRecvrThread recvThread = null;
 	RTCPRRSendThread rrSendThread = null;
-	//RTCPSDESHeader sdesThread = null;
+	RTCPSDESHeader sdesThread = null;
+	RTCPSRSendThread srSendThread = null;
 	
 	RTCPSession(RTPSession rtpSession) {
-		//this.rtcpPort = rtcpPort;
+		this.rtcpPort = rtcpPort;
 		this.rtpSession = rtpSession;
-		this.rtcpSock = rtpSession.rtcpSock;
-		// We don't need a bye-thread running constantly.
-		// byeThread = new RTCPBYESenderThread(rtcpPort,this);
+		byeThread = new RTCPBYESenderThread(this);
 		this.recvThread = new RTCPRecvrThread(this);
+		
 		this.rrSendThread = new RTCPRRSendThread(this);
-		//this.sdesThread = new RTCPSDESHeader(this);
+	//	this.sdesThread = new RTCPSDESHeader(rtcpPort,this);
+		srSendThread = new RTCPSRSendThread(this.rtpSession);
+		
 		this.recvThread.start();
-		this.rrSendThread.start();
+		
+		
 	}
 	
-	// Arne: Not sure what this does, should loop over database and send byes.
+	RTPSession getRTPSession()
+	{
+		return this.rtpSession;
+	}
+	
+	
 	//void requestBYE(int ssrc) {
 	//	System.out.println("BYE Request rcvd");
 	//	long [] ssrcArray = new long[1];
@@ -61,7 +70,9 @@ public class RTCPSession {
 	//	RTCPByePkt byePkt = new RTCPByePkt(1,ssrcArray);		
 	//	byeThread.sendBYEMsg(byePkt);
 	//}
-	synchronized void sendPkt(Participant p, byte[] rawPkt) {
-		//Do nothing.
+	
+	public void signalTimeout() {
+		// TODO Auto-generated method stub
+		
 	}
 }
