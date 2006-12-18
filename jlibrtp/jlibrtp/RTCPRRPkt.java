@@ -22,8 +22,12 @@ package jlibrtp;
 
 import java.sql.Timestamp;
 /**
- * RTCP Receiver Report Packet
- * 
+ * RTCP Receiver Report Packet. This class will periodically
+ * send the Receiver Reports to all the participants in the
+ * participant database. The RR message will include the statistics
+ * collected since the last RR packet was sent to all of the recivers.
+ * The statistics are updated at the RTPReceiverThread.
+ *  
  * @author Vaishnav Janardhan
  */
 
@@ -43,6 +47,10 @@ public class RTCPRRPkt
 	{
 		
 	}
+	/**
+	 * Constructor for the construction of RRPkt
+	 * @param ssrc
+	 */
 	RTCPRRPkt(long ssrc)
 	{
 		this.ssrc = ssrc;
@@ -87,7 +95,12 @@ public class RTCPRRPkt
 	{
 		return this.packetslost;
 	}
-	
+	/**
+	 * Function to encode the RR packet with all the statistics
+	 * for the SSRC of the receiver to be reported.
+	 * @param reporteeSSRC
+	 * @return
+	 */
 	byte[] encodeRRPkt(long reporteeSSRC)
 	{
 		 
@@ -121,7 +134,10 @@ public class RTCPRRPkt
 	
 		
 	}
-	
+	/**
+	 * The function to decode the received RR packet and display the statistics
+	 * @param rcvdPkt
+	 */
 	void decodeRRPkt(byte[] rcvdPkt)
 	{
 		byte[] reporterSSRCArry = new byte[32]; 
@@ -279,11 +295,11 @@ public class RTCPRRPkt
 			x++;
 		}
 		byte[] bx = new byte[32-ii];
-//		System.out.println("VVVVVVV="+ii);
+
 		for(int i=0;i<(32-ii);i++)
 		{
 			bx[i]=bin[x++];
-	//		System.out.print(" "+bx[i]);
+
 		}
 		String ss = new String(bx);
 		return ss;
