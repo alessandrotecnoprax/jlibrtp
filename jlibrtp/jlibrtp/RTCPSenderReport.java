@@ -23,6 +23,8 @@ import java.sql.Timestamp;
 
 /**
  * RTCP Sender Reports
+ * This class is used to construct the Sender Reports and send it 
+ * to all the participants.
  * 
  * @author Vaishnav Janardhan
  */
@@ -42,6 +44,12 @@ public class RTCPSenderReport
 	{
 		
 	}
+	
+	/**
+	 * Constructor for the SenderReport creation
+	 * @param ssrc
+	 * @param rtpSession
+	 */
 	RTCPSenderReport(long ssrc,RTPSession rtpSession)
 	{
 		this.ssrc = ssrc;
@@ -58,6 +66,10 @@ public class RTCPSenderReport
 		
 	}
 	
+	/**
+	 * Method to encode the Sender Report Packet.
+	 * @return
+	 */
 	byte[] encodeSRPkt()
 	{
 		byte[] firstLine = commonHdr.writeFristLine();
@@ -88,6 +100,10 @@ public class RTCPSenderReport
 		
 	}
 	
+	/**
+	 * The method to decode and display the received Sender Report packet.
+	 * @param rcvdPkt
+	 */
 	void decodeSRPkt(byte[] rcvdPkt)
 	{
 		byte[] reporterSSRCArry = new byte[32]; 
