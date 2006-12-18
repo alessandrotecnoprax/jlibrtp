@@ -36,7 +36,7 @@ public class AppCallerThread extends Thread {
 	RTPAppIntf appl;
 	
 	public AppCallerThread(RTPSession session, RTPAppIntf rtpApp) {
-		session = session;
+		rtpSession = session;
 		appl = rtpApp;
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> AppCallerThread created");
