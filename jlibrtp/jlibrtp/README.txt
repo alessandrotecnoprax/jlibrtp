@@ -52,8 +52,8 @@ comprehensive program for the distribution of content, such as television, and t
 is not designed to be used separately. 
 
 java.net.rtp[5] is a relatively old application specialized for a whiteboard application. 
-It only supports multicast, which currently severly limits its usefulness in common VoIP applications, 
-and lacks the datastructures to handle separate streams.
+It only supports multicast, which currently severly limits its usefulness in common VoIP 
+applications, and lacks the datastructures to handle separate streams.
 
 There are several RTP stacks available in C and C++, including GNU Telephony's ccRTP[6].
 
@@ -74,21 +74,51 @@ verify that the parsing is correct.
 
 ---Performance
 We tested the library by streaming raw audio (44.1kHz, 16 bit, stereo) across the loopback interface, 
-i.e. the same instance of the library was both sending and receiving. The test system (2.13 GHz, Linux 2.6.17, 
-Java 1.5.0) had no problems handling the 2.8 Mbps. While packet parsing is expensive in Java, due to lack of 
-pointers and unsigned integers, this would be more than sufficient to stream video.
+i.e. the same instance of the library was both sending and receiving. The test system (2.13 GHz, 
+Linux 2.6.17, Java 1.5.0) had no problems handling the 2.8 Mbps. While packet parsing is expensive 
+in Java, due to lack of pointers and unsigned integers, this would be more than sufficient to stream video.
 
 ---Security
-Java inherently provides some protection against buffer overflows and other common problems. Additionally, 
-packet buffer size is automatically limited to 2000 octets. Developers / users can choose whether packets from unknown 
-sources should be returned to the application or discarded.
+Java inherently provides some protection against buffer overflows and other common problems. 
+Additionally, packet buffer size is automatically limited to 2000 octets. Developers / users can 
+choose whether packets from unknown sources should be returned to the application or discarded.
 
-Our library does not implement encryption according to the Secure RTP (SRTP, RFC)[] specifications, and 
-therefore provides no confidentiality. All streams can be played by anyone able to intercept the packets.
+Our library does not implement encryption according to the Secure RTP (SRTP, RFC)[] specifications, 
+and therefore provides no confidentiality. All streams can be played by anyone able to intercept the packets.
 
 ------Example application
-The example below
-
+The example below illustrates the simplest usage of the library.
+1)	The class implements the callback interface RTPAppIntf, and defines
+	the necessary function "receiveData".
+2)	The implementation of receiveData just prints the received data.
+3)	In main(), one object of the class is instantiated.
+4)  A new RTP session is created.
+5)  The application registers with the RTPSession.
+	In the process, UDP ports 4545 and 4546 are used for RTP and RTCP respectively,
+	and our cname is set to "MyCname".
+6)	Next a participant is created. His name is "Cname", his ip-address is the looopback
+	interface, his RTP port is 4545 and his RTCP port is 4546. By defaul, this
+	participant is both a receiver and a sender. Of course, this is just us.
+7)	The participant is added to the session.
+8)	We enter an infinite loop where we constantly send the string "123" to ourselves.
+9)	receiveData will repeatedly be called and write out "I received 123 from MyCname".
+	
+Import jlibrtp.*;
+public AnExample implements RTPAppIntf {
+  RTPSession session = null;
+  Public void receiveData(byte[] data, String cname, long time) {
+	System.out.println(“I received “ + (new String(data)) + “from “+ cname); 
+  }
+  Public AnExample() { }
+  public static void main(String [] args) {
+	AnExample example = new AnExample();
+	example.session = new RTPSession();
+	example.session.RTPSessionRegister(4545,4546,”MyCname”,111);
+	Participant p = new Participant(“Cname”,”127.0.0.1”,4545,4546);
+	example.session.addParticipant(p);
+	String str = “123”;
+	while(true) { session.sendData(str.getBytes()) }
+}
 
 ------Task List
 Code
