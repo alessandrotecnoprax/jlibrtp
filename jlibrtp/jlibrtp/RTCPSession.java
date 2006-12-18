@@ -25,7 +25,10 @@ import java.net.MulticastSocket;
 
 /**
  * Datastructure that holds threads and structures used for RTCP
- * 
+ * This RTCPSession is the basic manager class for managing of
+ * the RTCPSession between different participants
+ * This class will create and maintain all of the different RTCP
+ * send and receive threads.
  * @author Vaishnav Janardhan
  */
 public class RTCPSession {
@@ -41,6 +44,11 @@ public class RTCPSession {
 	RTCPSDESHeader sdesThread = null;
 	RTCPSRSendThread srSendThread = null;
 	
+	/**
+	 * Constructor for starting of the RTCP session. This is invoked by
+	 * the RTPSession, when ever it is initialized.
+	 * @param rtpSession
+	 */
 	RTCPSession(RTPSession rtpSession) {
 		this.rtcpPort = rtcpPort;
 		this.rtpSession = rtpSession;
