@@ -21,6 +21,7 @@ package jlibrtp;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.concurrent.locks.*;
@@ -51,7 +52,7 @@ public class RTPSession {
 	 protected DatagramSocket rtcpSock = null;
 	 protected MulticastSocket rtpMCSock = null;
 	 protected MulticastSocket rtcpMCSock = null;
-	 
+	 protected InetAddress mcGroup = null;
 	 // Internal state
 	 protected int payloadType = 0;
 	 protected long ssrc;
@@ -109,11 +110,15 @@ public class RTPSession {
 	  * 
 	  * @param	rtpSock a multicast socket for RTP communication
 	  * @param	rtcpSock a multicast socket for RTCP communication
+	  * @param	multicastGroup the multicast group that we want to communicate with.
 	  * @param	aCNAME the character string that identifies you, example username@hostname.
 	  */
-	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, String aCNAME) throws Exception {
+	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, InetAddress multicastGroup,String aCNAME) throws Exception {
 		 MulticastSocket rtpMCSock =rtpSock;
 		 MulticastSocket rtcpMCSock = rtcpSock;
+		 mcGroup = multicastGroup;
+		 rtpMCSock.joinGroup(mcGroup);
+		 rtcpMCSock.joinGroup(mcGroup);
 		 CNAME = aCNAME;
 		 mcSession = true;
 	 }
@@ -182,14 +187,14 @@ public class RTPSession {
 			while(set.hasMoreElements()) {
 				Participant p = (Participant)set.nextElement();
 				if(RTPSession.rtpDebugLevel > 8) {
-					System.out.println("RTPSenderThread.sendData() Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
+					System.out.println("RTPSenderThread.sendData() unicast Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
 				}
 				try {	
 					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getRtpDestPort());
 					//Actually send the packet
 					rtpSock.send(packet);
 				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() failed - Possibly lost socket.");
+					System.out.println("RTPSession.sendData() unicast failed - Possibly lost socket.");
 					e.printStackTrace();
 					return -1;
 				}
@@ -197,6 +202,19 @@ public class RTPSession {
 			}
 		}else {
 			//Multicast
+
+			if(RTPSession.rtpDebugLevel > 8) {
+				System.out.println("RTPSenderThread.sendData() multicasting");
+			}
+			try {	
+				DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,mcGroup,rtpMCSock.getLocalPort());
+				//Actually send the packet
+				rtpMCSock.send(packet);
+			} catch (Exception e) {
+				System.out.println("RTPSession.sendData() multicast failed - Possibly lost socket.");
+				e.printStackTrace();
+				return -1;
+			}
 
 		}
 		
