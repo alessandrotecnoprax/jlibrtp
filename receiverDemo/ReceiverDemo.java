@@ -1,4 +1,3 @@
-package receiverDemo;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,53 +16,37 @@ package receiverDemo;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package receiverDemo;
 
-
-import java.io.File;
-import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import java.util.concurrent.locks.*;
 
 import jlibrtp.*;
 
-
+/**
+ * @author Arne Kepp
+ */
 public class ReceiverDemo implements RTPAppIntf {
 	//test
 	RTPSession rtpSession = null;
 	private Position curPosition;
-	private final int EXTERNAL_BUFFER_SIZE = 320; // 1 Kbyte
 	byte[] abData = null;
 	int nBytesRead = 0;
 	int pktCount = 0;
 	int offsetCount = 0;
 	SourceDataLine auline;
 	
-	final public Lock dataLock = new ReentrantLock();
-	final public Condition dataReady = dataLock.newCondition();
-	
 	 enum Position {
 		LEFT, RIGHT, NORMAL
 	};
 
 	public void receiveData(byte[] data, String cname, long time) {
-		//System.out.println("receiveData, time:" + time );
 		auline.write(data, 0, data.length);
 		pktCount++;
-		//System.out.println("pktcount:" + pktCount + "  " + auline.getBufferSize() + " " + auline.available() );
-		//if(pktCount == 1562) {
-		//	System.out.println("Received 1562 packets");
-		//}
-		//dataLock.lock();
-	    //try { dataReady.signalAll(); } finally {
-	    //	dataLock.unlock();
-	    //}
 	}
 	
 	public ReceiverDemo(String CNAME,int recvPort)  {
@@ -77,10 +60,6 @@ public class ReceiverDemo implements RTPAppIntf {
 		} else {
 			System.out.println("Couldn't register");
 		}
-		//public Participant(String sendingHost,int port,String CNAME)
-		//Participant p = new Participant(recvAddr,recvPort, CNAME);
-		//p.setIsSender();
-		//rtpSession.addParticipant(p);
 	}
 
 	/**
@@ -124,16 +103,9 @@ public class ReceiverDemo implements RTPAppIntf {
 		auline.start();
 		try {
 			while (nBytesRead != -1) {
-				if(abData != null) {
-					auline.write(abData, 0, abData.length);
-					abData = null;
-				}
-				try {
-					dataLock.lock();
-					try { dataReady.await(); } catch (Exception e) {};
-				} finally {
-					dataLock.unlock();
-				}
+				// Used to write audiot to auline here,
+				// now moved directly to receiveData.
+				try { Thread.sleep(100); } catch(Exception e) { }
 			}
 		} finally {
 			auline.drain();
