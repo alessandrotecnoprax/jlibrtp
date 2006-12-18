@@ -21,6 +21,10 @@ package jlibrtp;
 /**
  * RTCP Common Header
  * 
+ * This class is the common header class, which will be used by all the messages for
+ * creating of the header structure. It is also used to decode and incoming packet and 
+ * retrieve the message type
+ * 
  * @author Vaishnav Janardhan
  */
 public class RTCPCommonHeader
