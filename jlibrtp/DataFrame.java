@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,6 +16,7 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
 
 /**
@@ -28,7 +28,6 @@ package jlibrtp;
  * 
  * @author Arne Kepp
  */
-
 public class DataFrame {
 	public long timeStamp;
 	public long SSRC;
@@ -59,11 +58,11 @@ public class DataFrame {
 		// Concatenate the data of the packets
 		for(int i=0; i< noPkts; i++) {
 			aPkt = aBufNode.pkt;
-			// This is somewhat silly, because getPayload results in an array copy itself.
 			System.arraycopy(aPkt.getPayload(), 0, data, i*payloadLength, payloadLength);
 			// Get next node
 			aBufNode = aBufNode.nextFrameNode;
 		}
+		
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("<- DataFrame(PktBufNode, noPkt), data length: " + data.length);
 		}

@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,15 +16,23 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
-/**
- * These functions are ridiculously expensive, better way?
- * 
- * Thought: Only return array for the specific character, combine arrays once outside of these functions.
+/** 
+ * Generic functions for converting between unsigned integers and byte[]s.
+ *
+ * @author Arne Kepp
  */
-
 public class StaticProcs {
-	// Arne's stuff
+
+	/** 
+	 * Converts an integer into an array of bytes. 
+	 * Primarily used for 16 bit unsigned integers, ignore the first two octets.
+	 * 
+	 * @param i an integer
+	 * @return byte[4] representing the integer as unsigned, most significant bit first. 
+	 * @author Arne Kepp
+	 */
 	public static byte[] intToByteWord(int i) {
 		byte[] byteWord = new byte[4];
 		byteWord[0] = (byte) ((i >>> 24) & 0x000000FF);
@@ -35,6 +42,13 @@ public class StaticProcs {
 		return byteWord;
 	}
 	
+	/** 
+	 * Converts an unsigned 32 bit integer, stored in a long, into an array of bytes.
+	 * 
+	 * @param j a long
+	 * @return byte[4] representing the unsigned integer, most significant bit first. 
+	 * @author Arne Kepp
+	 */
 	public static byte[] longToByteWord(long j) {
 		int i = (int) j;
 		byte[] byteWord = new byte[4];
@@ -45,7 +59,14 @@ public class StaticProcs {
 		return byteWord;
 	}
 	
-	// Returns a 16 bit unsigned int in an int
+	/** 
+	 * Combines two bytes (most significant bit first) into a 16 bit unsigned integer.
+	 * 
+	 * @param highOrder most significant byte
+	 * @param lowOrder least significant byte
+	 * @return int with the 16 bit unsigned integer
+	 * @author Arne Kepp
+	 */
 	public static int combineBytes(byte highOrder, byte lowOrder) {
 		int temp = highOrder;
 		temp = (temp << 8);
@@ -53,7 +74,16 @@ public class StaticProcs {
 		return temp;
 	}
 	
-	// Returns a 32 bit unsigned int in a long
+	/** 
+	 * Combines four bytes (most significant bit first) into a 32 bit unsigned integer.
+	 * 
+	 * @param highOrder most significant byte
+	 * @param highMidOrder 2nd most significant byte
+	 * @param lowMidOrder 3rd most significant byte
+	 * @param lowOrder least significant byte
+	 * @return long with the 32 bit unsigned integer
+	 * @author Arne Kepp
+	 */
 	public static long combineBytes(byte highOrder, byte highMidOrder, byte lowMidOrder, byte lowOrder) {		
 		byte[] arr = new byte[4];
 		arr[0] = lowOrder;
@@ -69,36 +99,32 @@ public class StaticProcs {
 		}
 		return accum;
 	}
-
-	// Leftovers from when the code was char-based (largest unsigned int available)
-	//public static long combineChars(char highOrder, char lowOrder) {
-	//	long temp = highOrder;
-	//	temp = (temp << 16);
-	//	temp |= lowOrder;
-	//	return temp;
-	//}
-	//public static void printBits(char aChar) {
-	//	int temp;
-	//	for(int i=15; i>=0; i--) {
-	//		temp = (aChar >>> i);
-	//		temp &= 0x00000001;
-	//		System.out.print(""+temp);
-	//
-	//	}
-	//	System.out.println();
-	//}
+	
+	/** 
+	 * Print the bits of a byte to standard out. For debugging.
+	 * 
+	 * @param aByte the byte you wish to print out.
+	 * @author Arne Kepp
+	 */
 	public static void printBits(byte aByte) {
 		int temp;
 		for(int i=7; i>=0; i--) {
 			temp = (aByte >>> i);
 			temp &= 0x0001;
 			System.out.print(""+temp);
-
 		}
 		System.out.println();
 	}
 	
-	// Vaishnav's stuff
+	//------------------ Need to move code from RTCP-files here and clean up -------------
+	
+	/** 
+	 * Converts 32 bit uint (in long) to binary
+	 * 
+	 * @param srcPort 32 bit integer (in long)
+	 * @return byte[32] with one bit in each byte
+	 * @author Vaishnav Janardhan
+	 */
 	public static byte[] longToBin(long srcPort)
 	{
 		byte srcPortByte[] = new byte[32];
@@ -157,7 +183,13 @@ public class StaticProcs {
 	
 	}
 	
-	
+	/** 
+	 * Converts byte[32] to 32 bit uint (in long)
+	 * 
+	 * @param bin with one bit in each byte
+	 * @return 32 bit integer (in long)
+	 * @author Vaishnav Janardhan
+	 */
 	static long longBin2Dec(byte[] bin)   
 	{
 	  int  b, k, m, n;
@@ -186,6 +218,13 @@ public class StaticProcs {
 	  return(sum);
 	}
 
+	/** 
+	 * Converts 32 bit int (in int) to binary
+	 * 
+	 * @param srcPort 32 bit integer (in int)
+	 * @return byte[32] with one bit in each byte
+	 * @author Vaishnav Janardhan
+	 */
 	public static byte[] intToBin(int srcPort)
 	{
 		byte srcPortByte[] = new byte[32];
@@ -244,6 +283,13 @@ public class StaticProcs {
 	
 	}
 	
+	/** 
+	 * Converts byte[32] to 32 bit int (in int)
+	 * 
+	 * @param bin with one bit in each byte
+	 * @return 32 bit integer
+	 * @author Vaishnav Janardhan
+	 */
 	static int intBin2Dec(byte[] bin)   
 	{
 	  int  b, k, m, n;

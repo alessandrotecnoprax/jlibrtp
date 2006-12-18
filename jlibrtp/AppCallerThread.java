@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,25 +16,27 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
+import java.util.Enumeration;
+import java.util.concurrent.TimeUnit;
 /**
- * The purpose of this thread is to check whether there are
- * packets ready from any participants.
+ * The purpose of this thread is to check whether there are packets ready from 
+ * any participants.
  * 
  * It should sleep when not in use, and be woken up by a condition variable.
  * 
- * Optionally, if we do jitter-control, the condition variable should
- * have a max waiting period equal to how often we need to push data.
+ * Optionally, if we do jitter-control, the condition variable should have a max waiting period 
+ * equal to how often we need to push data.
+ * 
+ * @author Arne Kepp
  */
-import java.util.Enumeration;
-import java.util.concurrent.TimeUnit;
-
 public class AppCallerThread extends Thread {
-	RTPSession session;
+	RTPSession rtpSession;
 	RTPAppIntf appl;
 	
-	public AppCallerThread(RTPSession theSession, RTPAppIntf rtpApp) {
-		session = theSession;
+	public AppCallerThread(RTPSession session, RTPAppIntf rtpApp) {
+		session = session;
 		appl = rtpApp;
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> AppCallerThread created");
@@ -47,21 +48,25 @@ public class AppCallerThread extends Thread {
 			System.out.println("-> AppCallerThread.run()");
 		}
 		
-		while(session.endSession == false) {
+		while(rtpSession.endSession == false) {
 			
-			session.pktBufLock.lock();
+			rtpSession.pktBufLock.lock();
 		    try {
 				if(RTPSession.rtpDebugLevel > 15) {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
-		    	// We can add timeout to this
-		    	try { session.pktBufDataReady.await(13, TimeUnit.MILLISECONDS); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
-				//try { session.pktBufDataReady.await(); } catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());} 
-				//if(RTPSession.rtpDebugLevel > 15) {
-				//	System.out.println("<-> AppCallerThread waking up");
-				//}
+				
+				// Check whether the application has defined a maximum timeout.
+				if(rtpSession.callbackTimeout > 0) {
+					try { rtpSession.pktBufDataReady.await(rtpSession.callbackTimeout, TimeUnit.MILLISECONDS); } 
+					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+				}else{
+					try { rtpSession.pktBufDataReady.await(); } 
+					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+				}
+
 		    	// Next loop over all participants and check whether they have anything for us.
-				Enumeration set = session.partDb.getSenders();
+				Enumeration set = rtpSession.partDb.getSenders();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
@@ -71,25 +76,24 @@ public class AppCallerThread extends Thread {
 					}
 				}
 		    	
-				// For now we accept data from unkown senders as well.
-				set = session.partDb.getUnknownSenders();
-				while(set.hasMoreElements()) {
-					Participant p = (Participant)set.nextElement();
-					//System.out.println("check it.");
-					//while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 5 && p.pktBuffer.frameIsReady()) {
-					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 4) {
-						//System.out.println("yap");
-						DataFrame aFrame = p.pktBuffer.popOldestFrame();
-						if(aFrame != null) {
-							appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
-						} else {
-							System.out.println("Dropping frame!");
+				// Does the application want packet from participants it has not explicitly added?
+				if(rtpSession.naiveReception) {
+					set = rtpSession.partDb.getUnknownSenders();
+					while(set.hasMoreElements()) {
+						Participant p = (Participant)set.nextElement();
+						while(p.pktBuffer != null && p.pktBuffer.length > rtpSession.reorderBufferLength) {
+							DataFrame aFrame = p.pktBuffer.popOldestFrame();
+							if(aFrame != null) {
+								appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+							} else {
+								System.out.println("Dropping frame!");
+							}
 						}
 					}
 				}
 		    
 		     } finally {
-		       session.pktBufLock.unlock();
+		       rtpSession.pktBufLock.unlock();
 		     }
 			
 		}

@@ -1,5 +1,3 @@
-package jlibrtp;
-
 /**
  * Java RTP Library
  * Copyright (C) 2006 Vaishnav Janardhan
@@ -19,6 +17,7 @@ package jlibrtp;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+package jlibrtp;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
@@ -27,6 +26,11 @@ import java.net.DatagramSocket;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
+/**
+ * RTCP Receiver Report Thread
+ * 
+ * @author Vaishnav Janardhan
+ */
 public class RTCPRRSendThread implements Signalable
 {
 	RTCPSession rtcpSession = null;
@@ -43,7 +47,7 @@ public class RTCPRRSendThread implements Signalable
 	
 	public void signalTimeout() 
 	{
-		Hashtable rrRpt = rtcpSession.rtpSession.recvThrd.RTCPRecvRptTable;
+		 Hashtable rrRpt = rtcpSession.rtpSession.recvThrd.RTCPRecvRptTable;
 		 System.out.println("I am Sending Signal timeout");
 		 Enumeration set = rtcpSession.rtpSession.participantTable.elements();
 		 while(set.hasMoreElements()) 

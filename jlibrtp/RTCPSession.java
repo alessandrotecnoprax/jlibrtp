@@ -1,5 +1,3 @@
-package jlibrtp;
-
 /**
  * Java RTP Library
  * Copyright (C) 2006 Vaishnav Janardhan
@@ -18,10 +16,17 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 
+/**
+ * Datastructure that holds threads and structures used for RTCP
+ * 
+ * @author Vaishnav Janardhan
+ */
 public class RTCPSession {
 	RTPSession rtpSession = null;
 	DatagramSocket rtcpSock = null;
