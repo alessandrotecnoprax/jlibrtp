@@ -20,6 +20,7 @@ package jlibrtp;
 
 /**
  * RTCP Bye Packet
+ * This class will construct the BYE message packet and close down the session.
  * 
  * @author Vaishnav Janardhan
  */
@@ -28,7 +29,11 @@ public class RTCPByePkt
 	RTCPCommonHeader commonHdr = null;
 	byte[] rawBYEPkt = null;
 	long[] ssrcArray = new long[32];
-	
+
+	/*
+	 * Constructor that will be used to constructor the BYE Message packet.
+	 * 
+	 */
 	RTCPByePkt (byte[] byePkt,RTCPCommonHeader header)
 	{
 		this.commonHdr = header;
@@ -38,6 +43,12 @@ public class RTCPByePkt
 		
 		decodeBYEPkt(pktData);
 	}
+	
+	/**
+	 * Method to construct the BYE Message packet.
+	 * @param ssrcCount
+	 * @param ssrcArray
+	 */
 	
 	RTCPByePkt(int ssrcCount, long[] ssrcArray)
 	{
@@ -93,6 +104,10 @@ public class RTCPByePkt
 		
 	}
 	
+	/**
+	 * Method to encode the BYE packet.
+	 * @return
+	 */
 	byte[] encodeBYEPkt()
 	{
 		byte[] firstLine = commonHdr.writeFristLine();
