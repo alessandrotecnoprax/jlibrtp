@@ -1,6 +1,6 @@
 /**
  * Java RTP Library
- * Copyright (C) 2006 Vaishnav Janardhan / Arne Kepp
+ * Copyright (C) 2006 Arne Kepp / Vaishnav Janardhan
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,10 @@ package jlibrtp;
 import java.net.InetAddress;
 
 /**
- * A participant represents a peer in an RTPSession. Based on the information stored on these objects, packets are processed and statistics generated for RTCP.
+ * A participant represents a peer in an RTPSession. Based on the information stored on 
+ * these objects, packets are processed and statistics generated for RTCP.
+ * 
+ * If you need to update a participant, 
  */
 public class Participant {
 	private int rtpDestPort = 0;
@@ -38,7 +41,7 @@ public class Participant {
 	protected long lastRecvTimeStamp = -1;
 	
 	//Store the packets received from this participant
-	public PktBuffer pktBuffer = null;
+	protected PktBuffer pktBuffer = null;
 
 
 	/**
@@ -110,20 +113,20 @@ public class Participant {
 	}
 	
 	/**
-	 * Check whether this participant expects packets from us or not.
+	 * RTP port we expect peer to listen on.
 	 * 
-	 * @return true if the receiver expects packets from us.
+	 * @return the UDP port number
 	 */
-	int getRtpDestPort() {
+	public int getRtpDestPort() {
 		return rtpDestPort;
 	}
 	
 	/**
-	 * Check whether this participant expects packets from us or not.
+	 * RTCP port we expect peer to listen on.
 	 * 
-	 * @return true if the receiver expects packets from us.
+	 * @return the UDP port number
 	 */
-	int getRtcpDestPort() {
+	public int getRtcpDestPort() {
 		return rtcpDestPort;
 	}
 	
@@ -137,9 +140,36 @@ public class Participant {
 	}
 	
 	/**
-	 * Address registered with this participant.
+	 * Update RTP port of participant
 	 * 
-	 * @return address of participant
+	 * @param rtpPort the UDP port to which we will send packets
+	 */
+	public void setRtpDestPort(int rtpPort) {
+		rtpDestPort = rtpPort;
+	}
+	
+	/**
+	 * Update RTCP port of participant
+	 * 
+	 * @param rtcpPort the UDP port to which we will send packets
+	 */
+	public void setRtcpDestPort(int rtcpPort) {
+		rtcpDestPort = rtcpPort;
+	}
+	
+	/**
+	 * Update ip address of participant.
+	 * 
+	 * @param newAdr the new address
+	 */
+	public void setInetAddress(InetAddress newAdr) {
+		address = newAdr;
+	}
+	
+	/**
+	 * CNAME registered for this participant.
+	 * 
+	 * @return the cname
 	 */
 	public String getCNAME() {
 		return cname;
@@ -148,7 +178,7 @@ public class Participant {
 	/**
 	 * SSRC for participant, determined through RTCP SDES
 	 * 
-	 * @return SSRC (32 bit unsigned integer)
+	 * @return SSRC (32 bit unsigned integer as long)
 	 */
 	public long getSSRC() {
 		return this.ssrc;
