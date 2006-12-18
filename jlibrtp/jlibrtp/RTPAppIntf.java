@@ -1,5 +1,3 @@
-package jlibrtp;
-
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -19,7 +17,20 @@ package jlibrtp;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+package jlibrtp;
 
+
+/**
+ * 
+ * 
+ * The instance holds a participant database, as well as other information about the session. 
+ * When the application registers with the session, the necessary threads for receiving and 
+ * processing RTP packets are spawned.
+ * 
+ * RTP Packets are sent synchronously, all other operations are asynchronous.
+ * 
+ * @author Arne Kepp
+ */
 public interface RTPAppIntf {
 	
 	public void receiveData(byte[] buff, String cName, long time);

@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Vaishnav Janardhan
@@ -17,7 +16,13 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
+/**
+ * Timer
+ * 
+ * @author Vaishnav Janardhan
+ */
 public class Timer 
 {
 	private int timeout;

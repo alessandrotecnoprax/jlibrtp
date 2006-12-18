@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,7 +16,7 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+package jlibrtp;
 
 /**
  * A PktBuffer stores packets either for buffering purposes,
@@ -26,7 +25,7 @@ package jlibrtp;
  * It also drops duplicate packets.
  * 
  * Note that newest is the most recently received, i.e. highest timeStamp
- * Next means new to old (recently received to previously received)
+ * Next means new to old (from recently received to previously received)
  * 
  *  All this stuff needs to be adjusted for rollovers!!!
  * 
@@ -62,19 +61,13 @@ public class PktBuffer {
 	/**
 	 * Adds a packet, this happens in constant time if they arrive in order.
 	 * Optimized for the case where each pkt is a complete frame.
+	 * @param aPkt the packet to be added to the buffer.
+	 * @return integer, negative if operation failed (see code)
 	 */
-	public synchronized int addPkt(RtpPkt aPkt) {
-		// remove me.
-		if(oldest == null) {
-			PktBufNode tmpNode = newest;
-			while(tmpNode.nextFrameQueueNode != null) {
-				tmpNode = tmpNode.nextFrameQueueNode;
-			}
-			oldest = tmpNode;
-			System.out.println("oldest was null");
-		}
+	protected synchronized int addPkt(RtpPkt aPkt) {
 		if(aPkt == null) {
-			System.out.println("aPkt null");
+			System.out.println("! PktBuffer.addPkt(aPkt) aPkt was null");
+			return -5;
 		}
 		
 		if(RTPSession.rtpDebugLevel > 7) {
@@ -86,7 +79,9 @@ public class PktBuffer {
 		if(aPkt.getSsrc() != SSRC) {
 			System.out.println("PktBuffer.addPkt() SSRCs don't match!");
 		}
+		
 		if(length != 0) {
+			// The packetbuffer is not empty.
 			if(newNode.timeStamp > newest.timeStamp && compLen == 1) {
 				// Yippi, small frames, and they're coming in order
 				newNode.nextFrameQueueNode = newest;
@@ -95,7 +90,8 @@ public class PktBuffer {
 				length++;
 				lastOp = "simpleAdd";
 			} else {
-
+				//There are packets, we need to order this one right.
+				
 				if(oldest.timeStamp > timeStamp || oldest.seqNum > aPkt.getSeqNumber()) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
@@ -105,24 +101,25 @@ public class PktBuffer {
 					return -1;
 				}
 				
-				//Need to do some real work
+				//Need to do some real work, find out where it belongs (lin search from back).
 				PktBufNode tmpNode = newest;
-				
-				//System.out.println("newest.timeStamp: " + newest.timeStamp);
-				// Find our place in the queue from the back
 				while(tmpNode.timeStamp > timeStamp) {
 					tmpNode = tmpNode.nextFrameQueueNode;
 				}
 				
+				//----------------------- START same frame --------------------------------
 				if(tmpNode.timeStamp == timeStamp) {
+					//Packet has same timestamp, presumably belongs to frame. Need to order within frame.
 					if(RTPSession.rtpDebugLevel > 8) {
-						System.out.println("   Found pkt with existing timeStamp: " + timeStamp);
-						lastOp = "dupe timestamp";
+						System.out.println("Found pkt with existing timeStamp: " + timeStamp);
 					}
+					lastOp = "dupe timestamp";
 					
 					// Node has same timeStamp, assume pkt belongs to frame
 					int seqNumber = aPkt.getSeqNumber();
+					
 					if(tmpNode.seqNum < seqNumber) {
+						// this is not the first packet in the frame
 						tmpNode.pktCount++;
 						
 						// Find the right spot
@@ -130,7 +127,7 @@ public class PktBuffer {
 							tmpNode = tmpNode.nextFrameNode;
 						}
 						
-						// Check whether packet is duplicate.
+						// Check whether packet is duplicate
 						if(tmpNode.nextFrameNode != null && tmpNode.nextFrameNode.seqNum == seqNumber) {
 							if(RTPSession.rtpDebugLevel > 2) {
 								System.out.println("PktBuffer.addPkt Dropped a duplicate packet!");
@@ -140,7 +137,7 @@ public class PktBuffer {
 						
 						newNode.nextFrameNode = tmpNode.nextFrameNode;
 						tmpNode.nextFrameNode = newNode;
-						
+					
 					} else {
 						// newNode has the lowest sequence number
 						newNode.nextFrameNode = tmpNode;
@@ -157,7 +154,11 @@ public class PktBuffer {
 							newNode.prevFrameQueueNode = tmpNode.prevFrameQueueNode;
 							tmpNode.prevFrameQueueNode = null;
 						}
-					}	
+						if(newest.timeStamp == timeStamp) {
+							newest = newNode;
+						}
+					}
+					//-----------------------------  END same frame ---------------------------------
 				} else {
 					// Update the length of this buffer
 					length++;
@@ -175,41 +176,35 @@ public class PktBuffer {
 					if(timeStamp > newest.timeStamp) {
 						newest = newNode; 
 					}
+					
+					// Doesn't happen.
+					//if(timeStamp > oldest.timeStamp) {
+					//	oldest = newNode;
+					//}
 				}
 			}
 		} else {
-			// The buffer is empty
+			// The buffer was empty, this packet is the one and only.
 			newest = newNode;
 			oldest = newNode;
 			length = 1;
 		}
 		
-		if(RTPSession.rtpDebugLevel > 10) {
-			this.debugPrint();
-		}
+
 		if(RTPSession.rtpDebugLevel > 7) {
+			if(RTPSession.rtpDebugLevel > 10) {
+				this.debugPrint();
+			}
 			System.out.println("<- PktBuffer.addPkt() , length:" + length);
 		}
 		return 0;
 	}
 	
-	/**
-	 * Checks the oldest frame, if there is one, sees whether it is complete.
-	 * @return Returns false if there are no complete frames available.
-	 */
-	//public boolean frameIsReady() {
-	//	if(oldest == null || oldest.pktCount != compLen) {
-	//		return false;
-	//	} else {
-	//		return true;
-	//	}
-	//}
-	
 	/** 
 	 * Checks the oldest frame, if there is one, sees whether it is complete.
-	 * @return Returns false if there are no complete frames available.
+	 * @return Returns null if there are no complete frames available.
 	 */
-	public synchronized DataFrame popOldestFrame() {
+	protected synchronized DataFrame popOldestFrame() {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> PktBuffer.popOldestFrame()");
 		}
@@ -217,15 +212,6 @@ public class PktBuffer {
 			this.debugPrint();
 		}
 		PktBufNode tmpNode = oldest;
-		
-		// remove me.
-		if(tmpNode == null) {
-			tmpNode = newest;
-			while(tmpNode.nextFrameQueueNode != null) {
-				tmpNode = tmpNode.nextFrameQueueNode;
-			}
-			oldest = tmpNode;
-		}
 		
 		if(oldest != null) {
 			// Pop it off, null all references.
@@ -240,15 +226,13 @@ public class PktBuffer {
 			}
 			
 			length--;
-			//if(tmpNode.pktCount == compLen) {
-			//	if(RTPSession.rtpDebugLevel > 7) {
-			//		System.out.println("<- PktBuffer.popOldestFrame() returns frame");
-			//	}
+			
+			if(tmpNode.pktCount == compLen) {
+				if(RTPSession.rtpDebugLevel > 7) {
+					System.out.println("<- PktBuffer.popOldestFrame() returns frame");
+				}
 				return new DataFrame(tmpNode, compLen);
-			//} else {
-			//	System.out.println("pop returns null, lastOp: " + lastOp);
-			//	return null;
-			//}
+			}
 		}
 		// If we get here we have little to show for.
 		if(RTPSession.rtpDebugLevel > 2) {
@@ -257,10 +241,17 @@ public class PktBuffer {
 		return null;
 	}
 	
-	public int getLength() {
+	/** 
+	 * Returns the length of the packetbuffer.
+	 * @return number of frames (complete or not) in packetbuffer.
+	 */
+	protected int getLength() {
 		return length;
 	}
 	
+	/** 
+	 * Prints out the packet buffer, oldest node first (on top).
+	 */
 	public void debugPrint() {
 		System.out.println("PktBuffer.debugPrint() : length " + length + " SSRC " + SSRC);
 		PktBufNode tmpNode = oldest;

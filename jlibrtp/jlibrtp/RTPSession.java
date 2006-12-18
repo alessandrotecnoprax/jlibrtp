@@ -21,12 +21,8 @@ package jlibrtp;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.nio.*;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.concurrent.locks.*;
 import java.util.Random;
 
@@ -36,9 +32,11 @@ import java.util.Random;
  * The instance holds a participant database, as well as other information about the session. When the application registers with the session, the necessary threads for receiving and processing RTP packets are spawned.
  * 
  * RTP Packets are sent synchronously, all other operations are asynchronous.
+ * 
+ * @author Arne Kepp
  */
 public class RTPSession {
-	 final static public int rtpDebugLevel = 1;
+	 final static public int rtpDebugLevel = 10;
 	 Hashtable participantTable = new Hashtable();
 	 
 	 // Is this a multicast session?
@@ -55,9 +53,17 @@ public class RTPSession {
 	 protected long lastTimestamp = 0;
 	 protected int seqNum = 0;
 	 protected String CNAME = "";
-	 int sentPktCount = 0;
-	 int sentOctetCount = 0;
+	 protected int sentPktCount = 0;
+	 protected int sentOctetCount = 0;
 	 
+	 //By default we use packetbuffers of length 5 to reorder.
+	 protected int reorderBufferLength = 5;
+	 //By default we do not return packets from strangers.
+	 protected boolean naiveReception = false;
+	 //By default we will call receiveData() only when a new packet arrives.
+	 protected int callbackTimeout = -1;
+	 
+	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(); 
 	 // Handle to application
 	 protected RTPAppIntf appIntf = null;
@@ -90,7 +96,7 @@ public class RTPSession {
 		 rtpSock = new DatagramSocket(rtpPort);
 		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
-		 this.rtcpSession = new RTCPSession(rtcpPort,this);
+		 this.rtcpSession = new RTCPSession(this);
 
 	 }
 	 
@@ -135,7 +141,7 @@ public class RTPSession {
 		 	appCallerThrd.start();
 		 	
 		 	// Set an SSRC
-		 	Random r = new Random();
+		 	Random r = new Random(System.currentTimeMillis());
 		 	this.ssrc = r.nextInt();
 			if(this.ssrc < 0) {
 				 this.ssrc = this.ssrc * -1;
@@ -160,36 +166,46 @@ public class RTPSession {
 			System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes.");
 		}
 		
+		// Create a new RTP Packet
 		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),this.ssrc,getNextSeqNum(),this.payloadType,buf);
 		
+		// Creates a raw packet
 		byte[] pktBytes = pkt.encode();
-		Enumeration set = partDb.getReceivers();
+		
+		//Are we using multicast or not?
+		if(!mcSession) {
 			
-		while(set.hasMoreElements()) {
-			Participant p = (Participant)set.nextElement();
-
-			if(p.isReceiver()) {
+			//Send it to all of the receives.
+			Enumeration set = partDb.getReceivers();	
+			while(set.hasMoreElements()) {
+				Participant p = (Participant)set.nextElement();
 				if(RTPSession.rtpDebugLevel > 8) {
 					System.out.println("RTPSenderThread.sendData() Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
 				}
 				try {	
 					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getRtpDestPort());
+					//Actually send the packet
 					rtpSock.send(packet);
-					this.sentPktCount++;
-					this.sentOctetCount++;
 				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() - Possibly lost socket.");
+					System.out.println("RTPSession.sendData() failed - Possibly lost socket.");
 					e.printStackTrace();
 					return -1;
 				}
+
 			}
-	
+		}else {
+			//Multicast
+
 		}
+		
+		//Update our stats
+		this.sentPktCount++;
+		this.sentOctetCount++;
 		
 		if(RTPSession.rtpDebugLevel > 3) {
 				System.out.println("<- RTPSession.sendData(byte[])");
 		}  
-			
+		
 		 return 0;
 	 }
 	
@@ -205,6 +221,7 @@ public class RTPSession {
 			System.out.println("<-> RTPSession.addParticipant("+p.cname+ ","+p.ssrc+")");
 		}		
 		
+		// Check whether the paticipant has an SSRC, if so, update.
 		Participant tmp = null;
 		if(p.ssrc > 0) {
 			tmp = partDb.getParticipant(ssrc);
@@ -217,7 +234,7 @@ public class RTPSession {
 			}
 		}
 		
-		// 
+		// Otherwise, the participant is presumably known only by cname.
 		Participant tmp2 = null;
 		if(p.cname != null) {
 			tmp2 = partDb.getParticipant(p.cname);
@@ -230,7 +247,7 @@ public class RTPSession {
 			}
 		}
 		
-		// This is actually a new one.
+		// This is a completely unknown participant.
 		if(tmp == null && tmp2 == null) {
 			partDb.addParticipant(p);
 			
@@ -374,6 +391,77 @@ public class RTPSession {
 	public int getPayloadType() {
 		return this.payloadType;
 	}
+	
+	/**
+	 * Should packets from unknown participants be returned to the application? This can be dangerous.
+	 * 
+	 * @param doAccept packets from participants not added by the application.
+	 */
+	public void setNaivePktReception(boolean doAccept) {
+		naiveReception = doAccept;
+	}
+	
+	/**
+	 * Are packets from unknown participants returned to the application?
+	 * 
+	 * @return whether we accept packets from participants not added by the application.
+	 */
+	public boolean naivePktReception() {
+		return naiveReception;
+	}
+	
+	/**
+	 * How many packets should be buffered. This affects how well we can reorder
+	 * packets, but introduces lag. The default value is 5.
+	 * 
+	 * @param length the number of frames to be buffered in the RTP stack
+	 * @return the length the buffers were actually set to.
+	 */
+	public int setReorderBufferLength(int length) {
+		if(length > 1) {
+			reorderBufferLength = length;
+		} else {
+			reorderBufferLength = 5;
+		}
+		return reorderBufferLength;
+	}
+	
+	/**
+	 * How many packets are currently being buffered for reordering purposes.
+	 * 
+	 * @return the requested lenth of packet buffers.
+	 */
+	public int reorderBufferLength() {
+		return reorderBufferLength;
+	}
+	
+	/**
+	 * The maximum number of milliseconds that should pass before the callback
+	 * interface is called with receiveData(). Note that the actual time
+	 * may vary due to thread scheduling. A negative number will disable this feature.
+	 * 
+	 * @param milliseconds the number of milliseconds to wait before calling receiveData()
+	 * @return the 
+	 */
+	public int setCallbackTimeout(int milliseconds) {
+		if(milliseconds > 0) {
+			callbackTimeout = milliseconds;
+		} else {
+			callbackTimeout = -1;
+		}
+		return milliseconds;
+	}
+	
+	/**
+	 * The maximum number of milliseconds that should pass before the callback
+	 * interface is called with receiveData().
+	 * 
+	 * @return the number of milliseconds that can pass, a negative number means infinite.
+	 */
+	public int callbackTimeout() {
+		return callbackTimeout;
+	}
+	
 	
 	/**
 	 * Change the RTCP multicast socket of the session. 

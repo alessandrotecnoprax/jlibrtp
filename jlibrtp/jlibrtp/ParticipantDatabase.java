@@ -1,4 +1,3 @@
-package jlibrtp;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,9 +16,25 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
 import java.util.*;
-	
+
+/**
+ * The participant database maintains three hashtables with participants.
+ * 
+ * The key issue is to be fast for operations that happen every time an
+ * RTP packet is sent or received. We allow linear searching in cases 
+ * where we need to update participants with information.
+ * 
+ * The keying is therefore usually the SSRC. In cases where we have the
+ * cname, but no SSRC is known (no SDES packet has been received), a
+ * simple hash i calculated based on the CNAME. The RTCP code should,
+ * when receiving SDES packets, check whether the participant is known
+ * and update the copy in this database with SSRC if needed.
+ * 
+ * @author Arne Kepp
+ */
 public class ParticipantDatabase {
 	Hashtable receivers = null; // Holds known receivers
 	Hashtable senders = null; // Holds known senders
@@ -31,7 +46,7 @@ public class ParticipantDatabase {
 		unknownSenders = new Hashtable();
 	}
 	
-	public void addParticipant(Participant p) {
+	protected void addParticipant(Participant p) {
 		if(p.cname != null) {
 			if(p.isReceiver) {
 				receivers.put(p.simpleHash(), p);
@@ -44,14 +59,14 @@ public class ParticipantDatabase {
 		}
 	}
 	
-	public void removeParticipant(Participant p) {
+	protected void removeParticipant(Participant p) {
 		// We adhere to a strict "no questions asked policy"
 		receivers.remove(p.simpleHash());
 		senders.remove(p.simpleHash());
 		unknownSenders.remove(p.simpleHash());
 	}
 	
-	public void updateParticipant(Participant p) {
+	protected void updateParticipant(Participant p) {
 		//This can be tricky, we'll do it the simple way:
 		//Delete no matter what key, reinsert correctly.
 		
@@ -70,11 +85,11 @@ public class ParticipantDatabase {
 		this.addParticipant(p);
 	}
 	
-	public Participant getSender(long ssrc) {
+	protected Participant getSender(long ssrc) {
 		return (Participant) senders.get(ssrc);
 	}
 	
-	public Participant getParticipant(long ssrc) {
+	protected Participant getParticipant(long ssrc) {
 		Participant p = null;
 		p = (Participant) senders.get(ssrc);
 		
@@ -88,7 +103,7 @@ public class ParticipantDatabase {
 		return p;
 	}
 	
-	public Participant getParticipant(String cname) {
+	protected Participant getParticipant(String cname) {
 		Participant p = null;
 		
 		p = (Participant) senders.get(cname.hashCode());
@@ -100,13 +115,13 @@ public class ParticipantDatabase {
 		return p;
 	}
 	
-	public Enumeration getReceivers() {
+	protected Enumeration getReceivers() {
 		return receivers.elements();
 	}
-	public Enumeration getSenders() {
+	protected Enumeration getSenders() {
 		return senders.elements();
 	}
-	public Enumeration getUnknownSenders() {
+	protected Enumeration getUnknownSenders() {
 		return unknownSenders.elements();
 	}
 }

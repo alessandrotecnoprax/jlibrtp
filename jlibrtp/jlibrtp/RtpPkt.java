@@ -1,5 +1,3 @@
-package jlibrtp;
-
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -18,8 +16,25 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package jlibrtp;
 
-
+/**
+ * RtpPkt is the basic class for creating and parsing RTP packets.
+ * 
+ * There are two ways of instantiating an RtpPkt. One is for packets that you wish to send,
+ * which requires that you provide basic information about the packet and a payload. Upon calling
+ * encode() the fields of the structure are written into a bytebuffer, in the form that it would
+ * sent across the network, excluding the UDP headers.
+ * 
+ * The other way is by passing a bytebuffer. The assumption is that this is a packet
+ * that has been received from the network, excluding UDP headers, and the bytebuffer will
+ * be parsed into the correct fields. 
+ * 
+ * The class keeps track of changes. Therefore, modifications are possible after calling encode(),
+ * if necessary, the raw version of the packet will be regenerated on subsequent requests.
+ * 
+ * @author Arne Kepp
+ */
 public class RtpPkt {
 	private boolean rawPktCurrent = false;
 	private int version = 2; 		//2 bits
@@ -36,13 +51,6 @@ public class RtpPkt {
 	private byte[] rawPkt = null;
 	private byte[] payload = null;
 
-	/**
-	 * Construct an empty packet.
-	 *  @return An empty packet.
-	 */
-	public RtpPkt(){
-		// Nothing
-	}
 	/**
 	 * Construct a packet-instance. The ByteBuffer required for UDP transmission can afterwards be obtained from getRawPkt(). If you need to set additional parameters, such as the marker bit or contributing sources, you should do so before calling getRawPkt;
 	 *
@@ -120,21 +128,21 @@ public class RtpPkt {
 	/*********************************************************************************************************
 	 *                                                Reading stuff 
 	 *********************************************************************************************************/
-	public int checkPkt() {
+	protected int checkPkt() {
 		//TODO, check for version 2 etc
 		return 0;
 	}
-	public int getHeaderLength() {
+	protected int getHeaderLength() {
 		//TODO include extension
 		return 12 + 4*getCsrcCount();
 	}
-	public int getPayloadLength() {
+	protected int getPayloadLength() {
 		return payload.length;
 	}
 	//public int getPaddingLength() {
 	//	return lenPadding;
 	//}
-	public int getVersion() {
+	protected int getVersion() {
 		return version;
 	}
 	//public boolean isPadded() {
@@ -147,42 +155,46 @@ public class RtpPkt {
 	//public int getHeaderExtension() {
 	//TODO
 	//}
-	public boolean isMarked() {
+	protected boolean isMarked() {
 		return (marker != 0);
 	}
-	public int getPayloadType() {
+	protected int getPayloadType() {
 		return payloadType;
 	}
 	
-	public int getSeqNumber() {
+	protected int getSeqNumber() {
 		return seqNumber;
 	}
-	public long getTimeStamp() {
+	protected long getTimeStamp() {
 		return timeStamp;
 	}
-	public long getSsrc() {
+	protected long getSsrc() {
 		return ssrc;
 	}
 	
-	public int getCsrcCount() {
+	protected int getCsrcCount() {
 		if(csrcArray != null) {
 			return csrcArray.length;
 		}else{
 			return 0;
 		}
 	}
-	public long[] getCsrcArray() {
+	protected long[] getCsrcArray() {
 		return csrcArray;
 	}
 
-	public byte[] encode() {
+	/** 
+	 *  Encodes the a
+	 */
+	protected byte[] encode() {
 		if(! rawPktCurrent || rawPkt == null) {
 			writePkt();
 		} 
 		return rawPkt;
 	}
 	
-	public void printPkt() {
+	/* For debugging purposes */
+	protected void printPkt() {
 		System.out.print("V:" + version + " P:" + padding + " EXT:" + extension);
 		System.out.println(" CC:" + getCsrcCount() + " M:"+ marker +" PT:" + payloadType + " SN: "+ seqNumber);
 		System.out.println("Timestamp:" + timeStamp + "(long output as int, may be 2s complement)");
@@ -196,21 +208,7 @@ public class RtpPkt {
 	/*********************************************************************************************************
 	 *                                                Setting stuff 
 	 *********************************************************************************************************/
-	
-	//public int setVersion(int aVersion) {
-	//	if(aVersion < 4 && aVersion > -1) {
-	//		rawPktCurrent = false;
-	//		version = aVersion;
-	//		return 0;
-	//	} else {
-	//		System.out.println("RtpPkt.setVersion must be 0 <= x <= 3");
-	//		return -1;
-	//	}
-	//}
-	//public boolean isPadded(boolean ) {
-	// Dynamically set	
-	//}
-	public void setMarked(boolean mark) {
+	protected void setMarked(boolean mark) {
 		rawPktCurrent = false;
 		if(mark) {
 			marker = 1;
@@ -221,9 +219,8 @@ public class RtpPkt {
 	//public int setHeaderExtension() {
 	//TODO
 	//}	
-	public int setPayloadType(int plType) {
-		int temp = (plType & 0x0000007F); // 7 bits
-		//System.out.println("PayloadType: " + plType + " temp:" + temp);
+	protected int setPayloadType(int plType) {
+		int temp = (plType & 0x0000007F); // 7 bits, checks in RTPSession as well.
 		if(temp == plType) {
 			rawPktCurrent = false;
 			payloadType = temp;
@@ -233,7 +230,7 @@ public class RtpPkt {
 		}
 	}
 	
-	public int setSeqNumber(int number) {
+	protected int setSeqNumber(int number) {
 		if(number <= 65536 && number >= 0) {
 			rawPktCurrent = false;
 			seqNumber = number;
@@ -244,19 +241,19 @@ public class RtpPkt {
 		}
 	}
 	
-	public int setTimeStamp(long time) {
+	protected int setTimeStamp(long time) {
 		rawPktCurrent = false;
 		timeStamp = time;
 		return 0;	//Naive for now
 	}
 	
-	public int setSsrc(long source) {
+	protected int setSsrc(long source) {
 		rawPktCurrent = false;
 		ssrc = source;
 		return 0;	//Naive for now
 	}
 	
-	public int setCsrcs(long[] contributors) {
+	protected int setCsrcs(long[] contributors) {
 		if(contributors.length <= 16) {
 			csrcArray = contributors;
 			return 0;
@@ -266,7 +263,7 @@ public class RtpPkt {
 		}
 	}
 	
-	public int setPayload(byte[] data) {
+	protected int setPayload(byte[] data) {
 		// TODO Padding
 		if(data.length < (1500 - 12)) {
 			rawPktCurrent = false;
@@ -277,13 +274,14 @@ public class RtpPkt {
 			return -1;
 		}
 	}
-	public byte[] getPayload() {
+	protected byte[] getPayload() {
 		return payload;
-		}
+	}
 
 	/*********************************************************************************************************
 	 *                                           Private functions 
 	 *********************************************************************************************************/
+	//Generate a bytebyffer representing the packet, store it.
 	private void writePkt() {
 		int bytes = getPayloadLength();
 		int headerLen = getHeaderLength();
@@ -316,7 +314,7 @@ public class RtpPkt {
 		System.arraycopy(payload, 0, rawPkt, headerLen, bytes);
 		rawPktCurrent = true;
 	}
-	
+	//Writes the first 4 octets of the RTP packet
 	private void writeFirstLine() {
 		byte aByte = 0;
 		aByte |=(version << 6);
@@ -332,7 +330,7 @@ public class RtpPkt {
 		rawPkt[2] = someBytes[2];
 		rawPkt[3] = someBytes[3];
 	}
-	
+	//Picks apart the first 4 octets of an RTP packet
 	private void sliceFirstLine() {
 		version = ((rawPkt[0] & 0xC0) >>> 6);
 		padding = ((rawPkt[0] & 0x20) >>> 5);
@@ -344,12 +342,15 @@ public class RtpPkt {
 		seqNumber = seqNumber*256;
 		seqNumber += (int) rawPkt[3];
 	}
+	//Takes the 4 octets representing the timestamp
 	private void sliceTimeStamp() {
 		timeStamp = StaticProcs.combineBytes(rawPkt[4],rawPkt[5],rawPkt[6],rawPkt[7]);
 	}
+	//Takes the 4 octets representing the SSRC
 	private void sliceSSRC() {
 		ssrc = StaticProcs.combineBytes(rawPkt[8],rawPkt[9],rawPkt[10],rawPkt[11]);
 	}
+	//Check the length of the csrcArray (set during sliceFirstLine) 
 	private void  sliceCSRCs() {
 		for(int i=0; i< csrcArray.length; i++) {
 			ssrc = StaticProcs.combineBytes(rawPkt[i*4 + 12],rawPkt[i*4 + 13],rawPkt[i*4 + 14],rawPkt[i*4 + 15]);
