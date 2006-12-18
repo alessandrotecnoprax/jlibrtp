@@ -1,4 +1,3 @@
-package senderDemo;
 /**
  * Java RTP Library
  * Copyright (C) 2006 Arne Kepp
@@ -17,11 +16,9 @@ package senderDemo;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+package senderDemo;
 
 
-import jlibrtp.Participant;
-import jlibrtp.RTPAppIntf;
-import jlibrtp.RTPSession;
 import java.io.File;
 import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
@@ -32,14 +29,13 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-
 import java.lang.String;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import jlibrtp.*;
 
+/**
+ * @author Arne Kepp
+ */
 public class SenderDemo implements RTPAppIntf  {
 	public RTPSession rtpSession = null;
 	static int pktCount = 0;
@@ -64,7 +60,6 @@ public class SenderDemo implements RTPAppIntf  {
 			System.out.println("Couldn't register");
 		}
 		this.local = isLocal;
-		//public Participant(String sendingHost,int port,String CNAME)
 	}
 	
 	/**
@@ -80,13 +75,12 @@ public class SenderDemo implements RTPAppIntf  {
 		// TODO Auto-generated method stub
 		System.out.println("Setup");
 		boolean local = true;
-		//if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
-		//	local = false;
-		//}
+		if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
+			local = false;
+		}
 		SenderDemo aDemo = new SenderDemo("Sender",4547, local);
 		Participant p = new Participant(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]), "Receiver");
 		aDemo.rtpSession.addParticipant(p);
-		//aDemo.filename = "/usr/share/sounds/login.wav";
 		aDemo.filename = args[0];
 		aDemo.run();
 		System.out.println("pktCount: " + pktCount);
@@ -162,7 +156,6 @@ public class SenderDemo implements RTPAppIntf  {
 					rtpSession.sendData(abData);
 					if(!this.local) {	
 						auline.write(abData, 0, abData.length);
-					//System.out.println("pktCount:" + pktCount + " length:"  + abData.length + " hash:" + abData[0] + abData[2] + " nbytes: " + nBytesRead);
 					} else {
 						try { Thread.sleep(14);} catch(Exception e) {}
 					}
@@ -174,7 +167,6 @@ public class SenderDemo implements RTPAppIntf  {
 			return;
 		}
 		System.out.println("Time: " + (System.currentTimeMillis() - start)/1000 + " s");
-		//rtpSession.endSession();
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<- Run()");
 		} 
