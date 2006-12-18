@@ -21,6 +21,7 @@ package jlibrtp;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.Enumeration;
 
 /**
  * RTCP SDES Header
@@ -91,11 +92,11 @@ public class RTCPSDESHeader implements Signalable
 	    
 	      try
 	      {
-			      MulticastSocket s = new MulticastSocket();
+			   //   MulticastSocket s = new MulticastSocket();
 
 			 
-			      DatagramPacket pack = new DatagramPacket(this.rawSDESPkt, this.rawSDESPkt.length,
-			      					 InetAddress.getByName(group), port);
+			    //  DatagramPacket pack = new DatagramPacket(this.rawSDESPkt, this.rawSDESPkt.length,
+			      //					 InetAddress.getByName(group), port);
 
 			      //s.send(pack);
 			      if(RTPSession.rtpDebugLevel > 1) {
@@ -104,7 +105,21 @@ public class RTCPSDESHeader implements Signalable
 			      //s.close();
 			      if(this.rtcpSession.rtpSession.mcSession == false)
 			      {
-			    	  this.rtcpSession.rtpSession.rtcpSock.send(pack);
+			    		Enumeration set = this.rtcpSession.rtpSession.partDb.getReceivers();
+						
+			    		while(set.hasMoreElements()) {
+			    			Participant p = (Participant)set.nextElement();
+
+			    			if(p.isReceiver()) {
+			    				if(RTPSession.rtpDebugLevel > 8) {
+			    					System.out.println("RTCPSDESHeader send data to Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
+			    				}
+			    				
+			    					DatagramPacket packet = new DatagramPacket(this.rawSDESPkt,this.rawSDESPkt.length,p.getInetAddress(),p.getRtpDestPort());
+			    					
+			    	  this.rtcpSession.rtpSession.rtcpSock.send(packet);
+			    			}
+			    		}
 			      }
 	      }
 	      catch(Exception e)
