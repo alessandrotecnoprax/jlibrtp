@@ -135,7 +135,9 @@ public class RTPReceiverThread extends Thread {
 	      	part.lastRecvSeqNumber = pkt.getSeqNumber();
 	      	part.lastRecvTimeStamp = pkt.getTimeStamp();
 	      	
-
+//	    	Added 06-12-18 from Vaishnav's tree
+	      	updateRRStatistics(pkt);
+	      	
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
