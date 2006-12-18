@@ -25,6 +25,9 @@ import java.util.Enumeration;
 
 /**
  * RTCP SDES Header
+ * In this class the SDES message will be constructed periodically 
+ * by fetching the data from the participant database and sending out
+ * to all the participants in the participant databse.
  * 
  * @author Vaishnav Janardhan
  */
@@ -38,11 +41,19 @@ public class RTCPSDESHeader implements Signalable
 	String CNAME = null;
 	long ssrc = 0;
 	int rtcpPort = 0;
+	
+	/**
+	 * Constructor for decoding of the SDES message
+	 * @param buf
+	 */
 	RTCPSDESHeader(byte[] buf)
 	{
 		this.rawSDESPkt = buf;
 	}
 	
+	/*
+	 * Constructor for the construction of the SDES message
+	 */
 	RTCPSDESHeader(int rtcpPort,RTCPSession session)
 	{
 		this.rtcpSession = session;
@@ -66,7 +77,14 @@ public class RTCPSDESHeader implements Signalable
 	
 	}
 	
-	
+	/**
+	 * This method is used to send the SDES message to all the participants.
+	 * This is invoked periodically when ever the timer fires.
+	 * When the timer fires, the SSRC and CNAME for all the participants are
+	 * fetched from the partcipants database and the data is encoded in the 
+	 * message and sent to all the participants.
+	 *
+	 */
 	void sendSDESPkt()
 	{
 		 
@@ -134,7 +152,10 @@ public class RTCPSDESHeader implements Signalable
 	{
 		return this.rawSDESPkt;
 	}
-	
+	/*
+	 * This method is used to decode the received SDES message and display all the
+	 * contents.
+	 */
 	void decode()
 	{
 		byte[] ssrcArry = new byte[32]; 
