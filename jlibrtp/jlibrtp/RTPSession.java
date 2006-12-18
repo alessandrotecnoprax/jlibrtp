@@ -100,7 +100,7 @@ public class RTPSession {
 		 rtpSock = new DatagramSocket(rtpPort);
 		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
-		 this.rtcpSession = new RTCPSession(rtcpPort,this);
+		 this.rtcpSession = new RTCPSession(this);
 	 }
 	 
 	 /**
