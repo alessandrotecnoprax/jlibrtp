@@ -25,16 +25,25 @@ import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 
+/**
+ * RTCPRecvrThread is the reciever thread that will be waiting for the 
+ * incoming RTCP packets. Once the packets are received, the header will
+ * be decoded and the depending on the type of the packet, the corresponding
+ * decode method would be invoked.
+ * 
+ * @author Vaishnav Janardhan
+ *
+ */
 public class RTCPRecvrThread extends Thread   {
 	RTCPSession session = null;
-//	int rtcpPort = 0;
+
 	MulticastSocket s = null;
-	String group = "225.4.5.6";
+
 	
 	RTCPRecvrThread(RTCPSession session) {
-//		this.rtcpPort = rtcpPort;
+
 		this.session = session;
-	//	int port = this.rtcpPort;
+
 
 	}
 	
@@ -47,9 +56,9 @@ public class RTCPRecvrThread extends Thread   {
 				if(RTPSession.rtpDebugLevel > 1){
 		//		System.out.println("INSIDE RTCPRecvThread 1 the port="+this.rtcpPort);
 				}
-				s = new MulticastSocket(8000);
+
 				
-				s.joinGroup(InetAddress.getByName(group));	
+	
 				byte buf[] = new byte[1024];
 				DatagramPacket pack = new DatagramPacket(buf, buf.length);
 			//	s.receive(pack);
@@ -105,8 +114,7 @@ public class RTCPRecvrThread extends Thread   {
 					
 				}
 				
-				s.leaveGroup(InetAddress.getByName(group));
-				s.close();
+
 			}
 			catch(Exception e)
 			{
