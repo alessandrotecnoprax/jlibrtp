@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html><head><title>jlibrtp - Java RTP Library</title>
+
+
+
+<meta name="author" content="Arne Kepp">
+<meta name="keywords" content="jlibrtp; java; rtp; streaming; voip">
+<meta name="description" content="jlibrtp is an implementation of RFC 3550, the Real-Time Transport Protocol, in Java."></head><body bgcolor="white">
+
+<h1>jlibrtp - Java RTP Library</h1>
+<address>
+<a href="http://kepp.net">Arne Kepp</a><br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="mailto:ak2618@columbia.edu">ak2618@columbia.edu</a>
+</address>
+<p>
+</p><address>
+Vaishnav Janardhan<br>
+Columbia University<br>
+New York, NY 10027<br>
+USA<br>
+<a href="mailto:vj2135@columbia.edu">vj2135@columbia.edu</a>
+</address>
+
+<h2><a name="abstract">Abstract</a></h2>
+
+<p>We have created a library that partially implements the Real-Time Transport Protocol (RTP), 
+a well-established standard for streaming media across IP-based networks, in Java. The purpose 
+of this library is to make it easy for application developers to create applications for peer 
+to peer streaming of audio, video and other data. In addition, developers will need a protocol 
+to establish contact with peers, such as Session Initialization Protocol (SIP).</p>
+
+<p>Our library accepts any kind of binary data, handles packet parsing and reordering, maintains a 
+participant database and the control connection associated with the protocol. The application 
+is notified of received data through a callback-interface. The library supports IPv4, IPv6 and 
+multicast. It does currently not support encryption, and should not be used in cases where 
+confidentiality is important.</p>
+
+<h2><a name="introduction">Introduction</a></h2>
+<p>jlibrtp partially implements the Real-Time Transport Protocol (RTP, RFC 3550)<a href="#1">[1]</a>. 
+It is an alternative to the RTP stack provided by Sun Microsystems (R) in the Java Media Framework 
+(JMF)<a href="#2">[2]</a>,  the difference is that we attempt to provide application developers with a much 
+simpler application programming interface (API).</p>
+
+<p>To use jlibrtp, developers must instatiate a copy of the RTPSession class and provide a class 
+that implements the callback interface RTPAppIntf. The RTPSession object is a container for the 
+datastructures required by the library,  and starts the threads used for receiving and parsing 
+packets. The program can use simple methods to add peers, participants  that send or receive 
+packets, to the session. The callback interface is called whenever the stack has data ready for 
+the application, and it is up to the developer to decide what to do with the binary data.</p>
+
+<p>Our code is licensed under the GNU Lesser General Public License (LGPL)<a href="#3">[3]</a>, 
+developers are therefore free to change functionality or provide a richer API if the current implementation 
+does not meet their needs.</p>
+
+<h3>Structure of Report</h3>
+<ul>
+<li><a href="#abstract">Abstract</a></li>
+
+<li><a href="#introduction">Introduction</a></li>
+
+<li><a href="#related_work">Related Work</a></li>
+
+<li><a href="#background">Background</a></li>
+
+<li><a href="#program_documentation">Program Documentation</a>
+<ul>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#api">Advanced Programming Interface (API)</a></li>
+<li><a href="#example_application">Example Application</a></li>
+<li><a href="#security">Security</a></li>
+</ul>
+</li>
+<li><a href="#measurements">Measurements</a>
+<ul>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#interoperability">Interoperability</a></li>
+</ul>
+</li>
+<li><a href="#task_list">Task List</a>
+<li><a href="#references">References</a>
+</ul>
+</p><h2><a name="related_work">Related Work</a></h2>
+<p>The Java Media Framework provides much of the same functionality as jlibrtp, but requires the 
+application developer to do considerably more work and cannot easily be modified to accomodate 
+special requirements.</p>
+
+<p>JRTP<a href="#4">[4]</a> is a framework for media distribution that also includes RTP. However, it is a 
+comprehensive program for the distribution of content, such as television, and the RTP component 
+is not designed to be used separately.</p>
+
+<p>java.net.rtp<a href="#5">[5]</a> is a relatively old application specialized for a whiteboard application. 
+It only supports multicast, which currently severly limits its usefulness in common VoIP 
+applications, and lacks the datastructures to handle separate streams.</p>
+
+<p>There are several RTP stacks available in C and C++, including GNU Telephony's ccRTP<a href="#6">[6]</a></p>
+
+</p><h2>Background</h2>
+
+<p>Provide background on the subject and components.  The title of
+this section is likely to differ from project to project and you may
+have several of these sections.
+
+</p><h2>Architecture</h2>
+
+<p>If applicable to your project, give an overview of the architecture
+of the software, i.e., which modules do what. Justify the overall
+architecture and briefly discuss alternatives, if you have considered
+(and discarded) them. From your description, a reader should be able
+to understand what the various components do and which one would need
+to be modified to extend the software's functionality. Also indicate the
+rough complexity (in lines of code) and language used.
+
+</p><h2>Program Documentation</h2>
+
+<p>This is a link to another stand-alone set of HTML files that
+describe:
+
+</p><ul>
+<li>Authors, affiliations and contact information (similar to the
+style of this document)
+</li><li>an abstract describing briefly what the program does
+</li><li>system requirements, such as operating system version, hardware, any
+multimedia devices
+</li><li>installation instructions
+</li><li>configuration (if any)
+</li><li>operation (similar in detail to a Unix "man" page); provide
+examples and screen dumps where applicable
+</li><li>program internal operation
+</li><li>things that do not work or other restrictions, such as the size of
+the problem, network properties
+</li><li>useful enhancements that you can think of
+</li><li>acknowledgements for code and ideas borrowed
+</li></ul>
+
+<p>Note: Do not use JPEG for screen dumps, as they will make the writing
+illegible. Use GIF or PNG.
+
+</p><p>This part is meant to be part of the program documentation, while
+parts of this document might become a technical report or a conference
+paper.
+
+</p>
+
+<h3><a name="security">Security</a></h3>
+Java inherently provides some protection against buffer overflows and other common problems. 
+Additionally, packet buffer size is automatically limited to 2000 octets. Developers / users can 
+choose whether packets from unknown sources should be returned to the application or discarded.
+
+Our library does not implement encryption according to the Secure RTP (SRTP, RFC)[] specifications, 
+and therefore provides no confidentiality. All streams can be played by anyone able to intercept the packets.
+
+<h2><a name="measurements">Measurements</a></h2>
+<h3><a name="interoperability">Interoperability</a></h3>
+The library has been validated in three ways. First, we have looped packets through the library to 
+verify that the parsing is correct. 
+
+<h3><a name="performance">Performance</a></h3>
+We tested the library by streaming raw audio (44.1kHz, 16 bit, stereo) across the loopback interface, 
+i.e. the same instance of the library was both sending and receiving. The test system (2.13 GHz, 
+Linux 2.6.17, Java 1.5.0) had no problems handling the 2.8 Mbps. While packet parsing is expensive 
+in Java, due to lack of pointers and unsigned integers, this would be more than sufficient to stream video.
+
+
+
+</p><h2>Task List</h2>
+<table border="0" cellpadding="2">
+<tr><td><b>Code:</b></td><td></td></tr>
+<tr><td valign="top">Vaishnav:</td><td> 	RTCPSession, RTCP Packet parsers, RTCP Receiver Report and threads, 
+			RTCP Sender Report and threads, RTCP SDES header, RTCP test application</td></tr>
+<tr><td valign="top">Arne:</td><td>  		RTP Packet parser, RTPSession, RTP Receiver Thread, Application Callback Thread, 
+			PacketBuffer, Frame, Participant database, RTPAppIntf, Sound Demo Application</td></tr>
+<tr><td>Shared:</td><td> 	Participant, Integer <-> Binary conversion methods (StaticProcs)</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td><b>Report:</b></td><td></td></tr>
+<tr><td>Vaishnav: </td><td>RTCP description</td></tr>
+<tr><td>Arne:</td><td>		Rest</td></tr>
+</table>
+
+<p>Classes are marked with the @author tag. The sender and receiver demo programs 
+were initially based on "Java play WAV sound file",  a tutorial on AnyExample.com<a href="#5">[7]</a>. 
+Except for this, all code is original work.</p>
+
+</p><h2><a name="references">References</a></h2>
+<dl compact="compact">
+<dt><a name="1">1</a></dt>
+<dd>IETF, <em><a href="http://www.ietf.org/rfc/rfc3550.txt">RFC 3550, Real-Time Transport Protocol</a></em></dd>
+<dt><a name="2">2</a></dt>
+<dd>Sun Microsystems, <em><a href="http://java.sun.com/products/java-media/jmf/index.jsp">Java Media Framework</a></em></dd>
+<dt><a name="3">3</a></dt>
+<dd>GNU / Free Software Foundation, <em><a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a></em></dd>
+<dt><a name="4">4</a></dt>
+<dd>Thomas Peuker, <em><a href="http://www4.informatik.uni-erlangen.de/Projects/JRTP/">JRTP</a></em>, University of Erlangen-Nuernberg, Germany</dd>
+<dt><a name="5">5</a></dt>
+<dd>Waqar Ali, Akhil Nigam, <em><a href="http://www.cs.columbia.edu/~hgs/teaching/ais/1998/projects/java_rtp/report.html">java.net.rtp</a></em>, Columbia University, NY, USA</dd>
+<dt><a name="6">6</a></dt>
+<dd>GNU Telephony, <em><a href="http://www.gnu.org/software/ccrtp/">ccRTP</a></em></dd>
+<dt><a name="7">7</a></dt>
+<dd>AnyExample.com, <em><a href="http://www.anyexample.com/programming/java/java_play_wav_sound_file.xml">Java play WAVA Sound file</a></em></dd>
+</dl>
+<hr>
+Last updated:  2006-12-18 by <a href="http://kepp.net">Arne Kepp</a>
+</body></html>
