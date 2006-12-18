@@ -4,7 +4,7 @@
 
 
 <meta name="author" content="Arne Kepp">
-<meta name="keywords" content="jlibrtp; java; rtp; streaming; voip">
+<meta name="keywords" content="jlibrtp, java, rtp, streaming, voip">
 <meta name="description" content="jlibrtp is an implementation of RFC 3550, the Real-Time Transport Protocol, in Java."></head><body bgcolor="white">
 
 <h1>jlibrtp - Java RTP Library</h1>
@@ -67,9 +67,16 @@ does not meet their needs.</p>
 
 <li><a href="#program_documentation">Program Documentation</a>
 <ul>
-<li><a href="#architecture">Architecture</a></li>
+<li><a href="#architecture">Architecture</a>
+<ul>
+<li><a href="#architecture_overview">Overview</a></li>
+<li><a href="#architecture_rtp">RTP</a></li>
+<li><a href="#architecture_rtcp">RTCP</a></li>
+</ul>
+</li>
 <li><a href="#api">Advanced Programming Interface (API)</a></li>
 <li><a href="#example_application">Example Application</a></li>
+<li><a href="#demo_application">Demonstration Application</a></li>
 <li><a href="#security">Security</a></li>
 </ul>
 </li>
@@ -83,66 +90,131 @@ does not meet their needs.</p>
 <li><a href="#references">References</a>
 </ul>
 </p><h2><a name="related_work">Related Work</a></h2>
-<p>The Java Media Framework provides much of the same functionality as jlibrtp, but requires the 
-application developer to do considerably more work and cannot easily be modified to accomodate 
-special requirements.</p>
+<p>The Java Media Framework provides much of the same functionality as jlibrtp, 
+but requires the application developer to do considerably more work and cannot 
+easily be modified to accomodate special requirements.</p>
 
-<p>JRTP<a href="#4">[4]</a> is a framework for media distribution that also includes RTP. However, it is a 
-comprehensive program for the distribution of content, such as television, and the RTP component 
-is not designed to be used separately.</p>
+<p>JRTP<a href="#4">[4]</a> is a framework for media distribution that also includes RTP. 
+However, it is a  comprehensive program for the distribution of content, such as television, 
+and the RTP component is not designed to be used separately. It appears that it was
+last modified in 1997 and is therefore probably outdated.</p>
 
-<p>java.net.rtp<a href="#5">[5]</a> is a relatively old application specialized for a whiteboard application. 
-It only supports multicast, which currently severly limits its usefulness in common VoIP 
-applications, and lacks the datastructures to handle separate streams.</p>
+<p>java.net.rtp<a href="#5">[5]</a> is a relatively old application specialized for a
+whiteboard application. It only supports multicast, which currently severly limits its 
+usefulness in common VoIP applications, and lacks the datastructures to 
+handle separate streams.</p>
 
 <p>There are several RTP stacks available in C and C++, including GNU Telephony's ccRTP<a href="#6">[6]</a></p>
 
-</p><h2>Background</h2>
+</p><h2><a name="background">Background</a></h2>
 
-<p>Provide background on the subject and components.  The title of
-this section is likely to differ from project to project and you may
-have several of these sections.
+<p>RTP is often used to refer to both the data (RTP packets) and the associated 
+signalling protocol, RTCP (Real-Time Transport Control Protocol). Less sophisticated applications 
+are generally only concerned with the data. RTCP provides functionality to monitor the flow of data
+and generates statistics for both senders and receivers. This information can be used to limit
+the bandwidth used, by detecting the loss of packets. Clients could for example switch to a more
+compact encoding scheme so that everyone in a session is able to keep up.</p>
+<p>The two sub-protocols operate on separate UDP ports (uni- or multicast), both of which must be 
+communicated to peers through a medium like SIP (Session Initialization Protocol).</p>
 
-</p><h2>Architecture</h2>
+</p><h2><a name="program_documentation">Program Documentation</a></h2>
+</p><h3><a name="architecture">Architecture</a></h3>
+</p><h4><a name="architecture_overview">Overview</a></h4>
+<p>At the heart of our code is the RTPSession object. It provides handles to
+all the other datastructures we use, namely the RTP receiver thread, the database
+of participants, the thread that calls the application when new data is available,
+and the associated RTCP session. Developers that want to use this library should
+only have to know about the RTPSession object and associated methods, our model of
+a participant, and implement the callback interface RtpAppIntf.</p>
 
-<p>If applicable to your project, give an overview of the architecture
-of the software, i.e., which modules do what. Justify the overall
-architecture and briefly discuss alternatives, if you have considered
-(and discarded) them. From your description, a reader should be able
-to understand what the various components do and which one would need
-to be modified to extend the software's functionality. Also indicate the
-rough complexity (in lines of code) and language used.
+<p>We have attempted to maintain a relatively small footprint and therefore only
+include code from the standard Java libraries provided by Sun Microsystems. The
+application was developed using Java Developer kit version 1.5.0, but it should
+work in environments using 1.4.2 as well. The code does not rely on any features
+that are specific to any platform and is written entirely in Java.</p>
 
-</p><h2>Program Documentation</h2>
+<p>It was somewhat difficult to implement RTP in Java. The language does not support
+unsigned integers, which RTP uses lots of. Instead we use 64 bit longs internally,
+which we convert to byte-arrays before transmitting. Java passes arrays
+of primitives by value, packet parsing therefore becomes relatively expensive.</p>
 
-<p>This is a link to another stand-alone set of HTML files that
-describe:
-
-</p><ul>
-<li>Authors, affiliations and contact information (similar to the
-style of this document)
-</li><li>an abstract describing briefly what the program does
-</li><li>system requirements, such as operating system version, hardware, any
-multimedia devices
-</li><li>installation instructions
-</li><li>configuration (if any)
-</li><li>operation (similar in detail to a Unix "man" page); provide
-examples and screen dumps where applicable
-</li><li>program internal operation
-</li><li>things that do not work or other restrictions, such as the size of
-the problem, network properties
-</li><li>useful enhancements that you can think of
-</li><li>acknowledgements for code and ideas borrowed
-</li></ul>
-
-<p>Note: Do not use JPEG for screen dumps, as they will make the writing
-illegible. Use GIF or PNG.
-
-</p><p>This part is meant to be part of the program documentation, while
-parts of this document might become a technical report or a conference
-paper.
-
+</p><h4><a name="architecture_rtp">RTP</a></h4>
+<p>The RTPSession object handles the sending of data synchronously. The idea is
+that we want to space the packets out in time as much as possible. Tests showed that
+making it asynchronous tended to create bursts of packets. On the receiving end there
+is a single thread listening on the specified UDP port. Once a packet is received it
+is parsed, a number of tests applied and then put into the packet buffer of the
+corresponding participant. The receiver thread is blocked until the next packet arrives.
 </p>
+<p>The packet buffer is a linked list. It reorders packets that arrive out of order
+and can recombine multiple packets into frames based on sequence numbers. A separate
+thread, called the AppCallerThread, is signalled every time a packet is added to a buffer.
+It then loops over all the participants that we expect to receive packets from and calls
+the receiveData() method, which is implemted by the application. This call is also
+synchronous by design, but can easily be made asynchronous by the application developer.
+</p>
+<p>The participant database is implemented as three hashtables, containing receivers,
+sender and unknown senders, keyed on SSRC for fast retrieval. Unknown senders are
+created in cases where we receive packets from sources that the application for some
+reason has not added as participants. The application developer specifies whether these 
+packets should be rejected, which is de default, or handed to the application.
+</p>
+
+</p><h4><a name="architecture_rtcp">RTCP</a></h4>
+<p></p>
+
+<h3><a name="api">Advanced Programming Interface (API)</a></h3>
+Please refer to the <a href="API">automatically generated JavaDocs</a>.
+
+<h3><a name="example_application">Example Application</a></h3>
+<table border="0" cellspacing="2">
+<tr><td>&nbsp;</td><td>The example below illustrates the simplest usage of the library.</td></tr>
+<tr><td valign="top">1)</td><td>The class implements the callback interface RTPAppIntf, and defines
+	the necessary function "receiveData".</td></tr>
+<tr><td valign="top">2)</td><td>The implementation of receiveData just prints the received data.</td></tr>
+<tr><td valign="top">3)</td><td>In main(), one object of the class is instantiated.</td></tr>
+<tr><td valign="top">4)</td><td>A new RTP session is created.</td></tr>
+<tr><td valign="top">5)</td><td>The application registers with the RTPSession.</td></tr>
+	In the process, UDP ports 4545 and 4546 are used for RTP and RTCP respectively,
+	and our cname is set to "MyCname".</td></tr>
+<tr><td valign="top">6)</td><td>Next a participant is created. His name is "Cname", his ip-address is the looopback
+	interface, his RTP port is 4545 and his RTCP port is 4546. By defaul, this
+	participant is both a receiver and a sender. Of course, this is just us.</td></tr>
+<tr><td valign="top">7)</td><td>The participant is added to the session.</td></tr>
+<tr><td valign="top">8)</td><td>We enter an infinite loop where we constantly send the string "123" to ourselves.</td></tr>
+<tr><td valign="top">9)</td><td>receiveData will repeatedly be called and write out "I received 123 from MyCname".</td></tr>
+<tr><td valign="top">&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td>&nbsp;</td><td>	
+Import jlibrtp.*;</br>
+<b>public AnExample implements RTPAppIntf {</b></br>
+&nbsp;&nbsp;  RTPSession session = null;</br>
+&nbsp;&nbsp;  <b>Public void receiveData(byte[] data, String cname, long time) {</b></br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;System.out.println(&quot;I received &quot; + (new String(data)) + &quot;from &quot;+ cname); </br>
+&nbsp;&nbsp;  <b>}</b></br>
+&nbsp;&nbsp;  Public AnExample() { }</br>
+&nbsp;&nbsp;  <b>public static void main(String [] args) {</b></br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;AnExample example = new AnExample();</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;example.session = new RTPSession();</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;example.session.RTPSessionRegister(4545,4546,&quot;MyCname&quot;,111);</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;Participant p = new Participant(&quot;Cname&quot;,&quot;127.0.0.1&quot;,4545,4546);</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;example.session.addParticipant(p);</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;String str = &quot;123&quot;;</br>
+&nbsp;&nbsp;  &nbsp;&nbsp;&nbsp;&nbsp;while(true) { session.sendData(str.getBytes()) }</br>
+&nbsp;&nbsp;<b>}</b></br>
+<b>}</b></br>
+</td></tr></table>
+<h3><a name="demo_application">Demonstration Application</a></h3>
+<p>The source code includes receiverDemo.java and senderDemo.java. They are 
+designed to stream 8kHz PCM mono sound from the sender to the receiver. Note 
+that it is difficult to stream sound files in Java, the timer is not accurate 
+enough to ensure timely tranmission and the Java Media Framework does not guarantee 
+that the receiver will block, when writing to the sound stream, if the packets 
+arrive too quickly. One way to fix this is to also play the sound on the sender, 
+which ensures that it blocks for the right amount of time before sending the next packet.</p> 
+<p>Readers are encouraged to look at them and modify them, certain parameters 
+(such as audio-format) have been hardcoded intentionally to limit the number of 
+parameters (and sources of confusion) that are needed. Running the program without
+any parameters explains the required parameters.</p>
 
 <h3><a name="security">Security</a></h3>
 Java inherently provides some protection against buffer overflows and other common problems. 
@@ -155,17 +227,17 @@ and therefore provides no confidentiality. All streams can be played by anyone a
 <h2><a name="measurements">Measurements</a></h2>
 <h3><a name="interoperability">Interoperability</a></h3>
 The library has been validated in three ways. First, we have looped packets through the library to 
-verify that the parsing is correct. 
+verify that the parsing is correct
 
 <h3><a name="performance">Performance</a></h3>
-We tested the library by streaming raw audio (44.1kHz, 16 bit, stereo) across the loopback interface, 
+We tested the library by streaming raw audio (44.1kHz, 16 bit, stereo, 1kbyte packets) across the loopback interface, 
 i.e. the same instance of the library was both sending and receiving. The test system (2.13 GHz, 
 Linux 2.6.17, Java 1.5.0) had no problems handling the 2.8 Mbps. While packet parsing is expensive 
 in Java, due to lack of pointers and unsigned integers, this would be more than sufficient to stream video.
 
 
 
-</p><h2>Task List</h2>
+</p><h2><a name="task_list">Task List</a></h2>
 <table border="0" cellpadding="2">
 <tr><td><b>Code:</b></td><td></td></tr>
 <tr><td valign="top">Vaishnav:</td><td> 	RTCPSession, RTCP Packet parsers, RTCP Receiver Report and threads, 
