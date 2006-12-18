@@ -21,7 +21,6 @@ package jlibrtp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 //Added 06-12-18 from Vaishnav's tree
-import java.util.Enumeration;
 import java.util.Hashtable;
 
 /**
@@ -62,11 +61,22 @@ public class RTPReceiverThread extends Thread {
 	       byte[] rawPkt = new byte[2000];
 	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
 	       
-	       // Wait for it to arrive
-	       try {
-	    	   rtpSession.rtpSock.receive(packet);
-	       } catch (IOException e) {
-	    	   e.printStackTrace();
+	       if(! rtpSession.mcSession) {
+	    	   //Unicast
+	    	   // Wait for it to arrive
+	    	   try {
+	    		   rtpSession.rtpSock.receive(packet);
+	    	   } catch (IOException e) {
+	    		   e.printStackTrace();
+	    	   }
+	       } else {
+	    	   //Multicast 
+	    	   // Wait for it to arrive
+	    	   try {
+	    		   rtpSession.rtpMCSock.receive(packet);
+	    	   } catch (IOException e) {
+	    		   e.printStackTrace();
+	    	   }
 	       }
 	       
 	       // Make a minimum-size bytebyffer
