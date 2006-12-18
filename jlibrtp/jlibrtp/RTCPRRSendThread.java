@@ -28,6 +28,8 @@ import java.util.Hashtable;
 
 /**
  * RTCP Receiver Report Thread
+ * This class will periodically send out the Receiver Reports to all
+ * the participants in the participant database. 
  * 
  * @author Vaishnav Janardhan
  */
@@ -37,6 +39,9 @@ public class RTCPRRSendThread implements Signalable
 	RTPSession rtpSession = null;
 	//int rtcpPort = 0;
 
+	/**
+	 * Constructor for starting of RTCPRRSendThread
+	 */
 	RTCPRRSendThread(RTCPSession rtcpSession)
 	{
 		this.rtcpSession = rtcpSession;
@@ -45,6 +50,10 @@ public class RTCPRRSendThread implements Signalable
 		t.startTimer();
 	}
 	
+	/**
+	 * Timer trigger call back method. This will be invoked periodically when
+	 * the timer fires. When this is invoked the RR packet will be sent out.
+	 */
 	public void signalTimeout() 
 	{
 		 Hashtable rrRpt = rtcpSession.rtpSession.recvThrd.RTCPRecvRptTable;
@@ -56,7 +65,7 @@ public class RTCPRRSendThread implements Signalable
 	
 			 if(rrRpt.containsKey(new Long(p.ssrc)))
 			 {
-				 System.out.println("I am Sending out the RR packet");
+		//		 System.out.println("I am Sending out the RR packet");
 				 //RTCPRRPkt rrPkt= (RTCPRRPkt) rrRpt.get(new Long(p.ssrc));
 				 RTCPRRPkt rrPkt= (RTCPRRPkt) rtcpSession.rtpSession.recvThrd.RTCPRecvRptTable.get(new Long(p.ssrc));
 		
