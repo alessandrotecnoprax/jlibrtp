@@ -35,7 +35,11 @@ public class RTCPCommonHeader
 	
 	int pktType = 0;
 	int pktLen = 0;
-	
+	/**
+	 * Constructor used to decode the message type 
+	 * at the RTCP receiver thread.
+	 * @param rtcpPktbuf
+	 */
 	RTCPCommonHeader(byte[] rtcpPktbuf)
 	{
 		byte[] icountbuf = new byte[5];
@@ -65,6 +69,13 @@ public class RTCPCommonHeader
 		
 	}
 	
+	/**
+	 * Constructor for header creation
+	 * @param version
+	 * @param padding
+	 * @param iCount
+	 * @param pktType
+	 */
 	RTCPCommonHeader(int version,int padding,int iCount,int pktType)
 	{
 		this.version = version;
