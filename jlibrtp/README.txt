@@ -1,10 +1,10 @@
 jlibrtp - Java RTP Library
 
-Kepp, Arne
-ak2618@columbia.edu
-
 Janardhan, Vaishnav
 vj2135@columbia.edu
+
+Kepp, Arne
+ak2618@columbia.edu
 
 Columbia University
 New York, NY 10027
@@ -121,11 +121,21 @@ public AnExample implements RTPAppIntf {
 }
 
 ------Task List
-Code
+Code:
+Vaishnav: 	RTCPSession, RTCP Packet parsers, RTCP Receiver Report and threads, 
+			RTCP Sender Report and threads, RTCP SDES header, RTCP test application, 
+Arne: 		RTP Packet parser, RTPSession, RTP Receiver Thread, Application Callback Thread, 
+			PacketBuffer, Frame, Participant database, RTPAppIntf, Sound Demo Application
+Shared:		Participant, Integer <-> Binary conversion methods (StaticProcs)
 
+Report:
+Vaishnav: 	RTCP description
+Arne:		Rest
 
-
-
-References
-
- 
+------References
+[1] Real-Time Transport protocol, RFC 3550: http://www.ietf.org/rfc/rfc3550.txt
+[2] Java Media Framework: http://java.sun.com/products/java-media/jmf/index.jsp
+[3] GNU Lesser General Public License: http://www.gnu.org/licenses/lgpl.html
+[4] JRTP: http://www4.informatik.uni-erlangen.de/Projects/JRTP/
+[5] java.net.rtp: http://www.cs.columbia.edu/~hgs/teaching/ais/1998/projects/java_rtp/report.html
+[6] ccRTP: http://www.gnu.org/software/ccrtp/
