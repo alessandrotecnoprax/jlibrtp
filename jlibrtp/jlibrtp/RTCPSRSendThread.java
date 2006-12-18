@@ -25,6 +25,9 @@ import java.util.Enumeration;
 
 /**
  * RTCP Sender Report Thread
+ * This class will send the Sender Reports periodically to all of the 
+ * participants in the participant database. The SR message packet is 
+ * constructed through the RTCPSenderReport class.
  * 
  * @author Vaishnav Janardhan
  */
@@ -33,6 +36,11 @@ public class RTCPSRSendThread implements Signalable
 	RTPSession rtpSession = null;
 
 	RTCPSenderReport sendReport = null;
+	
+	/**
+	 * Constructor for creation of the RTCPSRSendThread
+	 * @param rtpSession
+	 */
 	RTCPSRSendThread(RTPSession rtpSession)
 	{
 		this.rtpSession = rtpSession;
@@ -43,6 +51,11 @@ public class RTCPSRSendThread implements Signalable
 	}
 	
 	
+	/**
+	 * The callback method that will be invoked, when the timer fires.
+	 * This method will send the SR message to all the participants in the 
+	 * database.
+	 */
 	public void signalTimeout() 
 	{
 	      
