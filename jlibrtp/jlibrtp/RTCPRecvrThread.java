@@ -27,14 +27,14 @@ import java.net.MulticastSocket;
 
 public class RTCPRecvrThread extends Thread   {
 	RTCPSession session = null;
-	int rtcpPort = 0;
+//	int rtcpPort = 0;
 	MulticastSocket s = null;
 	String group = "225.4.5.6";
 	
-	RTCPRecvrThread(int rtcpPort,RTCPSession session) {
-		this.rtcpPort = rtcpPort;
+	RTCPRecvrThread(RTCPSession session) {
+//		this.rtcpPort = rtcpPort;
 		this.session = session;
-		int port = this.rtcpPort;
+	//	int port = this.rtcpPort;
 
 	}
 	
@@ -45,7 +45,7 @@ public class RTCPRecvrThread extends Thread   {
 			try
 			{
 				if(RTPSession.rtpDebugLevel > 1){
-				System.out.println("INSIDE RTCPRecvThread 1 the port="+this.rtcpPort);
+		//		System.out.println("INSIDE RTCPRecvThread 1 the port="+this.rtcpPort);
 				}
 				s = new MulticastSocket(8000);
 				
