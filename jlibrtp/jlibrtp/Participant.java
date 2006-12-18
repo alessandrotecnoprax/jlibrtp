@@ -23,8 +23,6 @@ import java.net.InetAddress;
 /**
  * A participant represents a peer in an RTPSession. Based on the information stored on 
  * these objects, packets are processed and statistics generated for RTCP.
- * 
- * If you need to update a participant, 
  */
 public class Participant {
 	private int rtpDestPort = 0;
