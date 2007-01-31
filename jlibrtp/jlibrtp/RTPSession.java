@@ -74,7 +74,7 @@ public class RTPSession {
 	 // Handle to application
 	 protected RTPAppIntf appIntf = null;
 	 // Threads etc.
-	 protected RTCPSession rtcpSession = null;
+	 //protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
 
@@ -101,7 +101,7 @@ public class RTPSession {
 		 rtpSock = new DatagramSocket(rtpPort);
 		 rtcpSock = new DatagramSocket(rtcpPort);
 		 CNAME = aCNAME;
-		 this.rtcpSession = new RTCPSession(this);
+		 //this.rtcpSession = new RTCPSession(this);
 	 }
 	 
 	 /**
