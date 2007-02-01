@@ -42,7 +42,7 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 15;
 	 Hashtable participantTable = new Hashtable();
 	 
 	 // Is this a multicast session?

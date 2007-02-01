@@ -38,10 +38,9 @@ public class PktBuffer {
 
 	//Bookkeeping
 	int length = 0;
-	int compLen = 0;
+	//int compLen = 0;
 	PktBufNode oldest = null;
 	PktBufNode newest = null;
-	String lastOp = null;
 
 	/** 
 	 * Creates a new PktBuffer, a linked list of PktBufNode
@@ -49,8 +48,7 @@ public class PktBuffer {
 	 * @param aPkt First packet 
 	 * @param completionLength How many pkts make up a complete frame, depends on paylod type.
 	 */
-	public PktBuffer(RtpPkt aPkt, int completionLength) {
-		compLen = completionLength;
+	public PktBuffer(RtpPkt aPkt) {
 		SSRC = aPkt.getSsrc();
 		PktBufNode newNode = new PktBufNode(aPkt);
 		oldest = newNode;
@@ -82,26 +80,23 @@ public class PktBuffer {
 
 		if(length != 0) {
 			// The packetbuffer is not empty.
-			if(newNode.timeStamp > newest.timeStamp && compLen == 1) {
-				// Yippi, small frames, and they're coming in order
+			if(newNode.timeStamp > newest.timeStamp) {
+				// Yippi, it came in order
 				newNode.nextFrameQueueNode = newest;
 				newest.prevFrameQueueNode = newNode;
 				newest = newNode;
 				length++;
-				lastOp = "simpleAdd";
 			} else {
 				//There are packets, we need to order this one right.
-
-				if(oldest.timeStamp > timeStamp || oldest.seqNum > aPkt.getSeqNumber()) {
+				if(oldest.timeStamp > timeStamp) { //|| oldest.seqNum > aPkt.getSeqNumber()) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
 						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " + timeStamp + " vs "+ oldest.timeStamp);
 					}
-					lastOp = "late packet";
 					return -1;
 				}
 
-				//Need to do some real work, find out where it belongs (lin search from back).
+				//Need to do some real work, find out where it belongs (linear search from the back).
 				PktBufNode tmpNode = newest;
 				while(tmpNode.timeStamp > timeStamp) {
 					tmpNode = tmpNode.nextFrameQueueNode;
@@ -109,7 +104,7 @@ public class PktBuffer {
 
 				// Update the length of this buffer
 				length++;
-				lastOp = "sorted in somewhere";
+				
 				// Insert into buffer
 				newNode.nextFrameQueueNode = tmpNode;
 				newNode.prevFrameQueueNode = tmpNode.prevFrameQueueNode;
@@ -173,18 +168,19 @@ public class PktBuffer {
 
 			length--;
 
-			if(tmpNode.pktCount == compLen) {
-				if(RTPSession.rtpDebugLevel > 7) {
-					System.out.println("<- PktBuffer.popOldestFrame() returns frame");
-				}
-				return new DataFrame(tmpNode, compLen);
+			//if(tmpNode.pktCount == compLen) {
+			if(RTPSession.rtpDebugLevel > 7) {
+				System.out.println("<- PktBuffer.popOldestFrame() returns frame");
 			}
+			return new DataFrame(tmpNode, 1);
+			//}
+		} else {
+			// If we get here we have little to show for.
+			if(RTPSession.rtpDebugLevel > 2) {
+				System.out.println("<- PktBuffer.popOldestFrame() returns null");
+			}
+			return null;
 		}
-		// If we get here we have little to show for.
-		if(RTPSession.rtpDebugLevel > 2) {
-			System.out.println("<- PktBuffer.popOldestFrame() returns null");
-		}
-		return null;
 	}
 
 	/** 

@@ -121,7 +121,7 @@ public class RTPReceiverThread extends Thread {
 	    		   pktBuffer.addPkt(pkt);
 	    	   } else {
 	    		   // Create a new packet/frame buffer
-	    		   pktBuffer = new PktBuffer(pkt,1);
+	    		   pktBuffer = new PktBuffer(pkt);
 	    		   part.pktBuffer = pktBuffer;
 	    	   }
 	       } else {
