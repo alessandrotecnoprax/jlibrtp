@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 
 public class CompRtcpPkt {
 	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
+	
 	protected CompRtcpPkt(RtcpPkt[] rtcpPackets ) {
-		
 		
 	}
 	

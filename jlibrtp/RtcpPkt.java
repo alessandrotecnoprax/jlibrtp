@@ -29,4 +29,9 @@ public class RtcpPkt {
 		}
 	}
 	
+	protected byte[] encode() {
+	
+		return new byte[1];
+	}
+	
 }
