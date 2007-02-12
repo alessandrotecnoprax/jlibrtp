@@ -5,7 +5,7 @@ public class RtcpPktRR extends RtcpPkt {
 	protected long reporterSsrc = -1; //32 bits
 	protected long reporteeSsrc = -1; //32 bits
 	protected int lossFraction = -1; //8 bits
-	protected int cumPacketsLost = -1; //24 bits
+	protected int lostPktCount = -1; //24 bits
 	protected long extHighSeqRecv = -1; //32 bits
 	protected long interArvJitter = -1; //32 bits
 	protected long timeStampLSR = -1; //32 bits
@@ -32,9 +32,10 @@ public class RtcpPktRR extends RtcpPkt {
 				reporterSsrc = 		StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 			if(super.length > 1)
 				reporteeSsrc = 		StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
-			if(super.length > 2)
+			if(super.length > 2) {
 				lossFraction = 		(int) aRawPkt[12];
-			cumPacketsLost = 	(int) StaticProcs.combineBytes((byte) 0, aRawPkt[13],aRawPkt[14],aRawPkt[15]);
+				lostPktCount = 	(int) StaticProcs.combineBytes((byte) 0, aRawPkt[13],aRawPkt[14],aRawPkt[15]);
+			}
 			if(super.length > 3)
 				extHighSeqRecv = 	StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
 			if(super.length > 4)

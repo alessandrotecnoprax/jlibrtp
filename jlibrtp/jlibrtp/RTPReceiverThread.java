@@ -35,115 +35,114 @@ import java.util.Hashtable;
  */
 public class RTPReceiverThread extends Thread {
 	RTPSession rtpSession = null;
-	
+
 	//Added 06-12-18 from Vaishnav's tree
 	Hashtable RTCPRecvRptTable = new Hashtable();
-	
+
 	RTPReceiverThread(RTPSession session) {
 		rtpSession = session;
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPReceiverThread created");
 		} 
-	
+
 	}
-	
+
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
-			 System.out.println("-> RTPReceiverThread.run() listening on " + rtpSession.rtpSock.getLocalPort() );
+			System.out.println("-> RTPReceiverThread.run() listening on " + rtpSession.rtpSock.getLocalPort() );
 		}
-		
+
 		while(!rtpSession.endSession) {
-	       if(RTPSession.rtpDebugLevel > 6) {
-	    	   System.out.println("-> RTPReceiverThread.run() waiting for packet on " + rtpSession.rtpSock.getLocalPort() );
-	       }
-	       
-	       // Prepare a packet
-	       byte[] rawPkt = new byte[2000];
-	       DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
-	       
-	       if(! rtpSession.mcSession) {
-	    	   //Unicast
-	    	   // Wait for it to arrive
-	    	   try {
-	    		   rtpSession.rtpSock.receive(packet);
-	    	   } catch (IOException e) {
-	    		   e.printStackTrace();
-	    	   }
-	       } else {
-	    	   //Multicast 
-	    	   // Wait for it to arrive
-	    	   try {
-	    		   rtpSession.rtpMCSock.receive(packet);
-	    	   } catch (IOException e) {
-	    		   e.printStackTrace();
-	    	   }
-	       }
-	       
-	       // Make a minimum-size bytebyffer
-	       byte[] slicedPkt = new byte[packet.getLength()];
-	       System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
-	       
-	       // Parse the received RTP (?) packet
-	       RtpPkt pkt = new RtpPkt(slicedPkt);
-	       
-	       // Check whether it was valid.
-	       if(pkt == null) {
-	    	   System.out.println("Received invalid packet. Ignoring");
-	    	   continue;
-	       }
-	       
-	       if(RTPSession.rtpDebugLevel > 6) {
-	    	   System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
-		       if(RTPSession.rtpDebugLevel > 10) {
-		    	   String str = new String(pkt.getPayload());
-		    	   System.out.println("-> RTPReceiverThread.run() payload is " + str );
-		       }
-	       }
-	       
-	       //Find the participant in the database based on SSRC
-	       Participant part = rtpSession.partDb.getParticipant(pkt.getSsrc());
-	       
-	       if(part == null) {
-	    	   System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
-	    	   //Create an unknown sender
-	    	   part = new Participant(packet.getAddress(),packet.getPort(),pkt.getSsrc());
-	    	   rtpSession.addParticipant(part);
-	    	   part.lastRecvSeqNumber = pkt.getSeqNumber();
-	       }
-	       
-	       	// Do checks on whether the datagram came from the expected source for that SSRC.
-	      	if(packet.getAddress().equals(part.getInetAddress())) {
-	    	   PktBuffer pktBuffer  = part.pktBuffer;
-	       
-	    	   //Temporarily we'll assume there is only one source
-	    	   if(pktBuffer != null) {
-	    		   //A buffer already exists, append to it
-	    		   pktBuffer.addPkt(pkt);
-	    	   } else {
-	    		   // Create a new packet/frame buffer
-	    		   pktBuffer = new PktBuffer(pkt);
-	    		   part.pktBuffer = pktBuffer;
-	    	   }
-	       } else {
-	    	   System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString()
-	    			   + ", the sending ip-address was " + packet.getAddress().toString() + ", we expected from " + part.getInetAddress().toString());
-	       }
-	      
-	      	// Statistics for receiver report.
-	      	part.lostPktCount += pkt.getSeqNumber() - part.lastRecvSeqNumber;
-	      	part.recvOctetCount += pkt.getPayloadLength();
-	      	part.lastRecvSeqNumber = pkt.getSeqNumber();
-	      	part.lastRecvTimeStamp = pkt.getTimeStamp();
-	      	
+			if(RTPSession.rtpDebugLevel > 6) {
+				System.out.println("-> RTPReceiverThread.run() waiting for packet on " + rtpSession.rtpSock.getLocalPort() );
+			}
+
+			// Prepare a packet
+			byte[] rawPkt = new byte[2000];
+			DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
+
+			if(! rtpSession.mcSession) {
+				//Unicast
+				// Wait for it to arrive
+				try {
+					rtpSession.rtpSock.receive(packet);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				//Multicast 
+				// Wait for it to arrive
+				try {
+					rtpSession.rtpMCSock.receive(packet);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			// Make a minimum-size bytebyffer
+			byte[] slicedPkt = new byte[packet.getLength()];
+			System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
+
+			// Parse the received RTP (?) packet
+			RtpPkt pkt = new RtpPkt(slicedPkt);
+
+			// Check whether it was valid.
+			if(pkt == null) {
+				System.out.println("Received invalid packet. Ignoring");
+				continue;
+			}
+
+			if(RTPSession.rtpDebugLevel > 6) {
+				System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
+				if(RTPSession.rtpDebugLevel > 10) {
+					String str = new String(pkt.getPayload());
+					System.out.println("-> RTPReceiverThread.run() payload is " + str );
+				}
+			}
+
+			//Find the participant in the database based on SSRC
+			Participant part = rtpSession.partDb.getParticipant(pkt.getSsrc());
+
+			if(part == null) {
+				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
+				//Create an unknown sender
+				part = new Participant(packet.getAddress(),packet.getPort(),pkt.getSsrc());
+				rtpSession.addParticipant(part);
+			}
+
+			// Do checks on whether the datagram came from the expected source for that SSRC.
+			if(packet.getAddress().equals(part.getInetAddress())) {
+				PktBuffer pktBuffer  = part.pktBuffer;
+
+				//Temporarily we'll assume there is only one source
+				if(pktBuffer != null) {
+					//A buffer already exists, append to it
+					pktBuffer.addPkt(pkt);
+				} else {
+					// Create a new packet/frame buffer
+					pktBuffer = new PktBuffer(pkt);
+					part.pktBuffer = pktBuffer;
+				}
+			} else {
+				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString()
+						+ ", the sending ip-address was " + packet.getAddress().toString() + ", we expected from " + part.getInetAddress().toString());
+			}
+
+			// Statistics for receiver report.
+			part.lostPktCount += pkt.getSeqNumber() - part.lastSeqNumber;
+			part.receivedOctets += pkt.getPayloadLength();
+			part.lastSeqNumber = pkt.getSeqNumber();
+			//part.lastRecvTimeStamp = pkt.getTimeStamp();
+
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
-	       // Signal the thread that pushes data to application
+			// Signal the thread that pushes data to application
 			rtpSession.pktBufLock.lock();
-		    try { rtpSession.pktBufDataReady.signalAll(); } finally {
-		    	rtpSession.pktBufLock.unlock();
-		    }
-		 
+			try { rtpSession.pktBufDataReady.signalAll(); } finally {
+				rtpSession.pktBufLock.unlock();
+			}
+
 		}
 	}
 

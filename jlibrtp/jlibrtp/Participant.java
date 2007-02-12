@@ -30,13 +30,39 @@ public class Participant {
 	protected boolean isSender = true;
 	protected boolean isReceiver = true;
 	private InetAddress address = null;
+	
+	// SDES Items
 	protected long ssrc = -1;
 	protected String cname = null;
-	protected int	lastRecvSeqNumber = -1;
-	protected int	lostPktCount = 0;
-	protected int	recvOctetCount = 0;
-	protected int	recvPktCount = 0;
-	protected long lastRecvTimeStamp = -1;
+	protected String name = null;
+	protected String email = null;
+	protected String phone = null;
+	protected String loc = null;
+	protected String tool = null;
+	protected String note = null;
+	protected String priv = null;
+	
+	// Receiver Report Items
+	protected int lastSeqNumber = -1;
+	protected int recvPktCount = 0;
+	protected int lostPktCount = 0;
+	protected long extHighSeqRecv = -1;
+	protected long prevDelay = -1;
+	protected long curJitter = -1;
+	protected long prevJitter = -1;
+	protected long timeStampLSR = -1;		//The timestamp of the last SR
+	protected long timeReceivedLSR = -1; 	//The time when we actually got it
+	
+	// Sender Report Items
+	protected long reportedPkts = -1;
+	protected long reportedOctets = -1;
+	protected long receivedPkts = -1;
+	protected long receivedOctets = -1;
+	protected long ntpRelativeOffset = 0; //Offset between our clock and his
+	protected long ntpRtpOffset = 0;	//Offset between his RTP timestamps and his NTP
+	
+	// BYE Items
+	protected long timestampBYE = -1;	// The user said BYE at this time
 	
 	//Store the packets received from this participant
 	protected PktBuffer pktBuffer = null;
