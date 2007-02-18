@@ -36,92 +36,75 @@ import java.util.*;
  * @author Arne Kepp
  */
 public class ParticipantDatabase {
-	Hashtable receivers = null; // Holds known receivers
-	Hashtable senders = null; // Holds known senders
-	Hashtable unknownSenders = null; // Holds unknown participants, ie unexpected packets.
+	Hashtable table = null; // Holds participants
+	HashSet receivers = null; // InetSocketAddresses
 	
 	public ParticipantDatabase() {
-		receivers = new Hashtable();
-		senders = new Hashtable();
-		unknownSenders = new Hashtable();
+		table = new Hashtable();
+		receivers = new HashSet();
 	}
 	
-	protected void addParticipant(Participant p) {
-		if(p.cname != null) {
-			if(p.isReceiver) {
-				receivers.put(p.simpleHash(), p);
+	synchronized protected void addParticipant(Participant p) {
+		table.put(p.ssrc, p);
+		
+		if(p.isReceiver && p.rtpAddress != null && !receivers.contains(p.rtpAddress)) {
+			receivers.add(p.rtpAddress);
+		}
+	}
+	
+	synchronized protected void removeParticipant(Participant p) {
+		table.remove(p.ssrc);
+		
+		if(p.isReceiver) {
+			// Need to see whether more recipients use this address (multicast)
+			boolean notused = true;
+			Enumeration enu = table.elements();
+			while(enu.hasMoreElements() && notused) {
+				Participant ap = (Participant) enu.nextElement();
+				if(ap.rtpAddress.equals(p.rtpAddress)) {
+					notused = false;
+				}
 			}
-			if(p.isSender) {
-				senders.put(p.simpleHash(), p);
+			
+			if(notused) {
+				receivers.remove(p.rtpAddress);
 			}
-		} else {
-			unknownSenders.put(p.simpleHash(), p);
+				
 		}
 	}
 	
-	protected void removeParticipant(Participant p) {
-		// We adhere to a strict "no questions asked policy"
-		receivers.remove(p.simpleHash());
-		senders.remove(p.simpleHash());
-		unknownSenders.remove(p.simpleHash());
-	}
-	
-	protected void updateParticipant(Participant p) {
-		//This can be tricky, we'll do it the simple way:
-		//Delete no matter what key, reinsert correctly.
-		
-		if(p.cname != null) {
-			receivers.remove(p.cname.hashCode());
-			senders.remove(p.cname.hashCode());
-			unknownSenders.remove(p.cname.hashCode());
-		}
-		
-		if(p.ssrc > 0) {
-			receivers.remove(p.ssrc);
-			senders.remove(p.ssrc);
-			unknownSenders.remove(p.ssrc);
-		}
-		
+	synchronized protected void updateParticipant(Participant p) {
+		this.removeParticipant(p);
 		this.addParticipant(p);
-	}
-	
-	protected Participant getSender(long ssrc) {
-		return (Participant) senders.get(ssrc);
 	}
 	
 	protected Participant getParticipant(long ssrc) {
 		Participant p = null;
-		p = (Participant) senders.get(ssrc);
+		p = (Participant) table.get(ssrc);
 		
-		if(p == null) {
-			p = (Participant) unknownSenders.get(ssrc);
-		}
-		if(p == null) {
-			p = (Participant) receivers.get(ssrc);
-		}
-		
-		return p;
+		return p; 
 	}
 	
 	protected Participant getParticipant(String cname) {
-		Participant p = null;
+		Participant p;
 		
-		p = (Participant) senders.get(cname.hashCode());
-	
-		if(p == null) {
-			p = (Participant) receivers.get(cname.hashCode());
+		Enumeration enu = table.elements();
+		while(enu.hasMoreElements()) {
+			p = (Participant) enu.nextElement();
+			
+			if(p.cname.equalsIgnoreCase(cname)) {
+				return p;
+			}
+			
 		}
-		
-		return p;
+		return null;
 	}
 	
-	protected Enumeration getReceivers() {
-		return receivers.elements();
+	protected Iterator getReceivers() {
+		return receivers.iterator();
 	}
-	protected Enumeration getSenders() {
-		return senders.elements();
-	}
-	protected Enumeration getUnknownSenders() {
-		return unknownSenders.elements();
+	
+	protected Enumeration getParticipants() {
+		return table.elements();
 	}
 }

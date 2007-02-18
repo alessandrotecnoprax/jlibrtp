@@ -99,22 +99,22 @@ public class RTPReceiverThread extends Thread {
 					System.out.println("-> RTPReceiverThread.run() payload is " + str );
 				}
 			}
-
+ 
 			//Find the participant in the database based on SSRC
 			Participant part = rtpSession.partDb.getParticipant(pkt.getSsrc());
 
 			if(part == null) {
 				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
 				//Create an unknown sender
-				part = new Participant(packet.getAddress(),packet.getPort(),pkt.getSsrc());
+				part = new Participant(packet.getAddress(),pkt.getSsrc());
+				part.unexpected = true;
 				rtpSession.addParticipant(part);
 			}
 
 			// Do checks on whether the datagram came from the expected source for that SSRC.
-			if(packet.getAddress().equals(part.getInetAddress())) {
-				PktBuffer pktBuffer  = part.pktBuffer;
+			if(packet.getAddress().equals(part.rtpAddress.getAddress())) {
+				PktBuffer pktBuffer = part.pktBuffer;
 
-				//Temporarily we'll assume there is only one source
 				if(pktBuffer != null) {
 					//A buffer already exists, append to it
 					pktBuffer.addPkt(pkt);
@@ -125,7 +125,7 @@ public class RTPReceiverThread extends Thread {
 				}
 			} else {
 				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString()
-						+ ", the sending ip-address was " + packet.getAddress().toString() + ", we expected from " + part.getInetAddress().toString());
+						+ ", the sending ip-address was " + packet.getAddress().toString() + ", we expected from " + part.rtpAddress.toString());
 			}
 
 			// Statistics for receiver report.

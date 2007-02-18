@@ -18,6 +18,7 @@
  */
 package jlibrtp;
 
+import java.net.InetSocketAddress;
 import java.net.InetAddress;
 
 /**
@@ -25,11 +26,11 @@ import java.net.InetAddress;
  * these objects, packets are processed and statistics generated for RTCP.
  */
 public class Participant {
-	private int rtpDestPort = 0;
-	private int rtcpDestPort = 0;
-	protected boolean isSender = true;
-	protected boolean isReceiver = true;
-	private InetAddress address = null;
+	protected boolean isSender = false;
+	protected boolean isReceiver = false;
+	protected boolean unexpected = false;
+	protected InetSocketAddress rtpAddress = null; 	
+	protected InetSocketAddress rtcpAddress = null; 
 	
 	// SDES Items
 	protected long ssrc = -1;
@@ -76,27 +77,38 @@ public class Participant {
 	 * @param networkAddress string representation of network address (ipv4 or ipv6). Use "127.0.0.1" for multicast session.
 	 * @param rtpPort port on which peer expects RTP packets. Use 0 if this is a sender-only, or this is a multicast session.
 	 * @param rtcpPort port on which peer expects RTCP packets. Use 0 if this is a sender-only, or this is a multicast session.
-	 * @param CNAME the cname of the peer, we expect this to be included in his RTCP SDES messages.
 	 */
-	public Participant(String networkAddress, int rtpPort, int rtcpPort, String CNAME) {
+	public Participant(String networkAddress, int rtpPort, int rtcpPort) {
 		if(RTPSession.rtpDebugLevel > 6) {
-			System.out.println("New participant created: " + CNAME + "@" + networkAddress);
+			System.out.println("Creating new participant: " + networkAddress);
 		}
 		
-		try {
-			address = InetAddress.getByName(networkAddress);
-		} catch (Exception e) {
-			System.out.println("Couldn't resolve " + networkAddress);
+		// RTP
+		if(rtpPort > 0) {
+			try {
+				rtpAddress = new InetSocketAddress(networkAddress, rtpPort);
+			} catch (Exception e) {
+				System.out.println("Couldn't resolve " + networkAddress);
+			}
 		}
-		cname = CNAME;
-		rtpDestPort = rtpPort;
-		rtcpDestPort = rtcpPort;
+		
+		// RTCP 
+		if(rtcpPort > 0) {
+			try {
+				rtcpAddress = new InetSocketAddress(networkAddress, rtcpPort);
+			} catch (Exception e) {
+				System.out.println("Couldn't resolve " + networkAddress);
+			}
+		}
+		
+		//By default this is a sender and a receiver:
+		isReceiver = true;
+		isSender = true;
 	}
 	
-	// Incomplete insert, we got a packet, but we don't know this person yet.
-	protected Participant(InetAddress adr, int rtpPort, long SSRC) {
-		address = adr;
-		rtpDestPort = rtpPort;
+	// We got a packet, but we don't know this person yet.
+	protected Participant(InetAddress adr, long SSRC) {
+		rtpAddress = new InetSocketAddress(adr,0);
 		ssrc = SSRC;
 	}
 	
@@ -141,53 +153,36 @@ public class Participant {
 	 * 
 	 * @return the UDP port number
 	 */
-	public int getRtpDestPort() {
-		return rtpDestPort;
-	}
+	//public int getRtpDestPort() {
+	//	return rtpDestPort;
+	//}
 	
 	/**
 	 * RTCP port we expect peer to listen on.
 	 * 
 	 * @return the UDP port number
 	 */
-	public int getRtcpDestPort() {
-		return rtcpDestPort;
-	}
+	//public int getRtcpDestPort() {
+	//	return rtcpDestPort;
+	//}
 	
 	/**
-	 * Address registered with this participant.
+	 * RTP Address registered with this participant.
 	 * 
 	 * @return address of participant
 	 */
-	InetAddress getInetAddress() {
-		return address;
+	InetSocketAddress getRtpSocketAddress() {
+		return rtpAddress;
 	}
 	
-	/**
-	 * Update RTP port of participant
-	 * 
-	 * @param rtpPort the UDP port to which we will send packets
-	 */
-	public void setRtpDestPort(int rtpPort) {
-		rtpDestPort = rtpPort;
-	}
 	
 	/**
-	 * Update RTCP port of participant
+	 * RTCP Address registered with this participant.
 	 * 
-	 * @param rtcpPort the UDP port to which we will send packets
+	 * @return address of participant
 	 */
-	public void setRtcpDestPort(int rtcpPort) {
-		rtcpDestPort = rtcpPort;
-	}
-	
-	/**
-	 * Update ip address of participant.
-	 * 
-	 * @param newAdr the new address
-	 */
-	public void setInetAddress(InetAddress newAdr) {
-		address = newAdr;
+	InetSocketAddress getRtcpSocketAddress() {
+		return rtcpAddress;
 	}
 	
 	/**
@@ -207,25 +202,4 @@ public class Participant {
 	public long getSSRC() {
 		return this.ssrc;
 	}
-	
-	// Set the SSRC, for internal use only, public only for convenience.
-	protected int setSSRC(long anSSRC) {
-		if(ssrc < 0) {
-			return -1;
-		} else {
-			ssrc = anSSRC;
-			return 0;
-		}
-	}
-
-	// Check ParticipantDatabase.java if you change this!
-	protected long simpleHash() {
-		if(ssrc > 0) {
-			return ssrc;
-		} else {
-			// This is a bit pricey
-			return cname.hashCode();
-		}
-	}
-	
 }
