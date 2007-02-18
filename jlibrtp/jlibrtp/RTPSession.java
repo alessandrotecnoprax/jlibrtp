@@ -22,10 +22,12 @@ import java.net.DatagramSocket;
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.util.Enumeration;
+import java.net.InetSocketAddress;
+import java.util.Iterator;
 import java.util.Hashtable;
 import java.util.concurrent.locks.*;
 import java.util.Random;
+//import java.util.*;
 
 /**
  * The RTPSession object is the core of jlibrtp. One should be instanciated for every communication channel, i.e. if you send voice and video, you should create one for each.
@@ -80,7 +82,6 @@ public class RTPSession {
 
 	 
 	 // Locks
-	 final protected Lock partDbLock = new ReentrantLock();
 	 final protected Lock pktBufLock = new ReentrantLock();
 	 final protected Condition pktBufDataReady = pktBufLock.newCondition();
 	 
@@ -179,43 +180,39 @@ public class RTPSession {
 		// Creates a raw packet
 		byte[] pktBytes = pkt.encode();
 		
-		//Are we using multicast or not?
-		if(!mcSession) {
+		// Loop over recipients
+		Iterator iter = partDb.getReceivers();	
+		while(iter.hasNext()) {
+			InetSocketAddress receiver = (InetSocketAddress) iter.next();
 			
-			//Send it to all of the receives.
-			Enumeration set = partDb.getReceivers();	
-			while(set.hasMoreElements()) {
-				Participant p = (Participant)set.nextElement();
-				if(RTPSession.rtpDebugLevel > 8) {
-					System.out.println("RTPSenderThread.sendData() unicast Participant: " + p.getCNAME() + "@" +  p.getInetAddress() + ":" + p.getRtpDestPort());
-				}
-				try {	
-					DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,p.getInetAddress(),p.getRtpDestPort());
-					//Actually send the packet
-					rtpSock.send(packet);
-				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() unicast failed - Possibly lost socket.");
-					e.printStackTrace();
-					return -1;
-				}
-
-			}
-		}else {
-			//Multicast
-
-			if(RTPSession.rtpDebugLevel > 8) {
-				System.out.println("RTPSenderThread.sendData() multicasting");
-			}
-			try {	
-				DatagramPacket packet = new DatagramPacket(pktBytes,pktBytes.length,mcGroup,rtpMCSock.getLocalPort());
-				//Actually send the packet
-				rtpMCSock.send(packet);
+			DatagramPacket packet = null;
+			
+			try {
+				packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
 			} catch (Exception e) {
-				System.out.println("RTPSession.sendData() multicast failed - Possibly lost socket.");
+				System.out.println("RTPSession.sendData() packet creation failed.");
 				e.printStackTrace();
 				return -1;
 			}
-
+			
+			//Actually send the packet
+			if( receiver.getAddress().isMulticastAddress() ) {
+				try {
+					rtpMCSock.send(packet);
+				} catch (Exception e) {
+					System.out.println("RTPSession.sendData() multicast failed.");
+					e.printStackTrace();
+					return -1;
+				}
+			} else {
+				try {
+					rtpSock.send(packet);
+				} catch (Exception e) {
+					System.out.println("RTPSession.sendData() unicast failed.");
+					e.printStackTrace();
+					return -1;
+				}
+			}
 		}
 		
 		//Update our stats

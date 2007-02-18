@@ -66,29 +66,13 @@ public class AppCallerThread extends Thread {
 				}
 
 		    	// Next loop over all participants and check whether they have anything for us.
-				Enumeration set = rtpSession.partDb.getSenders();
+				Enumeration set = rtpSession.partDb.getParticipants();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > 4) {
+					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > rtpSession.reorderBufferLength) {
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
-					}
-				}
-		    	
-				// Does the application want packet from participants it has not explicitly added?
-				if(rtpSession.naiveReception) {
-					set = rtpSession.partDb.getUnknownSenders();
-					while(set.hasMoreElements()) {
-						Participant p = (Participant)set.nextElement();
-						while(p.pktBuffer != null && p.pktBuffer.length > rtpSession.reorderBufferLength) {
-							DataFrame aFrame = p.pktBuffer.popOldestFrame();
-							if(aFrame != null) {
-								appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
-							} else {
-								System.out.println("Dropping frame!");
-							}
-						}
 					}
 				}
 		    
