@@ -36,20 +36,27 @@ import java.util.*;
  * @author Arne Kepp
  */
 public class ParticipantDatabase {
+	RTPSession rtpSession = null;
 	Hashtable table = null; // Holds participants
 	HashSet receivers = null; // InetSocketAddresses
 	
-	public ParticipantDatabase() {
+	public ParticipantDatabase(RTPSession parent) {
+		rtpSession = parent;
 		table = new Hashtable();
 		receivers = new HashSet();
 	}
 	
-	synchronized protected void addParticipant(Participant p) {
+	synchronized protected int addParticipant(Participant p) {
+		if( p.rtpAddress != null && p.rtpAddress.getAddress().isMulticastAddress() != this.rtpSession.mcSession) {
+			System.out.println("ParticipantDatabase.addParticipant() rejected (non)multicast participant.");
+		}
+		
 		table.put(p.ssrc, p);
 		
 		if(p.isReceiver && p.rtpAddress != null && !receivers.contains(p.rtpAddress)) {
 			receivers.add(p.rtpAddress);
 		}
+		return 0;
 	}
 	
 	synchronized protected void removeParticipant(Participant p) {

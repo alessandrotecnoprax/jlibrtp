@@ -20,8 +20,6 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-//Added 06-12-18 from Vaishnav's tree
-import java.util.Hashtable;
 
 /**
  * The RTP receiver thread waits on the designated UDP socket for new packets.
@@ -35,9 +33,6 @@ import java.util.Hashtable;
  */
 public class RTPReceiverThread extends Thread {
 	RTPSession rtpSession = null;
-
-	//Added 06-12-18 from Vaishnav's tree
-	Hashtable RTCPRecvRptTable = new Hashtable();
 
 	RTPReceiverThread(RTPSession session) {
 		rtpSession = session;
@@ -129,10 +124,12 @@ public class RTPReceiverThread extends Thread {
 			}
 
 			// Statistics for receiver report.
-			part.lostPktCount += pkt.getSeqNumber() - part.lastSeqNumber;
 			part.receivedOctets += pkt.getPayloadLength();
-			part.lastSeqNumber = pkt.getSeqNumber();
-			//part.lastRecvTimeStamp = pkt.getTimeStamp();
+			part.receivedPkts++;
+			
+			if( part.lastSeqNumber < pkt.getTimeStamp()) {
+				part.lastSeqNumber = pkt.getSeqNumber();
+			}
 
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");

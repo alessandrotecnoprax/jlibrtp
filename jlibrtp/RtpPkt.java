@@ -297,16 +297,12 @@ public class RtpPkt {
 		//System.out.println("writePkt timeStamp:" + rawPkt[7]);
 		
 		someBytes = StaticProcs.longToByteWord(ssrc);
-		for(int i=0;i<4;i++) {
-			rawPkt[i + 8] = someBytes[i];
-		}
+		System.arraycopy(someBytes, 0, rawPkt, 8, 4);
 		//System.out.println("writePkt ssrc:" + rawPkt[11]);
 		
-		for(int j=0; j<csrcLen ; j++) {
-			someBytes = StaticProcs.longToByteWord(csrcArray[j]);
-			for(int i=0;i<4;i++) {
-				rawPkt[i + 12 + 4*j] = someBytes[i];
-			}
+		for(int i=0; i<csrcLen ; i++) {
+			someBytes = StaticProcs.longToByteWord(csrcArray[i]);
+			System.arraycopy(someBytes, 0, rawPkt, 12 + 4*i, 4);
 		}
 		// TODO Extension
 

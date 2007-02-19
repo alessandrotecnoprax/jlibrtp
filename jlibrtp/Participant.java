@@ -44,9 +44,10 @@ public class Participant {
 	protected String priv = null;
 	
 	// Receiver Report Items
+	protected int firstSeqNumber = -1;
 	protected int lastSeqNumber = -1;
 	protected int recvPktCount = 0;
-	protected int lostPktCount = 0;
+	//protected int lostPktCount = 0;
 	protected long extHighSeqRecv = -1;
 	protected long prevDelay = -1;
 	protected long curJitter = -1;
@@ -57,6 +58,8 @@ public class Participant {
 	// Sender Report Items
 	protected long reportedPkts = -1;
 	protected long reportedOctets = -1;
+	protected long reportedPktsOffset = -1;
+	protected long reportedOctetsOffset = -1;
 	protected long receivedPkts = -1;
 	protected long receivedOctets = -1;
 	protected long ntpRelativeOffset = 0; //Offset between our clock and his
