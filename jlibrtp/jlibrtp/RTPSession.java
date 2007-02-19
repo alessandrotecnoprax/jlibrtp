@@ -45,17 +45,16 @@ public class RTPSession {
 	  * Debug output is written to System.out</br>
 	  */
 	 final static public int rtpDebugLevel = 15;
-	 Hashtable participantTable = new Hashtable();
 	 
-	 // Is this a multicast session?
-	 protected boolean mcSession = false;
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
 	 protected DatagramSocket rtcpSock = null;
 	 protected MulticastSocket rtpMCSock = null;
 	 protected MulticastSocket rtcpMCSock = null;
 	 protected InetAddress mcGroup = null;
+	 
 	 // Internal state
+	 protected boolean mcSession; // Multicast session?
 	 protected int payloadType = 0;
 	 protected long ssrc;
 	 protected long lastTimestamp = 0;
@@ -72,7 +71,7 @@ public class RTPSession {
 	 protected int callbackTimeout = -1;
 	 
 	 // List of participants
-	 protected ParticipantDatabase partDb = new ParticipantDatabase(); 
+	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
 	 // Handle to application
 	 protected RTPAppIntf appIntf = null;
 	 // Threads etc.
@@ -94,14 +93,14 @@ public class RTPSession {
 	  * Returns an instance of a <b>unicast</b> RTP session. 
 	  * Following this you should register your application.
 	  * 
-	  * @param	rtpPort a free port for RTP communication
-	  * @param	rtcpPort a free port for RTCP communication
-	  * @param	aCNAME the character string that identifies you, example username@hostname.
+	  * @param	rtpSocket UDP socket to receive RTP communication on
+	  * @param	rtcpSocket UDP socket to receive RTCP communication on, null if none.
 	  */
-	 public RTPSession(int rtpPort, int rtcpPort, String aCNAME) throws Exception {
-		 rtpSock = new DatagramSocket(rtpPort);
-		 rtcpSock = new DatagramSocket(rtcpPort);
-		 CNAME = aCNAME;
+	 public RTPSession(DatagramSocket rtpSocket, DatagramSocket rtcpSocket) {
+		 mcSession = false;
+		 rtpSock = rtpSocket;
+		 rtcpSock = rtcpSocket;
+		 // Get default value for CNAME
 		 //this.rtcpSession = new RTCPSession(this);
 	 }
 	 
@@ -109,19 +108,21 @@ public class RTPSession {
 	  * Returns an instance of a <b>multicast</b> RTP session. 
 	  * Following this you should register your application.
 	  * 
-	  * @param	rtpSock a multicast socket for RTP communication
-	  * @param	rtcpSock a multicast socket for RTCP communication
+	  * @param	rtpSock a multicast socket to receive RTP communication on
+	  * @param	rtcpSock a multicast socket to receive RTP communication on
 	  * @param	multicastGroup the multicast group that we want to communicate with.
-	  * @param	aCNAME the character string that identifies you, example username@hostname.
 	  */
-	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, InetAddress multicastGroup,String aCNAME) throws Exception {
+	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, InetAddress multicastGroup) throws Exception {
+		 mcSession = true;
 		 MulticastSocket rtpMCSock =rtpSock;
 		 MulticastSocket rtcpMCSock = rtcpSock;
 		 mcGroup = multicastGroup;
 		 rtpMCSock.joinGroup(mcGroup);
 		 rtcpMCSock.joinGroup(mcGroup);
-		 CNAME = aCNAME;
-		 mcSession = true;
+
+		 
+		 // Get default value for CNAME
+		 // this.rtcpSession = new RTCPSession(this);
 	 }
 	 
 	 /**
@@ -196,19 +197,19 @@ public class RTPSession {
 			}
 			
 			//Actually send the packet
-			if( receiver.getAddress().isMulticastAddress() ) {
+			if( this.mcSession ) {
 				try {
-					rtpMCSock.send(packet);
+					rtpSock.send(packet);
 				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() multicast failed.");
+					System.out.println("RTPSession.sendData() unicast failed.");
 					e.printStackTrace();
 					return -1;
 				}
 			} else {
 				try {
-					rtpSock.send(packet);
+					rtpMCSock.send(packet);
 				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() unicast failed.");
+					System.out.println("RTPSession.sendData() multicast failed.");
 					e.printStackTrace();
 					return -1;
 				}
@@ -286,9 +287,14 @@ public class RTPSession {
 	  *
 	  * @param cname The cname of the participant.
 	  */
-	 public void removeParticipant(String cname) {
+	 public int removeParticipant(String cname) {
 		Participant p = partDb.getParticipant(cname);
-		partDb.removeParticipant(p);
+		if(p == null) {
+			partDb.removeParticipant(p);
+			return 0;
+		} else {
+			return -1;
+		}
 	 }
 	 
 	 /**
@@ -310,7 +316,7 @@ public class RTPSession {
 	}
 
 	/**
-	 * Update your CNAME, used for outgoing RTCP packets.
+	 * Overrides CNAME, used for outgoing RTCP packets.
 	 * 
 	 * @param cname a string, e.g. username@hostname. Must be unique for session.
 	 */
@@ -325,15 +331,15 @@ public class RTPSession {
 	 * 
 	 * @param rtpPort integer for new port number, check it is free first.
 	 */
-	public int updateRTPSock(int rtpPort) throws Exception {
-		if(mcSession = false) {
-			 rtpSock = new DatagramSocket(rtpPort);
-			 return 0;
-		} else {
-			System.out.println("Can't switch from multicast to unicast.");
-			return -1;
-		}
-	}
+	//public int updateRTPSock(int rtpPort) throws Exception {
+	//	if(mcSession = false) {
+	//		 rtpSock = new DatagramSocket(rtpPort);
+	//		 return 0;
+	//	} else {
+	//		System.out.println("Can't switch from multicast to unicast.");
+	//		return -1;
+	//	}
+	//}
 	
 	/**
 	 * Change the RTCP port of the session. 
@@ -342,15 +348,15 @@ public class RTPSession {
 	 * 
 	 * @param rtcpPort integer for new port number, check it is free first.
 	 */
-	public int updateRTCPSock(int rtcpPort) throws Exception {
-		if(mcSession = false) {
-			 rtpSock = new DatagramSocket(rtcpPort);
-			 return 0;
-		} else {
-			System.out.println("Can't switch from multicast to unicast.");
-			return -1;
-		}
-	}
+	//public int updateRTCPSock(int rtcpPort) throws Exception {
+	//	if(mcSession = false) {
+	//		 rtpSock = new DatagramSocket(rtcpPort);
+	//		 return 0;
+	//	} else {
+	//		System.out.println("Can't switch from multicast to unicast.");
+	//		return -1;
+	//	}
+	//}
 	
 	/**
 	 * Change the RTP multicast socket of the session. 
@@ -359,15 +365,15 @@ public class RTPSession {
 	 * 
 	 * @param rtpSock the new multicast socket for RTP communication.
 	 */
-	public int updateRTPSock(MulticastSocket rtpSock) {
-		if(mcSession = true) {
-			 rtpMCSock = rtpSock;
-			 return 0;
-		} else {
-			System.out.println("Can't switch from unicast to multicast.");
-			return -1;
-		}
-	}
+	//public int updateRTPSock(MulticastSocket rtpSock) {
+	//	if(mcSession = true) {
+	//		 rtpMCSock = rtpSock;
+	//		 return 0;
+	//	} else {
+	//		System.out.println("Can't switch from unicast to multicast.");
+	//		return -1;
+	//	}
+	//}
 	
 	/**
 	 * Change the RTCP multicast socket of the session. 
@@ -376,15 +382,15 @@ public class RTPSession {
 	 * 
 	 * @param rtcpSock the new multicast socket for RTCP communication.
 	 */
-	public int updateRTCPSock(MulticastSocket rtcpSock) {
-		if(mcSession = true) {
-			 rtcpMCSock = rtcpSock;
-			 return 0;
-		} else {
-			System.out.println("Can't switch from unicast to multicast.");
-			return -1;
-		}
-	}
+	//public int updateRTCPSock(MulticastSocket rtcpSock) {
+	//	if(mcSession = true) {
+	//		 rtcpMCSock = rtcpSock;
+	//		 return 0;
+	//	} else {
+	//		System.out.println("Can't switch from unicast to multicast.");
+	//		return -1;
+	//	}
+	//}
 	
 	/**
 	 * Update the payload type used for the session. It is represented as a 7 bit integer, whose meaning must be negotiated elsewhere (see IETF RFCs <a href="http://www.ietf.org/rfc/rfc3550.txt">3550</a> and <a href="http://www.ietf.org/rfc/rfc3550.txt">3551</a>)
@@ -435,7 +441,7 @@ public class RTPSession {
 	 * @return the length the buffers were actually set to.
 	 */
 	public int setReorderBufferLength(int length) {
-		if(length > 1) {
+		if(length > -1) {
 			reorderBufferLength = length;
 		} else {
 			reorderBufferLength = 5;
@@ -479,14 +485,6 @@ public class RTPSession {
 		return callbackTimeout;
 	}
 	
-	
-	/**
-	 * Change the RTCP multicast socket of the session. 
-	 * Peers must be notified through SIP or other signalling protocol.
-	 * Only valid if this is a multicast session to begin with.
-	 * 
-	 * @param rtcpSock the new multicast socket for RTCP communication.
-	 */
 	private int getNextSeqNum() {
 		seqNum++;
 		// 16 bit number
