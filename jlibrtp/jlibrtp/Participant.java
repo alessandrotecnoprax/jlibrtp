@@ -113,6 +113,13 @@ public class Participant {
 	protected Participant(InetAddress adr, long SSRC) {
 		rtpAddress = new InetSocketAddress(adr,0);
 		ssrc = SSRC;
+		unexpected = true;
+	}
+	
+	// Surprise through SDES
+	protected Participant(long SSRC) {
+		ssrc = SSRC;
+		unexpected = true;
 	}
 	
 	/**

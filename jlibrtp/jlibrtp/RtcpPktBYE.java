@@ -4,17 +4,17 @@ public class RtcpPktBYE extends RtcpPkt {
 	private long[] ssrcArray = null;//32xn bits, n<16
 	byte[] reason = null;
 	
-	protected RtcpPktBYE() {
+	protected RtcpPktBYE(long[] ssrcs,byte[] aReason) {
 		// Fetch all the right stuff from the database
-		
-		
+		reason = aReason;
+		ssrcArray = ssrcs;
+		if(ssrcs.length < 1) {
+			System.out.println("RtcpBYE.RtcpPktBYE(long[] ssrcs, byte[] aReason) requires at least one SSRC!");
+		}
 	}
 	
 	protected RtcpPktBYE(byte[] aRawPkt) {
 		rawPkt = aRawPkt;
-
-		//byte[] header = new byte[4];
-		//System.arraycopy(aRawPkt, 0, header, 0, 4);
 
 		if(super.parseHeaders() != 0 || packetType != 203) {
 			//Error...
@@ -33,6 +33,35 @@ public class RtcpPktBYE extends RtcpPkt {
 	}
 	
 	protected byte[] encode() {	
-		return new byte[1];
+		packetType = 203;
+		
+		itemCount = ssrcArray.length;
+		length = 4*ssrcArray.length;
+		
+		if(reason != null) {
+			length += (reason.length + 1)/4;
+			if((reason.length + 1) % 4 != 0) {
+				length +=1;
+			}
+		}
+		rawPkt = new byte[length*4 + 4];
+		
+		int i;
+		byte[] someBytes;
+		
+		// SSRCs
+		for(i=0; i<ssrcArray.length; i++ ) {
+			someBytes = StaticProcs.longToByteWord(ssrcArray[i]);
+			System.arraycopy(someBytes, 0, rawPkt, 4 + 4*i, 4);			
+		}
+		
+		// Reason for leaving
+		if(reason != null) {
+			rawPkt[8+4*i] = (byte) reason.length;
+		}
+		
+		System.arraycopy(reason, 0, rawPkt, 9+4*i, reason.length);			
+		
+		return rawPkt;
 	}
 }

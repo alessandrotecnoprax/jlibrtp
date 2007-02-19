@@ -3,33 +3,35 @@ package jlibrtp;
 import java.util.LinkedList;
 
 public class RtcpPktSDES extends RtcpPkt {
-	private long[] ssrcArray = null;//32xn bits, n<16
-	protected LinkedList<byte[]> firstItemList = null;
+	boolean reportSelf = true;
+	protected Participant[] participants = null;
 	
-	protected RtcpPktSDES() {
+	protected RtcpPktSDES(boolean reportThisSession, Participant[] additionalParticipants) {
 		// Fetch all the right stuff from the database
-		
-		
+		reportSelf = reportThisSession;
+		participants = additionalParticipants;
 	}
 	
-	protected RtcpPktSDES(byte[] aRawPkt) {
+	protected RtcpPktSDES(byte[] aRawPkt, ParticipantDatabase partDb) {
 		rawPkt = aRawPkt;
-
-		//byte[] header = new byte[4];
-		//System.arraycopy(aRawPkt, 0, header, 0, 4);
 
 		if(super.parseHeaders() != 0 || packetType != 202) {
 			//Error...
 		} else {
-			firstItemList = new LinkedList<byte[]>();
 			int curPos = 4;
 			int curLength;
 			int curType;
+			long ssrc;
 			boolean endReached = false;
 			// Loop over SSRC SDES chunks
-			for(int i=0; i<super.itemCount; i++) {
-				ssrcArray[i] = StaticProcs.combineBytes(aRawPkt[curPos],aRawPkt[curPos + 1],aRawPkt[curPos + 2],aRawPkt[curPos + 3]);
+			for(int i=0; i< itemCount; i++) {
+				ssrc = StaticProcs.combineBytes(aRawPkt[curPos],aRawPkt[curPos + 1],aRawPkt[curPos + 2],aRawPkt[curPos + 3]);
 	
+				Participant part = partDb.getParticipant(ssrc);
+				if(part == null) {
+					part = new Participant(ssrc);
+					partDb.addParticipant(part);
+				}
 				curPos += 4;
 				
 				while(!endReached && (curPos/4) <= this.length) {
@@ -42,13 +44,35 @@ public class RtcpPktSDES extends RtcpPkt {
 						
 					} else {
 						curLength  = (int) aRawPkt[curPos + 1];
-						
-						byte[] item = new byte[curLength];
-						System.arraycopy(aRawPkt, curPos + 1, item, 0, curLength);
-						
-						if(i==0)
-							firstItemList.add(item);
-						
+
+						if(curLength > 0) {
+							byte[] item = new byte[curLength];
+							System.arraycopy(aRawPkt, curPos + 1, item, 0, curLength);
+
+
+							switch(curType) {
+							case 1:  part.cname = new String(item); break;
+							case 2:  part.name = new String(item); break;
+							case 3:  part.email = new String(item); break;
+							case 4:  part.phone = new String(item); break;
+							case 5:  part.loc = new String(item); break;
+							case 6:  part.tool = new String(item); break;
+							case 7:  part.note = new String(item); break;
+							case 8:  part.priv = new String(item); break;
+							}
+						} else {
+							switch(curType) {
+							case 1:  part.cname = null; break;
+							case 2:  part.name = null; break;
+							case 3:  part.email = null; break;
+							case 4:  part.phone = null; break;
+							case 5:  part.loc = null; break;
+							case 6:  part.tool = null; break;
+							case 7:  part.note = null; break;
+							case 8:  part.priv = null; break;
+							}
+
+						}
 						curPos = curPos + curLength + 2;
 					}
 
