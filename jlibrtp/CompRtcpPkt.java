@@ -1,16 +1,19 @@
 package jlibrtp;
 
 import java.util.*;
-import java.nio.ByteBuffer;
 
 public class CompRtcpPkt {
 	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
 	
-	protected CompRtcpPkt(RtcpPkt[] rtcpPackets ) {
+	protected CompRtcpPkt() {
 		
 	}
 	
-	protected CompRtcpPkt(byte[] rawPkt) {
+	protected void addPacket(RtcpPkt aPkt) {
+		rtcpPkts.add(aPkt);
+	}
+	
+	protected CompRtcpPkt(byte[] rawPkt, ParticipantDatabase partDb) {
 		// Chop it up
 		int start = 0;
 		
@@ -24,7 +27,7 @@ public class CompRtcpPkt {
 			if(pktType == 201 )
 				rtcpPkts.add(new RtcpPktRR(tmpBuf));
 			if(pktType == 202)
-				rtcpPkts.add(new RtcpPktSDES(tmpBuf));
+				rtcpPkts.add(new RtcpPktSDES(tmpBuf, partDb));
 			if(pktType == 203 )
 				rtcpPkts.add(new RtcpPktBYE(tmpBuf));
 			if(pktType == 204)
@@ -48,11 +51,10 @@ public class CompRtcpPkt {
 		iter = rtcpPkts.listIterator();
 		do {
 			RtcpPkt aPkt = iter.next();
-			System.arraycopy(aPkt.encode(), 0, rawPkt, pos, aPkt.getLength());
+			System.arraycopy(aPkt.encode(), 0, rawPkt, pos, (1 + 8*aPkt.getLength()));
 			pos += aPkt.getLength();
 		} while(iter.hasNext());
 		
 		return rawPkt;
 	}
-	
 }

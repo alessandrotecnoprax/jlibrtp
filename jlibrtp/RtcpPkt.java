@@ -64,4 +64,9 @@ public class RtcpPkt {
 		rawPkt[2] = someBytes[2];
 		rawPkt[3] = someBytes[3];
 	}
+	
+	protected byte[] encode() {
+		System.out.println("RtcpPkt.encode() should never be invoked!!");
+		return new byte[1];
+	}
 }

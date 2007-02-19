@@ -60,12 +60,14 @@ public class RtcpPktRR extends RtcpPkt {
 		
 		//Cumulative number of packets lost
 		someBytes = StaticProcs.longToByteWord(reportee.lastSeqNumber - (long) reportee.firstSeqNumber);
-		System.arraycopy(someBytes, 0, ret, 4, 4);
 		
 		//Calculate the loss fraction COMPLICATED, WAIT FOR NOW.
-		int lost = 0;
-		int expected = 0;
+		//int lost = 0;
+		//int expected = 0;
 		someBytes[4] = (byte) 0;
+		
+		//Write Cumulative number of packets lost and loss fraction to packet:
+		System.arraycopy(someBytes, 0, ret, 4, 4);
 		
 		// Extended highest sequence received
 		someBytes = StaticProcs.longToByteWord(reportee.extHighSeqRecv);
