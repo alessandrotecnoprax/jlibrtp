@@ -30,6 +30,7 @@ public class RtcpPkt {
 	protected int itemCount;	 		//5 bits
 	protected int packetType;			//8 bits
 	protected int length;				//16 bits
+	protected long ssrc;
 	
 	// Contains the actual data (eventually)
 	protected byte[] rawPkt = null;
@@ -65,8 +66,7 @@ public class RtcpPkt {
 		rawPkt[3] = someBytes[3];
 	}
 	
-	protected byte[] encode() {
+	protected void encode() {
 		System.out.println("RtcpPkt.encode() should never be invoked!!");
-		return new byte[1];
 	}
 }

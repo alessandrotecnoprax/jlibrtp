@@ -59,7 +59,7 @@ public class RTPSession {
 	 protected long ssrc;
 	 protected long lastTimestamp = 0;
 	 protected int seqNum = 0;
-	 protected String CNAME = "";
+	 //protected String CNAME = "";
 	 protected int sentPktCount = 0;
 	 protected int sentOctetCount = 0;
 	 
@@ -89,6 +89,17 @@ public class RTPSession {
 	 // Only one registered application, please
 	 protected boolean registered = false;
 
+	 // SDES stuff
+	 protected String cname;
+	 public String name = null;
+	 public String email = null;
+	 public String phone = null;
+	 public String loc = null;
+	 public String tool = null;
+	 public String note = null;
+	 public String priv = null;
+	 
+	 
 	 /**
 	  * Returns an instance of a <b>unicast</b> RTP session. 
 	  * Following this you should register your application.
@@ -321,7 +332,7 @@ public class RTPSession {
 	 * @param cname a string, e.g. username@hostname. Must be unique for session.
 	 */
 	public void setCNAME(String cname) {
-		this.CNAME = cname;
+		this.cname = cname;
 	}
 	
 	/**

@@ -7,6 +7,7 @@ public class RtcpPktSR extends RtcpPkt {
 	protected long rtpTS = -1; //32 bits
 	protected long sendersPktCount = -1; //32 bits
 	protected long sendersOctCount = -1; //32 bits
+	protected RtcpPktRR rReports = null;
 	
 	protected RtcpPktSR(long ssrc, long pktCount, long octCount) {
 		// Fetch all the right stuff from the database
@@ -21,23 +22,21 @@ public class RtcpPktSR extends RtcpPkt {
 		if(super.parseHeaders() != 0 || packetType != 200 || super.length > 7) {
 			//Error...
 		} else {
-			// We don't really use RC / Item Count
-			if(super.length > 0)
-				reporterSsrc = 		StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
-			if(super.length > 2) {
-				ntpTS1 = 	StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
-				ntpTS2 = 	StaticProcs.combineBytes(aRawPkt[12], aRawPkt[13],aRawPkt[14],aRawPkt[15]);
+			reporterSsrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			ntpTS1 = StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
+			ntpTS2 = StaticProcs.combineBytes(aRawPkt[12], aRawPkt[13],aRawPkt[14],aRawPkt[15]);
+			rtpTS = StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
+			sendersPktCount = StaticProcs.combineBytes(aRawPkt[20],aRawPkt[21],aRawPkt[22],aRawPkt[23]);
+			sendersOctCount = StaticProcs.combineBytes(aRawPkt[24],aRawPkt[25],aRawPkt[26],aRawPkt[27]);
+			
+			// RRs attached?
+			if(itemCount > 0) {
+				rReports = new RtcpPktRR(rawPkt,itemCount);
 			}
-			if(super.length > 3)
-				rtpTS= 	StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
-			if(super.length > 4)
-				sendersPktCount = 	StaticProcs.combineBytes(aRawPkt[20],aRawPkt[21],aRawPkt[22],aRawPkt[23]);
-			if(super.length > 5)
-				sendersOctCount = 	StaticProcs.combineBytes(aRawPkt[24],aRawPkt[25],aRawPkt[26],aRawPkt[27]);
 		}
 	}
 	
-	protected byte[] encode(RtcpPktRR[] receptionReports) {
+	protected void encode(RtcpPktRR[] receptionReports) {
 
 		packetType = 200;
 		
@@ -77,7 +76,5 @@ public class RtcpPktSR extends RtcpPkt {
 		System.arraycopy(someBytes, 0, rawPkt, 20, 4);
 		someBytes = StaticProcs.longToByteWord(sendersOctCount);
 		System.arraycopy(someBytes, 0, rawPkt, 24, 4);
-		
-		return rawPkt;
 	}
 }

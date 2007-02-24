@@ -6,7 +6,7 @@ public class CompRtcpPkt {
 	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
 	
 	protected CompRtcpPkt() {
-		
+		// Will have to add packets directly to rtcpPkts.
 	}
 	
 	protected void addPacket(RtcpPkt aPkt) {
@@ -25,7 +25,7 @@ public class CompRtcpPkt {
 			if(pktType == 200)
 				rtcpPkts.add(new RtcpPktSR(tmpBuf));
 			if(pktType == 201 )
-				rtcpPkts.add(new RtcpPktRR(tmpBuf));
+				rtcpPkts.add(new RtcpPktRR(tmpBuf, -1));
 			if(pktType == 202)
 				rtcpPkts.add(new RtcpPktSDES(tmpBuf, partDb));
 			if(pktType == 203 )
@@ -51,7 +51,8 @@ public class CompRtcpPkt {
 		iter = rtcpPkts.listIterator();
 		do {
 			RtcpPkt aPkt = iter.next();
-			System.arraycopy(aPkt.encode(), 0, rawPkt, pos, (1 + 8*aPkt.getLength()));
+			aPkt.encode();
+			System.arraycopy(aPkt.rawPkt, 0, rawPkt, pos, (1 + 8*aPkt.getLength()));
 			pos += aPkt.getLength();
 		} while(iter.hasNext());
 		
