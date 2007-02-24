@@ -23,7 +23,7 @@ public class RtcpPktAPP extends RtcpPkt {
 		}
 	}
 	
-	protected byte[] encode() {	
-		return new byte[1];
+	protected void encode() {	
+	
 	}
 }

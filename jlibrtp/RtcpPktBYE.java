@@ -32,7 +32,7 @@ public class RtcpPktBYE extends RtcpPkt {
 		}
 	}
 	
-	protected byte[] encode() {	
+	protected void encode() {	
 		packetType = 203;
 		
 		itemCount = ssrcArray.length;
@@ -60,8 +60,6 @@ public class RtcpPktBYE extends RtcpPkt {
 			rawPkt[8+4*i] = (byte) reason.length;
 		}
 		
-		System.arraycopy(reason, 0, rawPkt, 9+4*i, reason.length);			
-		
-		return rawPkt;
+		System.arraycopy(reason, 0, rawPkt, 9+4*i, reason.length);
 	}
 }

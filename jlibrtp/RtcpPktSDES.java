@@ -1,6 +1,6 @@
 package jlibrtp;
 
-import java.util.LinkedList;
+import java.util.Vector;
 
 public class RtcpPktSDES extends RtcpPkt {
 	boolean reportSelf = true;
@@ -81,7 +81,54 @@ public class RtcpPktSDES extends RtcpPkt {
 		}
 	}
 	
-	protected byte[] encode() {	
-		return new byte[1];
+	// For the time being we'll only advertise ourselves.
+	protected void encode(RTPSession session) {	
+		packetType = 202;
+		byte[] temp = new byte[1450];
+		byte[] someBytes = StaticProcs.longToByteWord(session.ssrc);
+		System.arraycopy(someBytes, 0, temp, 4, 4);
+		
+		int pos = 8;
+	
+		String tmpString = null;
+		for(int i=1; i<9;i++) {
+			switch(i) {
+				case 1:  tmpString = session.cname; break;
+				case 2:  tmpString = session.name; break;
+				case 3:  tmpString = session.email; break;
+				case 4:  tmpString = session.phone; break;
+				case 5:  tmpString = session.loc; break;
+				case 6:  tmpString = session.tool; break;
+				case 7:  tmpString = session.note; break;
+				case 8:  tmpString = session.priv; break;
+			}
+			
+			if(tmpString != null) {
+				someBytes = tmpString.getBytes();
+				temp[pos] = (byte) someBytes.length;
+				temp[pos+1] = (byte) i;
+				System.arraycopy(someBytes, 0, temp, pos + 2, someBytes.length);
+				pos = pos + someBytes.length + 2;
+			}
+		}
+		int leftover = pos % 4;
+		if(leftover == 1) {
+			temp[pos] = (byte) 0; 
+			temp[pos + 1] = (byte) 1; 
+			pos += 3;
+		} else if(leftover == 2) {
+			temp[pos] = (byte) 0; 
+			temp[pos + 1] = (byte) 0; 
+			pos += 2;
+		} else if(leftover == 3) {
+			temp[pos] = (byte) 0; 
+			temp[pos + 1] = (byte) 3; 
+			pos += 5;
+		}
+		
+		rawPkt = new byte[pos];
+		itemCount = 1;
+		System.arraycopy(temp, 0, rawPkt, 0, pos);
+		writeHeaders();
 	}
 }
