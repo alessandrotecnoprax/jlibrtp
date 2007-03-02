@@ -18,6 +18,7 @@
  */
 package jlibrtp;
 
+import java.net.InetAddress;
 /** 
  * Common RTCP packet headers.
  *
@@ -27,9 +28,9 @@ public class RtcpPkt {
 	protected boolean rawPktCurrent = false;
 	protected int version = 2; 		//2 bits
 	protected int padding; 			//1 bit
-	protected int itemCount;	 		//5 bits
-	protected int packetType;			//8 bits
-	protected int length;				//16 bits
+	protected int itemCount;	 	//5 bits
+	protected int packetType;		//8 bits
+	protected int length;			//16 bits
 	protected long ssrc;
 	
 	// Contains the actual data (eventually)
@@ -68,5 +69,17 @@ public class RtcpPkt {
 	
 	protected void encode() {
 		System.out.println("RtcpPkt.encode() should never be invoked!!");
+	}
+	
+	protected boolean check(InetAddress adr, ParticipantDatabase partDb) {
+		if (partDb.rtpSession.mcSession && adr.equals(partDb.rtpSession.mcGroup))
+			return true;
+		
+		Participant part = partDb.getParticipant(this.ssrc);
+		if(part != null && part.rtcpAddress.getAddress().equals(adr))
+			return true;
+		
+		return false;
+		
 	}
 }

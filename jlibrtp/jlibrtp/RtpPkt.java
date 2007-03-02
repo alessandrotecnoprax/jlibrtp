@@ -80,9 +80,10 @@ public class RtpPkt {
 	 * Construct a packet-instance from an raw packet (believed to be RTP). The UDP-headers must be removed before invoking this method. Call checkPkt on the instance to verify that it was successfully parsed.
 	 *
 	 * @param aRawPkt The data-part of a UDP-packet believed to be RTP 
+	 * @param packetSize the number of valid octets in the packet, should be aRawPkt.length
 	 * @return A packet-instance.
 	 */
-	public RtpPkt(byte[] aRawPkt){
+	public RtpPkt(byte[] aRawPkt, int packetSize){
 		if( RTPSession.rtpDebugLevel > 5) {
 			System.out.println("-> RtpPkt(aRawPkt)"); 
 		}
@@ -91,7 +92,7 @@ public class RtpPkt {
 			System.out.println("RtpPkt(byte[]) Packet null");
 		}
 		
-		int remOct = aRawPkt.length - 12;
+		int remOct = packetSize - 12;
 		if(remOct >= 0) {
 			rawPkt = aRawPkt;	//Store it
 			//Interrogate the packet

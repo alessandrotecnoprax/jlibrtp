@@ -24,10 +24,8 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Iterator;
-import java.util.Hashtable;
 import java.util.concurrent.locks.*;
 import java.util.Random;
-//import java.util.*;
 
 /**
  * The RTPSession object is the core of jlibrtp. One should be instanciated for every communication channel, i.e. if you send voice and video, you should create one for each.
@@ -48,9 +46,7 @@ public class RTPSession {
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
-	 protected DatagramSocket rtcpSock = null;
 	 protected MulticastSocket rtpMCSock = null;
-	 protected MulticastSocket rtcpMCSock = null;
 	 protected InetAddress mcGroup = null;
 	 
 	 // Internal state
@@ -75,10 +71,9 @@ public class RTPSession {
 	 // Handle to application
 	 protected RTPAppIntf appIntf = null;
 	 // Threads etc.
-	 //protected RTCPSession rtcpSession = null;
+	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
-
 	 
 	 // Locks
 	 final protected Lock pktBufLock = new ReentrantLock();
@@ -110,9 +105,8 @@ public class RTPSession {
 	 public RTPSession(DatagramSocket rtpSocket, DatagramSocket rtcpSocket) {
 		 mcSession = false;
 		 rtpSock = rtpSocket;
-		 rtcpSock = rtcpSocket;
 		 // Get default value for CNAME
-		 //this.rtcpSession = new RTCPSession(this);
+		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
 	 }
 	 
 	 /**
@@ -125,15 +119,14 @@ public class RTPSession {
 	  */
 	 public RTPSession(MulticastSocket rtpSock, MulticastSocket rtcpSock, InetAddress multicastGroup) throws Exception {
 		 mcSession = true;
-		 MulticastSocket rtpMCSock =rtpSock;
-		 MulticastSocket rtcpMCSock = rtcpSock;
+		 rtpMCSock =rtpSock;
 		 mcGroup = multicastGroup;
 		 rtpMCSock.joinGroup(mcGroup);
-		 rtcpMCSock.joinGroup(mcGroup);
-
+		 
+		 rtcpSock.joinGroup(mcGroup);
 		 
 		 // Get default value for CNAME
-		 // this.rtcpSession = new RTCPSession(this);
+		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
 	 }
 	 
 	 /**
