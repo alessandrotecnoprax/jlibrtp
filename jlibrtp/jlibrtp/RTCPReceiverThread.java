@@ -60,7 +60,7 @@ public class RTCPReceiverThread extends Thread {
 			// Parse the received compound RTCP (?) packet
 			CompRtcpPkt pkt = new CompRtcpPkt(rawPkt, packet.getLength(), packet.getAddress(), rtpSession.partDb);
 			
-			// Loop over the information
+			// Loop over the information, skip SDES packets
 
 		}
 	}

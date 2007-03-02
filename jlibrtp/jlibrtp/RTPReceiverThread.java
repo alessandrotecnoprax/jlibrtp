@@ -39,7 +39,6 @@ public class RTPReceiverThread extends Thread {
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTPReceiverThread created");
 		} 
-
 	}
 
 	public void run() {

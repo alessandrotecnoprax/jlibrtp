@@ -21,6 +21,7 @@ public class RtcpPktSR extends RtcpPkt {
 
 		if(super.parseHeaders() != 0 || packetType != 200 || super.length > 7) {
 			//Error...
+			this.problem = 1;
 		} else {
 			reporterSsrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 			ntpTS1 = StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
