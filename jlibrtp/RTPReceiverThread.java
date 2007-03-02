@@ -44,21 +44,28 @@ public class RTPReceiverThread extends Thread {
 
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
-			System.out.println("-> RTPReceiverThread.run() listening on " + rtpSession.rtpSock.getLocalPort() );
+			if(rtpSession.mcSession) {
+				System.out.println("-> RTPReceiverThread.run() starting on MC " + rtpSession.rtpMCSock.getLocalPort() );
+			} else {
+				System.out.println("-> RTPReceiverThread.run() starting on " + rtpSession.rtpSock.getLocalPort() );
+			}
 		}
 
 		while(!rtpSession.endSession) {
 			if(RTPSession.rtpDebugLevel > 6) {
-				System.out.println("-> RTPReceiverThread.run() waiting for packet on " + rtpSession.rtpSock.getLocalPort() );
+				if(rtpSession.mcSession) {
+					System.out.println("-> RTPReceiverThread.run() waiting for MC packet on " + rtpSession.rtpMCSock.getLocalPort() );
+				} else {
+					System.out.println("-> RTPReceiverThread.run() waiting for packet on " + rtpSession.rtpSock.getLocalPort() );
+				}
 			}
 
 			// Prepare a packet
-			byte[] rawPkt = new byte[2000];
+			byte[] rawPkt = new byte[1500];
 			DatagramPacket packet = new DatagramPacket(rawPkt, rawPkt.length);
-
+			// Wait for it to arrive
 			if(! rtpSession.mcSession) {
 				//Unicast
-				// Wait for it to arrive
 				try {
 					rtpSession.rtpSock.receive(packet);
 				} catch (IOException e) {
@@ -66,7 +73,6 @@ public class RTPReceiverThread extends Thread {
 				}
 			} else {
 				//Multicast 
-				// Wait for it to arrive
 				try {
 					rtpSession.rtpMCSock.receive(packet);
 				} catch (IOException e) {
@@ -74,16 +80,12 @@ public class RTPReceiverThread extends Thread {
 				}
 			}
 
-			// Make a minimum-size bytebyffer
-			byte[] slicedPkt = new byte[packet.getLength()];
-			System.arraycopy(rawPkt, 0, slicedPkt, 0, packet.getLength());
-
 			// Parse the received RTP (?) packet
-			RtpPkt pkt = new RtpPkt(slicedPkt);
+			RtpPkt pkt = new RtpPkt(rawPkt, packet.getLength());
 
 			// Check whether it was valid.
 			if(pkt == null) {
-				System.out.println("Received invalid packet. Ignoring");
+				System.out.println("Received invalid RTP packet. Ignoring");
 				continue;
 			}
 

@@ -1,7 +1,5 @@
 package jlibrtp;
 
-import java.util.Vector;
-
 public class RtcpPktSDES extends RtcpPkt {
 	boolean reportSelf = true;
 	protected Participant[] participants = null;
