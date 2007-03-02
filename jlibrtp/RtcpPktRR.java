@@ -24,6 +24,7 @@ public class RtcpPktRR extends RtcpPkt {
 		
 		if(rrCount < 0 && super.parseHeaders() != 0 || packetType != 201 || super.length > 7) {
 			//Error...
+			this.problem = 1;
 		}
 		
 		int base;

@@ -15,6 +15,7 @@ public class RtcpPktSDES extends RtcpPkt {
 
 		if(super.parseHeaders() != 0 || packetType != 202) {
 			//Error...
+			this.problem = 1;
 		} else {
 			int curPos = 4;
 			int curLength;
@@ -123,6 +124,9 @@ public class RtcpPktSDES extends RtcpPkt {
 			temp[pos + 1] = (byte) 3; 
 			pos += 5;
 		}
+		
+		
+		// Here we ought to loop over participants
 		
 		rawPkt = new byte[pos];
 		itemCount = 1;

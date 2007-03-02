@@ -18,43 +18,32 @@ public class CompRtcpPkt {
 		// Chop it up
 		int start = 0;
 		
+		 //  o  The payload type field of the first RTCP packet in a compound
+		 //     packet must be equal to SR or RR.
+
+		 //  o  The padding bit (P) should be zero for the first packet of a
+		 //     compound RTCP packet because padding should only be applied, if it
+		 //     is needed, to the last packet.
+
+		 //  o  The length fields of the individual RTCP packets must add up to
+		 //     the overall length of the compound RTCP packet as received.  This
+		 //     is a fairly strong check.
+		      
 		while(start < (packetSize - 32)) {
 			int length = StaticProcs.combineBytes(rawPkt[start + 2], rawPkt[start + 3]);
 			byte[] tmpBuf = new byte[length];
 			int pktType = (int) rawPkt[start + 1];
 			System.arraycopy(rawPkt, start, tmpBuf, 0, length);
-			
-			if(pktType == 200) {
-				RtcpPktSR tmpPkt = new RtcpPktSR(tmpBuf);
-				if(tmpPkt.check(adr, partDb)) {
-					rtcpPkts.add(tmpPkt);
-				}
-			}
-			if(pktType == 201) {
-				RtcpPktRR tmpPkt = new RtcpPktRR(tmpBuf, -1);
-				if(tmpPkt.check(adr, partDb)) {
-					rtcpPkts.add(tmpPkt);
-				}
-			}
-			if(pktType == 202) {
-				RtcpPktSDES tmpPkt = new RtcpPktSDES(tmpBuf, partDb);
-				if(tmpPkt.check(adr, partDb)) {
-					rtcpPkts.add(tmpPkt);
-				}
-			}
-			if(pktType == 203 ) {
-				RtcpPktBYE tmpPkt = new RtcpPktBYE(tmpBuf);
-				if(tmpPkt.check(adr, partDb)) {
-					rtcpPkts.add(tmpPkt);
-				}
-			}
-			if(pktType == 204) {
-				RtcpPktAPP tmpPkt = new RtcpPktAPP(tmpBuf);
-				if(tmpPkt.check(adr, partDb)) {
-					rtcpPkts.add(tmpPkt);
-				}
-			}
-			
+			if(pktType == 200)
+				rtcpPkts.add(new RtcpPktSR(tmpBuf));
+			if(pktType == 201 )
+				rtcpPkts.add(new RtcpPktRR(tmpBuf, -1));
+			if(pktType == 202)
+				rtcpPkts.add(new RtcpPktSDES(tmpBuf, partDb));
+			if(pktType == 203 )
+				rtcpPkts.add(new RtcpPktBYE(tmpBuf));
+			if(pktType == 204)
+				rtcpPkts.add(new RtcpPktAPP(tmpBuf));
 			start += length;
 		}
 	}

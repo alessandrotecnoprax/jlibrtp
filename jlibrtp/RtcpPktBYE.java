@@ -18,6 +18,7 @@ public class RtcpPktBYE extends RtcpPkt {
 
 		if(super.parseHeaders() != 0 || packetType != 203) {
 			//Error...
+			this.problem = 1;
 		} else {
 			ssrcArray = new long[super.itemCount];
 			

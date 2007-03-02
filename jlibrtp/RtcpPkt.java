@@ -25,7 +25,8 @@ import java.net.InetAddress;
  * @author Arne Kepp
  */
 public class RtcpPkt {
-	protected boolean rawPktCurrent = false;
+	//protected boolean rawPktCurrent = false;
+	protected int problem = 0;
 	protected int version = 2; 		//2 bits
 	protected int padding; 			//1 bit
 	protected int itemCount;	 	//5 bits
@@ -72,14 +73,17 @@ public class RtcpPkt {
 	}
 	
 	protected boolean check(InetAddress adr, ParticipantDatabase partDb) {
+		//Multicast -> We have to be naive
 		if (partDb.rtpSession.mcSession && adr.equals(partDb.rtpSession.mcGroup))
 			return true;
 		
+		//See whether this participant is known
 		Participant part = partDb.getParticipant(this.ssrc);
 		if(part != null && part.rtcpAddress.getAddress().equals(adr))
 			return true;
 		
-		return false;
+		//If not, we should look for someone without SSRC with his ip-address?
 		
+		return false;
 	}
 }
