@@ -59,8 +59,6 @@ public class RTPSession {
 	 protected int sentPktCount = 0;
 	 protected int sentOctetCount = 0;
 	 
-	 //By default we use packetbuffers of length 5 to reorder.
-	 protected int reorderBufferLength = 5;
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
 	 //By default we will call receiveData() only when a new packet arrives.
@@ -152,6 +150,7 @@ public class RTPSession {
 			appCallerThrd = new AppCallerThread(this, rtpApp);
 			recvThrd.start();
 		 	appCallerThrd.start();
+		 	rtcpSession.start();
 		 	
 		 	// Set an SSRC
 		 	Random r = new Random(System.currentTimeMillis());
@@ -435,31 +434,6 @@ public class RTPSession {
 	 */
 	public boolean naivePktReception() {
 		return naiveReception;
-	}
-	
-	/**
-	 * How many packets should be buffered. This affects how well we can reorder
-	 * packets, but introduces lag. The default value is 5.
-	 * 
-	 * @param length the number of frames to be buffered in the RTP stack
-	 * @return the length the buffers were actually set to.
-	 */
-	public int setReorderBufferLength(int length) {
-		if(length > -1) {
-			reorderBufferLength = length;
-		} else {
-			reorderBufferLength = 5;
-		}
-		return reorderBufferLength;
-	}
-	
-	/**
-	 * How many packets are currently being buffered for reordering purposes.
-	 * 
-	 * @return the requested lenth of packet buffers.
-	 */
-	public int reorderBufferLength() {
-		return reorderBufferLength;
 	}
 	
 	/**

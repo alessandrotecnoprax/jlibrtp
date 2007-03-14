@@ -4,7 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-public class RTCPSession extends Thread {
+public class RTCPSession {
 	//tp: the last time an RTCP packet was transmitted;
 	protected long tp;
 	
@@ -57,6 +57,11 @@ public class RTCPSession extends Thread {
 		mcGroup = multicastGroup;
 		rtcpSock = rtcpSocket;
 		rtpSession = parent;
+	}
+	
+	protected void start() {
+		recvThrd = new RTCPReceiverThread(this, this. rtpSession);
+		senderThrd = new RTCPSenderThread(this , this.rtpSession);
 	}
 	
 }

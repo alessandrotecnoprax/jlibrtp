@@ -93,6 +93,7 @@ public class Participant {
 			} catch (Exception e) {
 				System.out.println("Couldn't resolve " + networkAddress);
 			}
+			isReceiver = true;
 		}
 		
 		// RTCP 
@@ -104,8 +105,7 @@ public class Participant {
 			}
 		}
 		
-		//By default this is a sender and a receiver:
-		isReceiver = true;
+		//By default this is a sender
 		isSender = true;
 	}
 	

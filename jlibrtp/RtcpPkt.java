@@ -37,15 +37,14 @@ public class RtcpPkt {
 	// Contains the actual data (eventually)
 	protected byte[] rawPkt = null;
 	
-	protected int getLength() {
-		return length;
-	}
-	
 	protected int parseHeaders() {
 		version = ((rawPkt[0] & 0xC0) >>> 6);
 		padding = ((rawPkt[0] & 0x20) >>> 5);
 		itemCount = (rawPkt[0] & 0x1F);
 		packetType = (int) rawPkt[1];
+		if(packetType < 0) {
+			packetType += 256;
+		}
 		length = StaticProcs.combineBytes(rawPkt[2], rawPkt[3]);
 		
 		if(version == 2 && packetType < 205 && packetType > 199 && length < 65536) {
@@ -63,13 +62,13 @@ public class RtcpPkt {
 		aByte = 0;
 		aByte |= packetType;
 		rawPkt[1] = aByte;
-		byte[] someBytes = StaticProcs.intToByteWord(length);
+		byte[] someBytes = StaticProcs.intToByteWord(rawPkt.length);
 		rawPkt[2] = someBytes[2];
 		rawPkt[3] = someBytes[3];
 	}
 	
 	protected void encode() {
-		System.out.println("RtcpPkt.encode() should never be invoked!!");
+		System.out.println("RtcpPkt.encode() should never be invoked!! " + this.packetType);
 	}
 	
 	protected boolean check(InetAddress adr, ParticipantDatabase partDb) {

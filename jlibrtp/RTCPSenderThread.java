@@ -4,7 +4,7 @@ public class RTCPSenderThread extends Thread {
 	private RTPSession rtpSession = null;
 	private RTCPSession rtcpSession = null;
 	
-	protected RTCPSenderThread(RTPSession rtpSession, RTCPSession rtcpSession) {
+	protected RTCPSenderThread(RTCPSession rtcpSession, RTPSession rtpSession) {
 		this.rtpSession = rtpSession;
 		this.rtcpSession = rtcpSession;
 		if(RTPSession.rtpDebugLevel > 1) {
