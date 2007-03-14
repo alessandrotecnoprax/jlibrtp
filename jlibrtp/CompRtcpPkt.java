@@ -8,13 +8,23 @@ public class CompRtcpPkt {
 	
 	protected CompRtcpPkt() {
 		// Will have to add packets directly to rtcpPkts.
+		if(RTPSession.rtpDebugLevel > 7) {
+			System.out.println("<-> CompRtcpPkt()");
+		}
 	}
 	
 	protected void addPacket(RtcpPkt aPkt) {
+		if(RTPSession.rtpDebugLevel > 11) {
+			System.out.println("  <-> CompRtcpPkt.addPacket( "+ aPkt.getClass() + " )");
+		}
 		rtcpPkts.add(aPkt);
 	}
 	
 	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetAddress adr, ParticipantDatabase partDb) {
+		if(RTPSession.rtpDebugLevel > 7) {
+			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + partDb.getClass() + ")");
+		}
+		
 		// Chop it up
 		int start = 0;
 		
@@ -40,20 +50,31 @@ public class CompRtcpPkt {
 			
 			System.arraycopy(rawPkt, start, tmpBuf, 0, length);
 			if(pktType == 200)
-				rtcpPkts.add(new RtcpPktSR(tmpBuf));
+				addPacket(new RtcpPktSR(tmpBuf));
 			if(pktType == 201 )
-				rtcpPkts.add(new RtcpPktRR(tmpBuf, -1));
+				addPacket(new RtcpPktRR(tmpBuf, -1));
 			if(pktType == 202)
-				rtcpPkts.add(new RtcpPktSDES(tmpBuf, partDb));
+				addPacket(new RtcpPktSDES(tmpBuf, partDb));
 			if(pktType == 203 )
-				rtcpPkts.add(new RtcpPktBYE(tmpBuf));
+				addPacket(new RtcpPktBYE(tmpBuf));
 			if(pktType == 204)
-				rtcpPkts.add(new RtcpPktAPP(tmpBuf));
+				addPacket(new RtcpPktAPP(tmpBuf));
 			start += length;
+			
+			if(RTPSession.rtpDebugLevel > 12) {
+				System.out.println("  parsing " + " pktType " + pktType + " length: " + length + " ");
+			}
+		}
+		if(RTPSession.rtpDebugLevel > 7) {
+			System.out.println("<- CompRtcpPkt(rawPkt....)");
 		}
 	}
 	
 	protected byte[] encode() {
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println(" <- CompRtcpPkt.encode()");
+		}
+		
 		// We have to do it every time since we have no control over the packets.
 		ListIterator  iter = rtcpPkts.listIterator();
 	
@@ -63,11 +84,8 @@ public class CompRtcpPkt {
 			RtcpPkt aPkt = (RtcpPkt) iter.next();
 			
 			if(aPkt.packetType == 200) {
-				System.out.println("hepp");
 				RtcpPktSR pkt = (RtcpPktSR) aPkt;
-				System.out.println("hepp 1");
 				pkt.encode(null);
-				System.out.println("hepp 2");
 				iter.set(pkt);
 			} else if(aPkt.packetType == 201 ) {
 				RtcpPktRR pkt = (RtcpPktRR) aPkt;
@@ -106,14 +124,15 @@ public class CompRtcpPkt {
 			
 			if(aPkt.rawPkt == null) {
 				System.out.println("is null, packetType " + aPkt.packetType);
-			} else {
-				System.out.println("cool");
 			}
 			
 			System.arraycopy(aPkt.rawPkt, 0, rawPkt, pos, aPkt.rawPkt.length);
 			pos += aPkt.rawPkt.length;
 		} 
 		
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println(" -> CompRtcpPkt.encode()");
+		}
 		return rawPkt;
 	}
 }

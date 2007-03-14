@@ -13,8 +13,10 @@ public class RtcpPktSDES extends RtcpPkt {
 	protected RtcpPktSDES(byte[] aRawPkt, ParticipantDatabase partDb) {
 		rawPkt = aRawPkt;
 
-		if(super.parseHeaders() != 0 || packetType != 202) {
-			//Error...
+		if(! super.parseHeaders() || packetType != 202) {
+			if(RTPSession.rtpDebugLevel > 2) {
+				System.out.println(" <-> RtcpPktSDES.parseHeaders() etc. problem");
+			}
 			this.problem = 1;
 		} else {
 			int curPos = 4;

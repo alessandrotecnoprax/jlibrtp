@@ -30,14 +30,14 @@ public class RtcpPkt {
 	protected int version = 2; 		//2 bits
 	protected int padding; 			//1 bit
 	protected int itemCount;	 	//5 bits
-	protected int packetType;		//8 bits
-	protected int length;			//16 bits
-	protected long ssrc;
+	protected int packetType = -1;	//8 bits
+	protected int length = -1;		//16 bits
+	protected long ssrc = -1;
 	
 	// Contains the actual data (eventually)
 	protected byte[] rawPkt = null;
 	
-	protected int parseHeaders() {
+	protected boolean parseHeaders() {
 		version = ((rawPkt[0] & 0xC0) >>> 6);
 		padding = ((rawPkt[0] & 0x20) >>> 5);
 		itemCount = (rawPkt[0] & 0x1F);
@@ -47,10 +47,15 @@ public class RtcpPkt {
 		}
 		length = StaticProcs.combineBytes(rawPkt[2], rawPkt[3]);
 		
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println(" <-> RtcpPkt.parseHeaders() version:"+version+" padding:"+padding+" itemCount:"+itemCount
+					+" packetType:"+packetType);
+		}
+		
 		if(version == 2 && packetType < 205 && packetType > 199 && length < 65536) {
-			return 0;
+			return true;
 		} else {
-			return -1;
+			return false;
 		}
 	}
 	protected void writeHeaders() {
@@ -82,7 +87,6 @@ public class RtcpPkt {
 			return true;
 		
 		//If not, we should look for someone without SSRC with his ip-address?
-		
 		return false;
 	}
 }

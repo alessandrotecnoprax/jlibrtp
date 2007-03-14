@@ -1,7 +1,6 @@
 package jlibrtp;
 
 public class RtcpPktSR extends RtcpPkt {
-	protected long reporterSsrc = -1; //32 bits
 	protected long ntpTS1 = -1; //32 bits
 	protected long ntpTS2 = -1; //32 bits
 	protected long rtpTS = -1; //32 bits
@@ -18,13 +17,20 @@ public class RtcpPktSR extends RtcpPkt {
 	}
 	
 	protected RtcpPktSR(byte[] aRawPkt) {
+		if(RTPSession.rtpDebugLevel > 9) {
+				System.out.println("  -> RtcpPktSR(rawPkt)");
+		}
+		
 		super.rawPkt = aRawPkt;
 
-		if(super.parseHeaders() != 0 || packetType != 200 || super.length > 7) {
-			//Error...
+		if(!super.parseHeaders() || packetType != 200 || super.length < 28) {
+			if(RTPSession.rtpDebugLevel > 2) {
+				System.out.println(" <-> RtcpPktSR.parseHeaders() etc. problem: "+ (!super.parseHeaders() ) + " " + packetType + " " + super.length);
+			}
 			this.problem = 1;
 		} else {
-			reporterSsrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			super.ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			System.out.println("Arne: " + super.ssrc);
 			ntpTS1 = StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
 			ntpTS2 = StaticProcs.combineBytes(aRawPkt[12], aRawPkt[13],aRawPkt[14],aRawPkt[15]);
 			rtpTS = StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
@@ -36,9 +42,20 @@ public class RtcpPktSR extends RtcpPkt {
 				rReports = new RtcpPktRR(rawPkt,itemCount);
 			}
 		}
+		
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println("  <- RtcpPktSR(rawPkt)");
+		}
 	}
 	
 	protected void encode(RtcpPktRR[] receptionReports) {
+		if(RTPSession.rtpDebugLevel > 9) {
+			if(receptionReports != null) {
+				System.out.println("  -> RtcpPktSR.encode() receptionReports.length: " + receptionReports.length );
+			} else {
+				System.out.println("  -> RtcpPktSR.encode() receptionReports: null");
+			}
+		}
 		if(receptionReports != null) {
 			super.itemCount = receptionReports.length;
 			super.length = 6 + 6*receptionReports.length;
@@ -54,10 +71,11 @@ public class RtcpPktSR extends RtcpPkt {
 			super.itemCount = 0;
 			super.rawPkt = new byte[28];
 			super.length = 6;
-			System.out.println("Yep");
 		}
 		//Write the common header
 		super.writeHeaders();
+		
+		ssrc = StaticProcs.combineBytes(rawPkt[4], rawPkt[5],rawPkt[6],rawPkt[7]);
 		
 		// Convert to NTP and chop up
 		ntpTS1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
@@ -65,7 +83,8 @@ public class RtcpPktSR extends RtcpPkt {
 		rtpTS = System.currentTimeMillis();
 		
 		//Write SR stuff
-		byte[] someBytes = StaticProcs.longToByteWord(reporterSsrc);
+		byte[] someBytes;
+		someBytes = StaticProcs.longToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		someBytes = StaticProcs.longToByteWord(ntpTS1);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
@@ -77,10 +96,14 @@ public class RtcpPktSR extends RtcpPkt {
 		System.arraycopy(someBytes, 0, super.rawPkt, 20, 4);
 		someBytes = StaticProcs.longToByteWord(sendersOctCount);
 		System.arraycopy(someBytes, 0, super.rawPkt, 24, 4);
+		
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println("  <- RtcpPktSR.encode() longs!: ntpTS1: "+ ntpTS1 + " ntpTS2: " + ntpTS2);
+		}
 	}
 
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
-			System.out.println("   " + super.ssrc + " " + reporterSsrc );
+			System.out.println("  SSRC: " + super.ssrc );
 	}
 }
