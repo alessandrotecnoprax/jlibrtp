@@ -1,8 +1,7 @@
 package jlibrtp;
 
 public class RtcpPktRR extends RtcpPkt {
-	protected Participant reportee = null;
-	protected long reporterSsrc = -1;//-1; //32 bits
+	protected Participant reportees[] = null;
 	protected long[] reporteeSsrc = null;// -1; //32 bits
 	protected int[] lossFraction = null;//-1; //8 bits
 	protected int[] lostPktCount = null;//-1; //24 bits
@@ -11,10 +10,11 @@ public class RtcpPktRR extends RtcpPkt {
 	protected long[] timeStampLSR = null;//-1; //32 bits
 	protected long[] delaySR = null;//-1; //32 bits
 	
-	protected RtcpPktRR(Participant reporteePart, long ssrc) {
+	protected RtcpPktRR(Participant[] reportees, long ssrc) {
 		// Fetch all the right stuff from the database
-		reportee = reporteePart;
-		reporterSsrc = ssrc;
+		this.reportees = reportees;
+		super.ssrc = ssrc;
+		super.packetType = 201;
 	}
 
 	// If rcount < 0 we assume we have to parse the entire packet
@@ -33,7 +33,7 @@ public class RtcpPktRR extends RtcpPkt {
 		} else {
 			base = 8;
 			rrCount = itemCount;
-			reporterSsrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 		}
 		
 		reporteeSsrc = new long[rrCount];
@@ -57,55 +57,67 @@ public class RtcpPktRR extends RtcpPkt {
 	}
 	// Makes a complete packet
 	protected void encode() {
-		packetType = 200;
-		
+		super.rawPkt = encodeRR();
 		//Write the common header
-		writeHeaders();
-		
-		rawPkt = encodeRR();
+		super.writeHeaders();
 	}
 	
 	// Makes only RR part of packet -> do not include our SSRC
 	protected byte[] encodeRR() {
 		//assuming we will always create complete reports:
-		byte[] ret = new byte[24];
+		byte[] ret = new byte[24*reportees.length];
 		
 		//Write SR stuff
+		for(int i = 0; i<reportees.length; i++) {
+			int offset = 24*i;
+			byte[] someBytes = StaticProcs.longToByteWord(reportees[i].ssrc);
+			System.arraycopy(someBytes, 0, ret, offset, 4);
+			
+			//Cumulative number of packets lost
+			someBytes = StaticProcs.longToByteWord(reportees[i].lastSeqNumber - (long) reportees[i].firstSeqNumber);
 		
-		byte[] someBytes = StaticProcs.longToByteWord(reportee.ssrc);
-		System.arraycopy(someBytes, 0, ret, 0, 4);
+			//Calculate the loss fraction COMPLICATED, WAIT FOR NOW.
+			//int lost = 0;
+			//int expected = 0;
+			someBytes[3] = (byte) 0;
 		
-		//Cumulative number of packets lost
-		someBytes = StaticProcs.longToByteWord(reportee.lastSeqNumber - (long) reportee.firstSeqNumber);
+			//Write Cumulative number of packets lost and loss fraction to packet:
+			System.arraycopy(someBytes, 0, ret, 4 + offset, 4);
 		
-		//Calculate the loss fraction COMPLICATED, WAIT FOR NOW.
-		//int lost = 0;
-		//int expected = 0;
-		someBytes[4] = (byte) 0;
+			// Extended highest sequence received
+			someBytes = StaticProcs.longToByteWord(reportees[i].extHighSeqRecv);
+			System.arraycopy(someBytes, 0, ret, 8 + offset, 4);
 		
-		//Write Cumulative number of packets lost and loss fraction to packet:
-		System.arraycopy(someBytes, 0, ret, 4, 4);
-		
-		// Extended highest sequence received
-		someBytes = StaticProcs.longToByteWord(reportee.extHighSeqRecv);
-		System.arraycopy(someBytes, 0, ret, 8, 4);
-		
-		// Interarrival jitter COMPLICATED, WAIT FOR NOW.
-		someBytes = StaticProcs.longToByteWord(0);
-		System.arraycopy(someBytes, 0, ret, 12, 4);
-		
-		// Timestamp last sender report received
-		someBytes = StaticProcs.longToByteWord(reportee.timeStampLSR);
-		System.arraycopy(someBytes, 0, ret, 16, 4);
-		
-		// Delay since last sender report received, in terms of 1/655536 s = 0.02 ms
-		if(reportee.timeReceivedLSR > 0) {
-			someBytes = StaticProcs.longToByteWord((System.currentTimeMillis() - reportee.timeStampLSR) / (1000*655536));
-		} else {
+			// Interarrival jitter COMPLICATED, WAIT FOR NOW.
 			someBytes = StaticProcs.longToByteWord(0);
-		}
-		System.arraycopy(someBytes, 0, rawPkt, 20, 4);
+			System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 		
+			// Timestamp last sender report received
+			someBytes = StaticProcs.longToByteWord(reportees[i].timeStampLSR);
+			System.arraycopy(someBytes, 0, ret, 16 + offset, 4);
+		
+			// Delay since last sender report received, in terms of 1/655536 s = 0.02 ms
+			if(reportees[i].timeReceivedLSR > 0) {
+				someBytes = StaticProcs.longToByteWord((System.currentTimeMillis() - reportees[i].timeStampLSR) / (1000*655536));
+			} else {
+				someBytes = StaticProcs.longToByteWord(0);
+			}
+			System.arraycopy(someBytes, 0, ret, 20 + offset, 4);
+		}
 		return ret;
+	}
+	public void debugPrint() {
+		System.out.println("RtcpPktRR.debugPrint() ");
+		if(reportees != null) {
+			for(int i= 0; i<reportees.length; i++) {
+				Participant part = reportees[i];
+				System.out.println("    " + part.ssrc + " " + part.cname);
+			}
+		} else {
+			for(int i=0;i<reporteeSsrc.length; i++) {
+				System.out.println("   " + reporteeSsrc[i] + " " + timeStampLSR[i]);
+			}
+		}
+
 	}
 }

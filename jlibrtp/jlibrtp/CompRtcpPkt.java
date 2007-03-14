@@ -4,7 +4,7 @@ import java.util.*;
 import java.net.InetAddress;
 
 public class CompRtcpPkt {
-	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
+	protected LinkedList rtcpPkts = new LinkedList();
 	
 	protected CompRtcpPkt() {
 		// Will have to add packets directly to rtcpPkts.
@@ -32,7 +32,12 @@ public class CompRtcpPkt {
 		while(start < (packetSize - 32)) {
 			int length = StaticProcs.combineBytes(rawPkt[start + 2], rawPkt[start + 3]);
 			byte[] tmpBuf = new byte[length];
+			
 			int pktType = (int) rawPkt[start + 1];
+			if(pktType < 0) {
+				pktType += 256;
+			}
+			
 			System.arraycopy(rawPkt, start, tmpBuf, 0, length);
 			if(pktType == 200)
 				rtcpPkts.add(new RtcpPktSR(tmpBuf));
@@ -50,15 +55,42 @@ public class CompRtcpPkt {
 	
 	protected byte[] encode() {
 		// We have to do it every time since we have no control over the packets.
-		ListIterator<RtcpPkt>  iter = rtcpPkts.listIterator();
+		ListIterator  iter = rtcpPkts.listIterator();
 	
 		// Encode the packets and find the total size
 		int rawPktSize = 0;
-		do {
-			RtcpPkt aPkt = iter.next();
-			aPkt.encode();
-			rawPktSize += aPkt.getLength();
-		} while(iter.hasNext());
+		while(iter.hasNext()) {
+			RtcpPkt aPkt = (RtcpPkt) iter.next();
+			
+			if(aPkt.packetType == 200) {
+				System.out.println("hepp");
+				RtcpPktSR pkt = (RtcpPktSR) aPkt;
+				System.out.println("hepp 1");
+				pkt.encode(null);
+				System.out.println("hepp 2");
+				iter.set(pkt);
+			} else if(aPkt.packetType == 201 ) {
+				RtcpPktRR pkt = (RtcpPktRR) aPkt;
+				pkt.encode();
+				iter.set(pkt);
+			} else if(aPkt.packetType == 202) {
+				RtcpPktSDES pkt = (RtcpPktSDES) aPkt;
+				pkt.encode();
+				iter.set(pkt);
+			} else if(aPkt.packetType == 203) {
+				RtcpPktBYE pkt = (RtcpPktBYE) aPkt;
+				pkt.encode();
+				iter.set(pkt);
+			} else if(aPkt.packetType == 204) {
+				RtcpPktAPP pkt = (RtcpPktAPP) aPkt;
+				pkt.encode();
+				iter.set(pkt);
+			} else {
+				System.out.println("oops");
+			}
+			
+			rawPktSize += aPkt.rawPkt.length;
+		} 
 		
 		if(rawPktSize > 1500) {
 			System.out.println("CompRtcpPkt.encode() exceeds 1500 bytes, this is probably not going to work.");
@@ -69,11 +101,18 @@ public class CompRtcpPkt {
 		// Copy the data to the actual rawPkt
 		int pos = 0;
 		iter = rtcpPkts.listIterator();
-		do {
-			RtcpPkt aPkt = iter.next();
-			System.arraycopy(aPkt.rawPkt, 0, rawPkt, pos, (1 + 8*aPkt.getLength()));
-			pos += aPkt.getLength();
-		} while(iter.hasNext());
+		while(iter.hasNext()) {
+			RtcpPkt aPkt = (RtcpPkt) iter.next();
+			
+			if(aPkt.rawPkt == null) {
+				System.out.println("is null, packetType " + aPkt.packetType);
+			} else {
+				System.out.println("cool");
+			}
+			
+			System.arraycopy(aPkt.rawPkt, 0, rawPkt, pos, aPkt.rawPkt.length);
+			pos += aPkt.rawPkt.length;
+		} 
 		
 		return rawPkt;
 	}

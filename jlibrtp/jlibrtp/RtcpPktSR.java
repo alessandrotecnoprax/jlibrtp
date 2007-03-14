@@ -11,13 +11,14 @@ public class RtcpPktSR extends RtcpPkt {
 	
 	protected RtcpPktSR(long ssrc, long pktCount, long octCount) {
 		// Fetch all the right stuff from the database
-		reporterSsrc = ssrc;
+		super.ssrc = ssrc;
+		super.packetType = 200;
 		sendersPktCount = pktCount;
 		sendersOctCount = octCount;
 	}
 	
 	protected RtcpPktSR(byte[] aRawPkt) {
-		rawPkt = aRawPkt;
+		super.rawPkt = aRawPkt;
 
 		if(super.parseHeaders() != 0 || packetType != 200 || super.length > 7) {
 			//Error...
@@ -38,26 +39,25 @@ public class RtcpPktSR extends RtcpPkt {
 	}
 	
 	protected void encode(RtcpPktRR[] receptionReports) {
-
-		packetType = 200;
-		
 		if(receptionReports != null) {
-			itemCount = receptionReports.length;
-			length = 6 + 6*receptionReports.length;
+			super.itemCount = receptionReports.length;
+			super.length = 6 + 6*receptionReports.length;
 			// Loop over reception reports, figure out their combined size
-			rawPkt = new byte[28 + 24*receptionReports.length];
+			super.rawPkt = new byte[28 + 24*receptionReports.length];
 			
 			for(int i=0; i<receptionReports.length; i++) {
 				byte[] recRep = receptionReports[i].encodeRR();
-				System.arraycopy(recRep, 0, rawPkt, 28 + 24*i, recRep.length);				
+				System.arraycopy(recRep, 0, super.rawPkt, 28 + 24*i, recRep.length);				
 			}
+			
 		} else {
-			itemCount = 0;
-			rawPkt = new byte[28];
-			length = 6;
+			super.itemCount = 0;
+			super.rawPkt = new byte[28];
+			super.length = 6;
+			System.out.println("Yep");
 		}
 		//Write the common header
-		writeHeaders();
+		super.writeHeaders();
 		
 		// Convert to NTP and chop up
 		ntpTS1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
@@ -66,16 +66,21 @@ public class RtcpPktSR extends RtcpPkt {
 		
 		//Write SR stuff
 		byte[] someBytes = StaticProcs.longToByteWord(reporterSsrc);
-		System.arraycopy(someBytes, 0, rawPkt, 4, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		someBytes = StaticProcs.longToByteWord(ntpTS1);
-		System.arraycopy(someBytes, 0, rawPkt, 8, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
 		someBytes = StaticProcs.longToByteWord(ntpTS2);
-		System.arraycopy(someBytes, 0, rawPkt, 12, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 12, 4);
 		someBytes = StaticProcs.longToByteWord(rtpTS);
-		System.arraycopy(someBytes, 0, rawPkt, 16, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 16, 4);
 		someBytes = StaticProcs.longToByteWord(sendersPktCount);
-		System.arraycopy(someBytes, 0, rawPkt, 20, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 20, 4);
 		someBytes = StaticProcs.longToByteWord(sendersOctCount);
-		System.arraycopy(someBytes, 0, rawPkt, 24, 4);
+		System.arraycopy(someBytes, 0, super.rawPkt, 24, 4);
+	}
+
+	public void debugPrint() {
+		System.out.println("RtcpPktSR.debugPrint() ");
+			System.out.println("   " + super.ssrc + " " + reporterSsrc );
 	}
 }

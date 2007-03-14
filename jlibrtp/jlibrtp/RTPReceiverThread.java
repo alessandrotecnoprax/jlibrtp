@@ -125,16 +125,18 @@ public class RTPReceiverThread extends Thread {
 			}
 
 			// Statistics for receiver report.
-			part.receivedOctets += pkt.getPayloadLength();
+			//part.receivedOctets += pkt.getPayloadLength();
+			part.receivedOctets += packet.getLength();
 			part.receivedPkts++;
 			
-			if( part.lastSeqNumber < pkt.getTimeStamp()) {
+			if( part.lastSeqNumber < pkt.getSeqNumber() || part.lastSeqNumber - part.lastSeqNumber < -100) {
 				part.lastSeqNumber = pkt.getSeqNumber();
 			}
 
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
+			
 			// Signal the thread that pushes data to application
 			rtpSession.pktBufLock.lock();
 			try { rtpSession.pktBufDataReady.signalAll(); } finally {

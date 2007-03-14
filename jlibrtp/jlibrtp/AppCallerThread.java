@@ -70,7 +70,7 @@ public class AppCallerThread extends Thread {
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					while(p.isSender() && p.pktBuffer != null && p.pktBuffer.length > rtpSession.reorderBufferLength) {
+					while(p.isSender() && p.pktBuffer != null) {
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
 					}

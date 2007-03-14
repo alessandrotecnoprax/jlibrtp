@@ -25,10 +25,7 @@ package jlibrtp;
  * It also drops duplicate packets.
  * 
  * Note that newest is the most recently received, i.e. highest timeStamp
- * Next means new to old (from recently received to previously received)
- * 
- *  All this stuff needs to be adjusted for rollovers!!!
- * 
+ * Next means new to old (from recently received to previously received) 
  * 
  * @author Arne Kepp
  */
@@ -38,9 +35,12 @@ public class PktBuffer {
 
 	//Bookkeeping
 	int length = 0;
-	//int compLen = 0;
+
 	PktBufNode oldest = null;
 	PktBufNode newest = null;
+	
+	int lastSeqNumber = -1;
+	long lastTimestamp = -1;
 
 	/** 
 	 * Creates a new PktBuffer, a linked list of PktBufNode
@@ -53,6 +53,8 @@ public class PktBuffer {
 		PktBufNode newNode = new PktBufNode(aPkt);
 		oldest = newNode;
 		newest = newNode;
+		//lastSeqNumber = aPkt.getSeqNumber();
+		//lastTimestamp = aPkt.getTimeStamp();
 		length = 1;
 	}
 
@@ -78,20 +80,27 @@ public class PktBuffer {
 			System.out.println("PktBuffer.addPkt() SSRCs don't match!");
 		}
 
-		if(length != 0) {
+		if(length == 0) {
+			// The buffer was empty, this packet is the one and only.
+			newest = newNode;
+			oldest = newNode;
+			length = 1;
+		} else {
 			// The packetbuffer is not empty.
-			if(newNode.timeStamp > newest.timeStamp) {
-				// Yippi, it came in order
+			if(newNode.timeStamp > newest.timeStamp || newNode.seqNum > newest.seqNum) {
+				// Packet came in order
 				newNode.nextFrameQueueNode = newest;
 				newest.prevFrameQueueNode = newNode;
 				newest = newNode;
 				length++;
 			} else {
 				//There are packets, we need to order this one right.
-				if(oldest.timeStamp > timeStamp) { //|| oldest.seqNum > aPkt.getSeqNumber()) {
+				
+				if(! pktOnTime(aPkt) ) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
-						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " + timeStamp + " vs "+ oldest.timeStamp);
+						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " +  timeStamp + " " 
+								+ aPkt.getSeqNumber() + " vs "+ oldest.timeStamp + " " + oldest.seqNum);
 					}
 					return -1;
 				}
@@ -100,6 +109,14 @@ public class PktBuffer {
 				PktBufNode tmpNode = newest;
 				while(tmpNode.timeStamp > timeStamp) {
 					tmpNode = tmpNode.nextFrameQueueNode;
+				}
+				
+				// Check that it's not a duplicate
+				if(tmpNode.timeStamp == timeStamp && aPkt.getSeqNumber() == tmpNode.seqNum) {
+					if(RTPSession.rtpDebugLevel > 2) {
+						System.out.println("PktBuffer.addPkt Dropped a duplicate packet! " +  timeStamp + " " + aPkt.getSeqNumber() );
+					}
+					return -1;
 				}
 
 				// Update the length of this buffer
@@ -118,19 +135,8 @@ public class PktBuffer {
 				if(timeStamp > newest.timeStamp) {
 					newest = newNode; 
 				}
-
-				// Doesn't happen.
-				//if(timeStamp > oldest.timeStamp) {
-				//	oldest = newNode;
-				//}
 			}
-		} else {
-			// The buffer was empty, this packet is the one and only.
-			newest = newNode;
-			oldest = newNode;
-			length = 1;
 		}
-
 
 		if(RTPSession.rtpDebugLevel > 7) {
 			if(RTPSession.rtpDebugLevel > 10) {
@@ -152,9 +158,9 @@ public class PktBuffer {
 		if(RTPSession.rtpDebugLevel > 10) {
 			this.debugPrint();
 		}
-		PktBufNode tmpNode = oldest;
+		PktBufNode retNode = oldest;
 
-		if(oldest != null) {
+		if(retNode != null) {
 			// Pop it off, null all references.
 			if(length == 1) {
 				//There's only one frame
@@ -166,14 +172,17 @@ public class PktBuffer {
 				oldest.nextFrameQueueNode = null;
 			}
 
+			// Update counters
 			length--;
-
+			this.lastSeqNumber = retNode.seqNum;
+			this.lastTimestamp = retNode.timeStamp;
+				
 			//if(tmpNode.pktCount == compLen) {
 			if(RTPSession.rtpDebugLevel > 7) {
 				System.out.println("<- PktBuffer.popOldestFrame() returns frame");
 			}
-			return new DataFrame(tmpNode, 1);
-			//}
+			
+			return new DataFrame(retNode, 1);
 		} else {
 			// If we get here we have little to show for.
 			if(RTPSession.rtpDebugLevel > 2) {
@@ -189,6 +198,33 @@ public class PktBuffer {
 	 */
 	protected int getLength() {
 		return length;
+	}
+	
+	/**
+	 * Checks whether a packet is too late, i.e. the next packet has already been returned.
+	 * @param aPkt
+	 * @return
+	 */
+	protected boolean pktOnTime(RtpPkt aPkt) {
+		if(this.lastSeqNumber == -1) {
+			// First packet
+			return true;
+		} else {
+			// Check whether we can sort it in
+			int seqNum = aPkt.getSeqNumber();
+			long timeStamp = aPkt.getTimeStamp();
+			
+			if(seqNum >= this.lastSeqNumber) {
+				if(this.lastSeqNumber < 3 && timeStamp < this.lastTimestamp ) {
+					return false;
+				}
+			} else {
+				if(seqNum > 3 || timeStamp < this.lastTimestamp) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/** 
