@@ -103,8 +103,10 @@ public class RTPSession {
 	 public RTPSession(DatagramSocket rtpSocket, DatagramSocket rtcpSocket) {
 		 mcSession = false;
 		 rtpSock = rtpSocket;
+		 this.generateSsrc();
 		 // Get default value for CNAME
 		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
+
 	 }
 	 
 	 /**
@@ -120,9 +122,8 @@ public class RTPSession {
 		 rtpMCSock =rtpSock;
 		 mcGroup = multicastGroup;
 		 rtpMCSock.joinGroup(mcGroup);
-		 
 		 rtcpSock.joinGroup(mcGroup);
-		 
+		 this.generateSsrc();
 		 // Get default value for CNAME
 		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
 	 }
@@ -152,12 +153,7 @@ public class RTPSession {
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
 		 	
-		 	// Set an SSRC
-		 	Random r = new Random(System.currentTimeMillis());
-		 	this.ssrc = r.nextInt();
-			if(this.ssrc < 0) {
-				 this.ssrc = this.ssrc * -1;
-			}
+
 		 	return 0;
 		}
 	}
@@ -470,5 +466,14 @@ public class RTPSession {
 			seqNum = 0;
 		}
 		return seqNum;
+	}
+	
+	private void generateSsrc() {
+		// Set an SSRC
+		Random r = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());// + this.rtpSock.getInetAddress().hashCode());
+		this.ssrc = r.nextInt();
+		if(this.ssrc < 0) {
+			this.ssrc = this.ssrc * -1;
+		}	
 	}
 }

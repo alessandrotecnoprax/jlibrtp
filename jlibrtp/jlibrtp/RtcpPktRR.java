@@ -22,8 +22,10 @@ public class RtcpPktRR extends RtcpPkt {
 	protected RtcpPktRR(byte[] aRawPkt, int rrCount) {
 		rawPkt = aRawPkt;
 		
-		if(rrCount < 0 && super.parseHeaders() != 0 || packetType != 201 || super.length > 7) {
-			//Error...
+		if(!super.parseHeaders() || packetType != 201 || super.length < 7) {
+			if(RTPSession.rtpDebugLevel > 2) {
+				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders())+" "+packetType+" "+super.length);
+			}
 			this.problem = 1;
 		}
 		
@@ -57,13 +59,22 @@ public class RtcpPktRR extends RtcpPkt {
 	}
 	// Makes a complete packet
 	protected void encode() {
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println("  -> RtcpPktRR.encode()");
+		}
 		super.rawPkt = encodeRR();
 		//Write the common header
 		super.writeHeaders();
+		if(RTPSession.rtpDebugLevel > 9) {
+			System.out.println("  <- RtcpPktRR.encode()");
+		}
 	}
 	
 	// Makes only RR part of packet -> do not include our SSRC
 	protected byte[] encodeRR() {
+		if(RTPSession.rtpDebugLevel > 10) {
+			System.out.println("   -> RtcpPktRR.encodeRR()");
+		}
 		//assuming we will always create complete reports:
 		byte[] ret = new byte[24*reportees.length];
 		
@@ -104,6 +115,9 @@ public class RtcpPktRR extends RtcpPkt {
 			}
 			System.arraycopy(someBytes, 0, ret, 20 + offset, 4);
 		}
+		if(RTPSession.rtpDebugLevel > 10) {
+			System.out.println("   <- RtcpPktRR.encodeRR()");
+		}
 		return ret;
 	}
 	public void debugPrint() {
@@ -111,11 +125,11 @@ public class RtcpPktRR extends RtcpPkt {
 		if(reportees != null) {
 			for(int i= 0; i<reportees.length; i++) {
 				Participant part = reportees[i];
-				System.out.println("    " + part.ssrc + " " + part.cname);
+				System.out.println("     part.ssrc: " + part.ssrc + "  part.cname: " + part.cname);
 			}
 		} else {
 			for(int i=0;i<reporteeSsrc.length; i++) {
-				System.out.println("   " + reporteeSsrc[i] + " " + timeStampLSR[i]);
+				System.out.println("     reporteeSSRC: " + reporteeSsrc[i] + "  timeStampLSR: " + timeStampLSR[i]);
 			}
 		}
 

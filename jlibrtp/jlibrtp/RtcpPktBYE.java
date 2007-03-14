@@ -16,8 +16,10 @@ public class RtcpPktBYE extends RtcpPkt {
 	protected RtcpPktBYE(byte[] aRawPkt) {
 		rawPkt = aRawPkt;
 
-		if(super.parseHeaders() != 0 || packetType != 203) {
-			//Error...
+		if(!super.parseHeaders() || packetType != 203) {
+			if(RTPSession.rtpDebugLevel > 2) {
+				System.out.println(" <-> RtcpPktBYE.parseHeaders() etc. problem");
+			}
 			this.problem = 1;
 		} else {
 			ssrcArray = new long[super.itemCount];

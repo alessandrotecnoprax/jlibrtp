@@ -8,7 +8,7 @@ public class RtcpPktAPP extends RtcpPkt {
 	protected RtcpPktAPP(byte[] aRawPkt) {
 		reporterSsrc = 	StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 		
-		if(super.parseHeaders() != 0 || packetType != 204) {
+		if(!super.parseHeaders() || packetType != 204) {
 			//Error...
 			this.problem = 1;
 		} else {
