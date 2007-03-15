@@ -20,7 +20,7 @@ public class RtcpPktRR extends RtcpPkt {
 	// If rcount < 0 we assume we have to parse the entire packet
 	// otherwise we'll just parse the body. 
 	protected RtcpPktRR(byte[] aRawPkt, int rrCount) {
-		rawPkt = aRawPkt;
+		super.rawPkt = aRawPkt;
 		
 		if(!super.parseHeaders() || packetType != 201 || super.length < 7) {
 			if(RTPSession.rtpDebugLevel > 2) {
@@ -34,27 +34,29 @@ public class RtcpPktRR extends RtcpPkt {
 			base = 28;
 		} else {
 			base = 8;
-			rrCount = itemCount;
-			ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			rrCount = super.itemCount;
+			super.ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 		}
 		
-		reporteeSsrc = new long[rrCount];
-		lossFraction = new int[rrCount];
-		lostPktCount = new int[rrCount];
-		extHighSeqRecv = new long[rrCount];
-		interArvJitter = new long[rrCount];
-		timeStampLSR = new long[rrCount];
-		delaySR = new long[rrCount];
-		
-		for(int i=0; i<rrCount; i++ ) {
-			int pos = base + i*24;
-			reporteeSsrc[i] = StaticProcs.combineBytes(aRawPkt[pos],aRawPkt[pos + 1],aRawPkt[pos + 2],aRawPkt[pos + 3]);
-			lossFraction[i] = (int) aRawPkt[pos + 4];
-			lostPktCount[i] = (int) StaticProcs.combineBytes((byte) 0, aRawPkt[pos + 5],aRawPkt[pos + 6],aRawPkt[pos + 7]);
-			extHighSeqRecv[i] = StaticProcs.combineBytes(aRawPkt[pos + 8],aRawPkt[pos + 9],aRawPkt[pos + 10],aRawPkt[pos + 11]);
-			interArvJitter[i] = StaticProcs.combineBytes(aRawPkt[pos + 12],aRawPkt[pos + 13],aRawPkt[pos + 14],aRawPkt[pos + 15]);
-			timeStampLSR[i] = StaticProcs.combineBytes(aRawPkt[pos + 16],aRawPkt[pos + 17],aRawPkt[pos + 18],aRawPkt[pos + 19]);
-			delaySR[i] = StaticProcs.combineBytes(aRawPkt[pos + 20],aRawPkt[pos + 21],aRawPkt[pos + 22],aRawPkt[pos + 24]);
+		if(rrCount > 0) {
+			reporteeSsrc = new long[rrCount];
+			lossFraction = new int[rrCount];
+			lostPktCount = new int[rrCount];
+			extHighSeqRecv = new long[rrCount];
+			interArvJitter = new long[rrCount];
+			timeStampLSR = new long[rrCount];
+			delaySR = new long[rrCount];
+
+			for(int i=0; i<rrCount; i++ ) {
+				int pos = base + i*24;
+				reporteeSsrc[i] = StaticProcs.combineBytes(aRawPkt[pos],aRawPkt[pos + 1],aRawPkt[pos + 2],aRawPkt[pos + 3]);
+				lossFraction[i] = (int) aRawPkt[pos + 4];
+				lostPktCount[i] = (int) StaticProcs.combineBytes((byte) 0, aRawPkt[pos + 5],aRawPkt[pos + 6],aRawPkt[pos + 7]);
+				extHighSeqRecv[i] = StaticProcs.combineBytes(aRawPkt[pos + 8],aRawPkt[pos + 9],aRawPkt[pos + 10],aRawPkt[pos + 11]);
+				interArvJitter[i] = StaticProcs.combineBytes(aRawPkt[pos + 12],aRawPkt[pos + 13],aRawPkt[pos + 14],aRawPkt[pos + 15]);
+				timeStampLSR[i] = StaticProcs.combineBytes(aRawPkt[pos + 16],aRawPkt[pos + 17],aRawPkt[pos + 18],aRawPkt[pos + 19]);
+				delaySR[i] = StaticProcs.combineBytes(aRawPkt[pos + 20],aRawPkt[pos + 21],aRawPkt[pos + 22],aRawPkt[pos + 23]);
+			}
 		}
 	}
 	// Makes a complete packet
@@ -62,12 +64,29 @@ public class RtcpPktRR extends RtcpPkt {
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println("  -> RtcpPktRR.encode()");
 		}
-		super.rawPkt = encodeRR();
+		
+		//Gather up the actual receiver reports
+		byte[] rRs = this.encodeRR();
+		if(rRs != null) {
+			super.rawPkt = new byte[rRs.length + 8];
+			System.arraycopy(rRs, 0, super.rawPkt, 8, rRs.length);
+		}
+		
+		//Set item count?
+		super.itemCount = reportees.length;
+			
 		//Write the common header
 		super.writeHeaders();
+		
+		//Add our SSRC (as sender)
+		byte[] someBytes;
+		someBytes = StaticProcs.longToByteWord(super.ssrc);
+		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
+		
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println("  <- RtcpPktRR.encode()");
 		}
+		
 	}
 	
 	// Makes only RR part of packet -> do not include our SSRC
@@ -120,6 +139,7 @@ public class RtcpPktRR extends RtcpPkt {
 		}
 		return ret;
 	}
+	
 	public void debugPrint() {
 		System.out.println("RtcpPktRR.debugPrint() ");
 		if(reportees != null) {

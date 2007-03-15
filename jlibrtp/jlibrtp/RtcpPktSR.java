@@ -30,7 +30,6 @@ public class RtcpPktSR extends RtcpPkt {
 			this.problem = 1;
 		} else {
 			super.ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
-			System.out.println("Arne: " + super.ssrc);
 			ntpTS1 = StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
 			ntpTS2 = StaticProcs.combineBytes(aRawPkt[12], aRawPkt[13],aRawPkt[14],aRawPkt[15]);
 			rtpTS = StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
@@ -75,8 +74,6 @@ public class RtcpPktSR extends RtcpPkt {
 		//Write the common header
 		super.writeHeaders();
 		
-		ssrc = StaticProcs.combineBytes(rawPkt[4], rawPkt[5],rawPkt[6],rawPkt[7]);
-		
 		// Convert to NTP and chop up
 		ntpTS1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
 		ntpTS2 = System.currentTimeMillis() % 1000;
@@ -104,6 +101,7 @@ public class RtcpPktSR extends RtcpPkt {
 
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
-			System.out.println("  SSRC: " + super.ssrc );
+			System.out.println("  SSRC:"+super.ssrc +" ntpTS1:"+ntpTS1+" ntpTS2:"+ntpTS2+" rtpTS:"+rtpTS
+					+" senderPktCount:"+sendersPktCount+" sendersOctetCount:"+sendersOctCount);
 	}
 }
