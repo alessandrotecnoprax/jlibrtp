@@ -28,8 +28,8 @@ public class RtcpPkt {
 	//protected boolean rawPktCurrent = false;
 	protected int problem = 0;
 	protected int version = 2; 		//2 bits
-	protected int padding; 			//1 bit
-	protected int itemCount;	 	//5 bits
+	protected int padding = 0; 			//1 bit
+	protected int itemCount = 0;	 	//5 bits
 	protected int packetType = -1;	//8 bits
 	protected int length = -1;		//16 bits
 	protected long ssrc = -1;
