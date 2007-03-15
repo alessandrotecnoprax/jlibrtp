@@ -114,4 +114,14 @@ public class ParticipantDatabase {
 	protected Enumeration getParticipants() {
 		return table.elements();
 	}
+	
+	protected void debugPrint() {
+		System.out.println("   ParticipantDatabase.debugPrint()");
+		Participant p;
+		Enumeration enu = table.elements();
+		while(enu.hasMoreElements()) {
+			p = (Participant) enu.nextElement();
+			System.out.println(" Table ssrc:"+p.ssrc+" cname:"+p.cname+" loc:"+p.loc);
+		}
+	}
 }

@@ -28,8 +28,8 @@ public class RtcpPkt {
 	//protected boolean rawPktCurrent = false;
 	protected int problem = 0;
 	protected int version = 2; 		//2 bits
-	protected int padding = 0; 			//1 bit
-	protected int itemCount = 0;	 	//5 bits
+	protected int padding = 0; 		//1 bit
+	protected int itemCount = 0;	 //5 bits
 	protected int packetType = -1;	//8 bits
 	protected int length = -1;		//16 bits
 	protected long ssrc = -1;
@@ -49,7 +49,7 @@ public class RtcpPkt {
 		
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println(" <-> RtcpPkt.parseHeaders() version:"+version+" padding:"+padding+" itemCount:"+itemCount
-					+" packetType:"+packetType);
+					+" packetType:"+packetType+" length:"+length);
 		}
 		
 		if(version == 2 && packetType < 205 && packetType > 199 && length < 65536) {

@@ -77,7 +77,28 @@ public class ValidateRtcpPkt {
 				pkt.debugPrint();
 			}
 		} 
+		System.out.println("****************************** SDES *******************************");
+		RtcpPktSDES sdespkt = new RtcpPktSDES(true,null);
+		rtpSession.cname = "cname123@123";
+		rtpSession.loc = "right here";
+		sdespkt.encode(rtpSession);
+		byte[] rawpkt = sdespkt.rawPkt;
+		//String test2 = new String(rawpkt);
+		//System.out.println(test2);
+		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, partDb);
+		decsdespkt.debugPrint();
+		partDb.debugPrint();
 		
+		System.out.println("****************************** BYE *******************************");
+		long[] tempArray = {rtpSession.ssrc};
+		byte[] tempReason = "tas".getBytes();
+		RtcpPktBYE byepkt = new RtcpPktBYE(tempArray,tempReason);
+		byepkt.debugPrint();
+		byepkt.encode();
+		rawpkt = byepkt.rawPkt;
 		
+		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpkt);
+		byepkt2 .debugPrint();
+
 	}
 }

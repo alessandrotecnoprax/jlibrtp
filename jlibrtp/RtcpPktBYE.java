@@ -27,10 +27,12 @@ public class RtcpPktBYE extends RtcpPkt {
 			for(int i=0; i<super.itemCount; i++) {
 				ssrcArray[i] = StaticProcs.combineBytes(aRawPkt[i*4 + 4],aRawPkt[i*4 + 5],aRawPkt[i*4 + 6],aRawPkt[i*4 + 7]);
 			}
-			if(super.length > super.itemCount) {
-				int reasonLength = (int) aRawPkt[super.itemCount*4];
+			if(super.length > (super.itemCount + 1)) {
+				int reasonLength = (int) aRawPkt[4 + super.itemCount*4];
+				//System.out.println("super.itemCount:"+super.itemCount+" reasonLength:"+reasonLength+" start:"+(super.itemCount*4 + 4 + 1));
 				reason = new byte[reasonLength];
-				System.arraycopy(aRawPkt, super.itemCount*4 + 1, reason, 0, reasonLength);
+				System.arraycopy(aRawPkt, super.itemCount*4 + 4 + 1, reason, 0, reasonLength);
+				//System.out.println("test:" + new String(reason));
 			}
 		}
 	}
@@ -60,9 +62,24 @@ public class RtcpPktBYE extends RtcpPkt {
 		
 		// Reason for leaving
 		if(reason != null) {
-			rawPkt[8+4*i] = (byte) reason.length;
+			//System.out.println("Writing to:"+(4+4*ssrcArray.length)+ " reason.length:"+reason.length );
+			rawPkt[(4 + 4*ssrcArray.length)] = (byte) reason.length;
+			System.arraycopy(reason, 0, rawPkt, 4+4*i +1, reason.length);		
 		}
 		
-		System.arraycopy(reason, 0, rawPkt, 9+4*i, reason.length);
+		super.writeHeaders();
+	}
+	
+	public void debugPrint() {
+		System.out.println("RtcpPktBYE.debugPrint() ");
+		if(ssrcArray != null) {
+			for(int i= 0; i<ssrcArray.length; i++) {
+				long anSsrc = ssrcArray[i];
+				System.out.println("     ssrc: " + anSsrc);
+			}
+		}
+		if(reason != null) {
+			System.out.println("     Reason: " + new String(reason));
+		}
 	}
 }
