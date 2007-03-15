@@ -16,20 +16,16 @@ public class RTCPSession {
 	 protected int pmembers = 0;
 
 	// the most current estimate for number of members (get from partDb?)
-	 //protected in members;
-	 
+	 //protected in members;	 
 	 // number of sender estimate (get from partDb?)
-	 //protected int senders;
-
 	//The target RTCP bandwidth, i.e., the total bandwidth that will be used for RTCP packets by all members of this session
 	 protected int rtcp_bw = -1;
-	 
 	 //Flag that is true if the application has sent data since the 2nd previous RTCP report was transmitted.
 	 protected boolean we_sent = false;
-	      
-	//The average compound RTCP packet size, in octets, including UDP and IP headers
-	protected int avg_rtcp_size = 0;
-
+	 
+	
+	protected int avgPktSize = 200; //The average compound RTCP packet size, in octets, including UDP and IP headers
+	
 	// Just starting up?
 	protected boolean initial = true;
 
@@ -63,5 +59,22 @@ public class RTCPSession {
 		recvThrd = new RTCPReceiverThread(this, this. rtpSession);
 		senderThrd = new RTCPSenderThread(this , this.rtpSession);
 	}
+
+	/**
+	 * Update the average packet size
+	 * @param length of latest packet
+	 */
+	synchronized protected void sendDelay() {
+		
+	}
 	
+	/**
+	 * Update the average packet size
+	 * @param length of latest packet
+	 */
+	synchronized protected void updateAvgPacket(int length) {
+		double tempAvg = (double) this.avgPktSize;
+		tempAvg = (15*tempAvg + ((double) length))/16;
+		this.avgPktSize = (int) tempAvg;
+	}
 }
