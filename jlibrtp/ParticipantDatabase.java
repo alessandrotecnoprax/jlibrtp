@@ -107,6 +107,9 @@ public class ParticipantDatabase {
 		return null;
 	}
 	
+	protected int size() {
+		return table.size();
+	}
 	protected Iterator getReceivers() {
 		return receivers.iterator();
 	}

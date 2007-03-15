@@ -1,5 +1,7 @@
 package jlibrtp;
 
+import java.util.concurrent.TimeUnit;
+
 public class RTCPSenderThread extends Thread {
 	private RTPSession rtpSession = null;
 	private RTCPSession rtcpSession = null;
@@ -15,8 +17,14 @@ public class RTCPSenderThread extends Thread {
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<-> RTCPSenderThread running");
-		} 
+		}
 		
+		while {
+			try { rtpSession.pktBufDataReady.await(rtcpSession.nextDelay, TimeUnit.MILLISECONDS); } 
+			catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+		
+			
+		}
 		
 	}
 }
