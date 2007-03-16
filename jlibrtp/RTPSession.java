@@ -59,6 +59,12 @@ public class RTPSession {
 	 protected int sentPktCount = 0;
 	 protected int sentOctetCount = 0;
 	 
+	 //Save the random seed
+	 protected Random random = null;
+	 
+	 //Session bandwidth
+	 protected int bandwidth = 0;
+	 
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
 	 //By default we will call receiveData() only when a new packet arrives.
@@ -470,8 +476,8 @@ public class RTPSession {
 	
 	private void generateSsrc() {
 		// Set an SSRC
-		Random r = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());// + this.rtpSock.getInetAddress().hashCode());
-		this.ssrc = r.nextInt();
+		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());// + this.rtpSock.getInetAddress().hashCode());
+		this.ssrc = this.random.nextInt();
 		if(this.ssrc < 0) {
 			this.ssrc = this.ssrc * -1;
 		}	
