@@ -19,10 +19,11 @@ public class RTCPSenderThread extends Thread {
 			System.out.println("<-> RTCPSenderThread running");
 		}
 		
-		while {
+		while(! rtpSession.endSession) {
 			try { rtpSession.pktBufDataReady.await(rtcpSession.nextDelay, TimeUnit.MILLISECONDS); } 
 			catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-		
+			
+			
 			
 		}
 		

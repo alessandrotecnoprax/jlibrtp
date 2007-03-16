@@ -24,6 +24,7 @@ public class RTCPSession {
 	 protected boolean we_sent = false;
 	 
 	
+	protected int nextDelay = -1; //Delay between RTCP transmissions, in ms. Initialized in start()
 	protected int avgPktSize = 200; //The average compound RTCP packet size, in octets, including UDP and IP headers
 	
 	// Just starting up?
@@ -58,6 +59,7 @@ public class RTCPSession {
 	protected void start() {
 		recvThrd = new RTCPReceiverThread(this, this. rtpSession);
 		senderThrd = new RTCPSenderThread(this , this.rtpSession);
+		nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
 	}
 
 	/**
@@ -65,9 +67,19 @@ public class RTCPSession {
 	 * @param length of latest packet
 	 */
 	synchronized protected void sendDelay() {
-		
+		int rand = rtpSession.random.nextInt(1000) - 500; //between -500 and +500
+
+		if(rtpSession.bandwidth != 0) {
+			// This does not distinguish between senders and receivers, yet.
+			double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.size());
+			double denominator = 0.05 * rtpSession.bandwidth;
+			this.nextDelay = (int) Math.round(1000.0*(numerator/denominator)) + rand;
+		} else {
+			// 4.5 to 5.5 seconds, randomly
+			this.nextDelay = 5000 + rand;
+		}
 	}
-	
+		
 	/**
 	 * Update the average packet size
 	 * @param length of latest packet
