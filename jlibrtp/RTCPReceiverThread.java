@@ -2,6 +2,7 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.util.Iterator;
 
 public class RTCPReceiverThread extends Thread {
 	private RTPSession rtpSession = null;
@@ -15,6 +16,75 @@ public class RTCPReceiverThread extends Thread {
 			System.out.println("<-> RTCPReceiverThread created");
 		} 
 
+	}
+	
+	private void parsePacket(DatagramPacket packet, byte[] rawPkt) {
+		// Parse the received compound RTCP (?) packet
+		CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), packet.getAddress(), rtpSession.partDb);
+		
+		//Loop over the information
+		Iterator iter = compPkt.rtcpPkts.iterator();
+		
+		while(iter.hasNext()) {
+			RtcpPkt aPkt = (RtcpPkt) iter.next();
+			
+			// Our own packets should already have been filtered out.
+			if(aPkt.ssrc == rtpSession.ssrc) {
+				System.out.println("RTCPReceiverThread() received RTCP packet" 
+						+ " with conflicting SSRC from " + packet.getSocketAddress().toString());
+				rtpSession.resolveSsrcConflict();
+				return;
+			}
+			
+			
+			
+			if(	aPkt.getClass() == RtcpPktRR.class) {
+				RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
+				
+				if(rtpSession.rtcAppIntf != null) {
+					rtpSession.rtcAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
+							rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
+							rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
+				}
+
+			} else if(aPkt.getClass() == RtcpPktSR.class) {
+				RtcpPktSR srPkt = (RtcpPktSR) aPkt;
+				
+				if(rtpSession.rtcAppIntf != null) {
+					rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTS1, srPkt.ntpTS2, 
+							srPkt.rtpTS, srPkt.sendersPktCount, srPkt.sendersPktCount );
+				}
+
+				
+			} else if(aPkt.getClass() == RtcpPktSDES.class) {
+				RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;
+				
+				// The the participant database is updated
+				// when the SDES packet is reconstructed by CompRtcpPkt
+				
+				if(rtpSession.rtcAppIntf != null) {
+					rtpSession.rtcAppIntf.SDESPktReceived(sdesPkt.participants);
+				}
+
+				
+			} else if(aPkt.getClass() == RtcpPktBYE.class) {
+				
+				RtcpPktBYE byePkt = (RtcpPktBYE) aPkt;
+				
+				long time = System.currentTimeMillis();
+				Participant[] partArray = new Participant[byePkt.ssrcArray.length];
+				
+				for(int i=0; i<byePkt.ssrcArray.length; i++) {
+					partArray[i] = rtpSession.partDb.getParticipant(byePkt.ssrcArray[i]);
+					partArray[i].timestampBYE = time;
+				}
+				
+				if(rtpSession.rtcAppIntf != null) {
+					rtpSession.rtcAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
+				}
+			}
+		}
+		
 	}
 
 	public void run() {
@@ -56,12 +126,15 @@ public class RTCPReceiverThread extends Thread {
 					e.printStackTrace();
 				}
 			}
-
-			// Parse the received compound RTCP (?) packet
-			CompRtcpPkt pkt = new CompRtcpPkt(rawPkt, packet.getLength(), packet.getAddress(), rtpSession.partDb);
 			
-			// Loop over the information, skip SDES packets
-
+			// Check whether this is one of our own
+			if( (rtpSession.mcSession && ! packet.getSocketAddress().equals(rtcpSession.rtcpMCSock) )
+					|| ! packet.getSocketAddress().equals(rtcpSession.rtcpSock) ) {
+				parsePacket(packet, rawPkt);
+			}			
+		}
+		if(RTPSession.rtpDebugLevel > 1) {
+			System.out.println("<-> RTCPReceiverThread terminating");
 		}
 	}
 

@@ -71,7 +71,11 @@ public class Participant {
 	//Store the packets received from this participant
 	protected PktBuffer pktBuffer = null;
 
-
+	//To check whether this participant has sent anything recently
+	protected long lastRtpPkt = -1; //Timestamp of last RTP packet
+	protected long lastRtcpRRPkt = -1; //Timestamp of last time we sent this person an RR packet
+	protected long secondLastRtcpRRPkt = -1; //Timestamp of 2nd to last time we sent this person an RR Packet
+	
 	/**
 	 * Create a basic participant. If this is a <b>unicast</b> session you must provide network address (ipv4 or ipv6) and ports for RTP and RTCP, 
 	 * as well as a cname for this contact. These things should be negotiated through SIP or a similar protocol.

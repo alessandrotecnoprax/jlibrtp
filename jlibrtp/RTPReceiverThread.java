@@ -125,9 +125,9 @@ public class RTPReceiverThread extends Thread {
 			}
 
 			// Statistics for receiver report.
-			//part.receivedOctets += pkt.getPayloadLength();
 			part.receivedOctets += packet.getLength();
 			part.receivedPkts++;
+			part.lastRtpPkt = System.currentTimeMillis();
 			
 			if( part.lastSeqNumber < pkt.getSeqNumber() || part.lastSeqNumber - part.lastSeqNumber < -100) {
 				part.lastSeqNumber = pkt.getSeqNumber();

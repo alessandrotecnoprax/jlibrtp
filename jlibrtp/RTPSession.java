@@ -72,8 +72,9 @@ public class RTPSession {
 	 
 	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
-	 // Handle to application
+	 // Handles to application
 	 protected RTPAppIntf appIntf = null;
+	 protected RTCPAppIntf rtcAppIntf = null;
 	 // Threads etc.
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
@@ -83,10 +84,16 @@ public class RTPSession {
 	 final protected Lock pktBufLock = new ReentrantLock();
 	 final protected Condition pktBufDataReady = pktBufLock.newCondition();
 	 
+	 //final protected Lock conflictResLock = new ReentrantLock();
+	 //final protected Condition conflictResolved = conflictResLock.newCondition();
+	 
 	 // Enough is enough, set to true when you want to quit.
 	 protected boolean endSession = false;
 	 // Only one registered application, please
 	 protected boolean registered = false;
+	 // We're busy resolving a conflict, please try again later
+	 protected boolean conflict = false;
+	 protected int conflictCount = 0;
 
 	 // SDES stuff
 	 protected String cname;
@@ -140,10 +147,11 @@ public class RTPSession {
 	  * 
 	  * Following this you should set the payload type and add participants to the session.
 	  * 
-	  * @param	rtpApp an object that implements the RTPAppIntf-interface 
+	  * @param	rtpApp an object that implements the RTPAppIntf-interface
+	  * @param	rtcpApp an object that implements the RTCPAppIntf-interface (optional)
 	  * @return	-1 if this RTPSession-instance already has an application registered.
 	  */
-	 public int RTPSessionRegister(RTPAppIntf rtpApp) {
+	 public int RTPSessionRegister(RTPAppIntf rtpApp, RTCPAppIntf rtcpApp) {
 		if(registered) {
 			System.out.println("RTPSessionRegister(): Can\'t register another application!");
 			return -1;
@@ -153,13 +161,13 @@ public class RTPSession {
 				System.out.println("-> RTPSessionRegister");
 			}  
 			this.appIntf = rtpApp;
+			this.rtcAppIntf = rtcpApp;
 			recvThrd = new RTPReceiverThread(this);
 			appCallerThrd = new AppCallerThread(this, rtpApp);
 			recvThrd.start();
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
 		 	
-
 		 	return 0;
 		}
 	}
@@ -177,7 +185,7 @@ public class RTPSession {
 		}  
 		
 		if(buf.length > 1500) {
-			System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes.");
+			System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes ("+buf.length+")");
 		}
 		
 		// Create a new RTP Packet
@@ -187,7 +195,14 @@ public class RTPSession {
 		byte[] pktBytes = pkt.encode();
 		
 		// Loop over recipients
-		Iterator iter = partDb.getReceivers();	
+		Iterator iter = partDb.getReceivers();
+		
+		// Pre-flight check, are resolving an SSRC conflict?
+		if(this.conflict) {
+			System.out.println("RTPSession.sendData() called while trying to ");
+			return -1;
+		}
+		
 		while(iter.hasNext()) {
 			InetSocketAddress receiver = (InetSocketAddress) iter.next();
 			
@@ -481,5 +496,34 @@ public class RTPSession {
 		if(this.ssrc < 0) {
 			this.ssrc = this.ssrc * -1;
 		}	
+	}
+	
+	protected void resolveSsrcConflict() {
+		System.out.println("!!!!!!! Beginning SSRC conflict resolution !!!!!!!!!");
+		this.conflictCount++;
+		
+		if(this.conflictCount < 5) {
+			//Don't send any more regular packets out until we have this sorted out.
+			this.conflict = true;
+		
+			//Send byes
+			rtcpSession.sendByes();
+		
+			//Calculate the next delay
+			rtcpSession.calculateDelay();
+			
+			//Generate a new Ssrc for ourselves
+			generateSsrc();
+			
+			//Get the SDES packets out faster
+			rtcpSession.initial = true;
+			
+			this.conflict = false;
+			System.out.println("SSRC conflict resolution complete");
+			
+		} else {
+			System.out.println("Too many conflicts. There is probably a loop in the network.");
+			this.endSession = true;
+		}
 	}
 }
