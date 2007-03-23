@@ -21,13 +21,9 @@ package jlibrtp;
 
 
 /**
+ * This is the callback interface for RTP packets.
  * 
- * 
- * The instance holds a participant database, as well as other information about the session. 
- * When the application registers with the session, the necessary threads for receiving and 
- * processing RTP packets are spawned.
- * 
- * RTP Packets are sent synchronously, all other operations are asynchronous.
+ * It is mandatory, but you can inore the data if you like.
  * 
  * @author Arne Kepp
  */
@@ -35,7 +31,8 @@ public interface RTPAppIntf {
 	
 	/**
 	 * The callback method through which the application will receive
-	 * data from jlibrtp.
+	 * data from jlibrtp. These calls are synchronous, so you will not
+	 * receive any new packets until this call returns.
 	 * 
 	 * @param buff a byte-buffer containing the data received
 	 * @param cName the cName (as determined through SSRC lookup) who sent it

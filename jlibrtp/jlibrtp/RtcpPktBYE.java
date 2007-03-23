@@ -1,8 +1,8 @@
 package jlibrtp;
 
 public class RtcpPktBYE extends RtcpPkt {
-	private long[] ssrcArray = null;//32xn bits, n<16
-	byte[] reason = null;
+	protected long[] ssrcArray = null;//32xn bits, n<16
+	protected byte[] reason = null;
 	
 	protected RtcpPktBYE(long[] ssrcs,byte[] aReason) {
 		// Fetch all the right stuff from the database
