@@ -1,7 +1,7 @@
 package jlibrtp;
 
 public class RtcpPktRR extends RtcpPkt {
-	protected Participant reportees[] = null;
+	protected Participant[] reportees = null;
 	protected long[] reporteeSsrc = null;// -1; //32 bits
 	protected int[] lossFraction = null;//-1; //8 bits
 	protected int[] lostPktCount = null;//-1; //24 bits
@@ -105,22 +105,19 @@ public class RtcpPktRR extends RtcpPkt {
 			System.arraycopy(someBytes, 0, ret, offset, 4);
 			
 			//Cumulative number of packets lost
-			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].lastSeqNumber - (long) reportees[i].firstSeqNumber);
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].getLostPktCount());
 		
-			//Calculate the loss fraction COMPLICATED, WAIT FOR NOW.
-			//int lost = 0;
-			//int expected = 0;
-			someBytes[3] = (byte) 0;
+			someBytes[0] = (byte) reportees[i].getFractionLost();
 		
 			//Write Cumulative number of packets lost and loss fraction to packet:
 			System.arraycopy(someBytes, 0, ret, 4 + offset, 4);
 		
 			// Extended highest sequence received
-			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].extHighSeqRecv);
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].getExtHighSeqRecv());
 			System.arraycopy(someBytes, 0, ret, 8 + offset, 4);
 		
-			// Interarrival jitter COMPLICATED, WAIT FOR NOW.
-			someBytes = StaticProcs.uIntLongToByteWord(0);
+			// Interarrival jitter
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].interArrivalJitter);
 			System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 		
 			// Timestamp last sender report received

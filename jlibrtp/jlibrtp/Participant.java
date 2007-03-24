@@ -47,11 +47,15 @@ public class Participant {
 	protected int firstSeqNumber = -1;
 	protected int lastSeqNumber = -1;
 	protected int recvPktCount = 0;
-	//protected int lostPktCount = 0;
-	protected long extHighSeqRecv = -1;
-	protected long prevDelay = -1;
-	protected long curJitter = -1;
-	protected long prevJitter = -1;
+	protected int receivedSinceLastSR = 0;
+	protected int lastSRRseqNumber = -1;
+	protected long seqRollOverCount = 0;
+	
+	protected long interArrivalJitter = -1;
+	protected long lastRtpTimestamp = -1;
+	
+	//protected long prevDelay = -1;
+	
 	protected long timeStampLSR = -1;		//The timestamp of the last SR
 	protected long timeReceivedLSR = -1; 	//The time when we actually got it
 	
@@ -215,5 +219,74 @@ public class Participant {
 	 */
 	public long getSSRC() {
 		return this.ssrc;
+	}
+	
+	protected void updateRRStats(int packetLength, RtpPkt pkt) {
+		int curSeqNum = pkt.getSeqNumber();
+		
+		if(firstSeqNumber < 0) {
+			firstSeqNumber = curSeqNum;
+		}
+		
+		receivedOctets += packetLength;
+		receivedSinceLastSR++;
+		receivedPkts++;
+		
+		long curTime =  System.currentTimeMillis();
+		
+		if( this.lastSeqNumber < curSeqNum ) {
+			//In-line packet, best thing you could hope for
+			this.lastSeqNumber = curSeqNum;
+						
+		} else if(this.lastSeqNumber - this.lastSeqNumber < -100) {
+			//Sequence counter rolled over
+			this.lastSeqNumber = curSeqNum;
+			seqRollOverCount++;
+			
+		} else {
+			//This was probably a duplicate or a late arrival.
+		}
+		
+		// Calculate jitter
+		if(this.lastRtpPkt > 0) {
+			long D = (pkt.getTimeStamp() - curTime) - (this.lastRtpTimestamp - this.lastRtpPkt);
+			if(D < 0)
+				D = (-1)*D;
+			
+			this.interArrivalJitter = this.interArrivalJitter + ((D - this.interArrivalJitter) / 16);
+		}
+
+		lastRtpPkt = curTime;
+	}
+	
+	protected long getExtHighSeqRecv() {
+		return ((10^16)*seqRollOverCount + lastSeqNumber);
+	}
+	
+	protected int getFractionLost() {
+		int denominator = (lastSeqNumber - lastSRRseqNumber);
+		if(denominator < 0)
+			denominator = 10^16 + denominator;
+
+		int fraction = 256*receivedSinceLastSR;
+		fraction = fraction / denominator;
+		
+		//Clear counters 
+		receivedSinceLastSR = 0;
+		lastSRRseqNumber = lastSeqNumber;
+		
+		return fraction;
+	}
+	
+	protected long getLostPktCount() {
+		long lost = (this.getExtHighSeqRecv() - this.firstSeqNumber) - receivedPkts;
+		
+		if(lost < 0)
+			lost = 0;
+		return lost;
+	}
+	
+	protected long getInterArrivalJitter() {
+		return this.interArrivalJitter;
 	}
 }
