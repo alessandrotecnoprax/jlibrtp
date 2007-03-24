@@ -29,12 +29,12 @@ public class RtcpPktSR extends RtcpPkt {
 			}
 			this.problem = 1;
 		} else {
-			super.ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
-			ntpTS1 = StaticProcs.combineBytes(aRawPkt[8],aRawPkt[9],aRawPkt[10],aRawPkt[11]);
-			ntpTS2 = StaticProcs.combineBytes(aRawPkt[12], aRawPkt[13],aRawPkt[14],aRawPkt[15]);
-			rtpTS = StaticProcs.combineBytes(aRawPkt[16],aRawPkt[17],aRawPkt[18],aRawPkt[19]);
-			sendersPktCount = StaticProcs.combineBytes(aRawPkt[20],aRawPkt[21],aRawPkt[22],aRawPkt[23]);
-			sendersOctCount = StaticProcs.combineBytes(aRawPkt[24],aRawPkt[25],aRawPkt[26],aRawPkt[27]);
+			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
+			ntpTS1 = StaticProcs.bytesToUIntLong(aRawPkt,8);
+			ntpTS2 = StaticProcs.bytesToUIntLong(aRawPkt,12);
+			rtpTS = StaticProcs.bytesToUIntLong(aRawPkt,16);
+			sendersPktCount = StaticProcs.bytesToUIntLong(aRawPkt,20);
+			sendersOctCount = StaticProcs.bytesToUIntLong(aRawPkt,24);
 			
 			// RRs attached?
 			if(itemCount > 0) {
@@ -81,17 +81,17 @@ public class RtcpPktSR extends RtcpPkt {
 		
 		//Write SR stuff
 		byte[] someBytes;
-		someBytes = StaticProcs.longToByteWord(super.ssrc);
+		someBytes = StaticProcs.uIntLongToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
-		someBytes = StaticProcs.longToByteWord(ntpTS1);
+		someBytes = StaticProcs.uIntLongToByteWord(ntpTS1);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
-		someBytes = StaticProcs.longToByteWord(ntpTS2);
+		someBytes = StaticProcs.uIntLongToByteWord(ntpTS2);
 		System.arraycopy(someBytes, 0, super.rawPkt, 12, 4);
-		someBytes = StaticProcs.longToByteWord(rtpTS);
+		someBytes = StaticProcs.uIntLongToByteWord(rtpTS);
 		System.arraycopy(someBytes, 0, super.rawPkt, 16, 4);
-		someBytes = StaticProcs.longToByteWord(sendersPktCount);
+		someBytes = StaticProcs.uIntLongToByteWord(sendersPktCount);
 		System.arraycopy(someBytes, 0, super.rawPkt, 20, 4);
-		someBytes = StaticProcs.longToByteWord(sendersOctCount);
+		someBytes = StaticProcs.uIntLongToByteWord(sendersOctCount);
 		System.arraycopy(someBytes, 0, super.rawPkt, 24, 4);
 		
 		if(RTPSession.rtpDebugLevel > 9) {

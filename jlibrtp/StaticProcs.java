@@ -29,16 +29,14 @@ public class StaticProcs {
 	 * Converts an integer into an array of bytes. 
 	 * Primarily used for 16 bit unsigned integers, ignore the first two octets.
 	 * 
-	 * @param i an integer
-	 * @return byte[4] representing the integer as unsigned, most significant bit first. 
+	 * @param i a 16 bit unsigned integer in an int
+	 * @return byte[2] representing the integer as unsigned, most significant bit first. 
 	 * @author Arne Kepp
 	 */
-	public static byte[] intToByteWord(int i) {
-		byte[] byteWord = new byte[4];
-		byteWord[0] = (byte) ((i >>> 24) & 0x000000FF);
-		byteWord[1] = (byte) ((i >> 16) & 0x000000FF);
-		byteWord[2] = (byte) ((i >> 8) & 0x000000FF);
-		byteWord[3] = (byte) (i & 0x00FF);
+	public static byte[] uIntIntToByteWord(int i) {
+		byte[] byteWord = new byte[2];
+		byteWord[0] = (byte) ((i >> 8) & 0x000000FF);
+		byteWord[1] = (byte) (i & 0x00FF);
 		return byteWord;
 	}
 	
@@ -49,7 +47,7 @@ public class StaticProcs {
 	 * @return byte[4] representing the unsigned integer, most significant bit first. 
 	 * @author Arne Kepp
 	 */
-	public static byte[] longToByteWord(long j) {
+	public static byte[] uIntLongToByteWord(long j) {
 		int i = (int) j;
 		byte[] byteWord = new byte[4];
 		byteWord[0] = (byte) ((i >>> 24) & 0x000000FF);
@@ -62,43 +60,35 @@ public class StaticProcs {
 	/** 
 	 * Combines two bytes (most significant bit first) into a 16 bit unsigned integer.
 	 * 
-	 * @param highOrder most significant byte
-	 * @param lowOrder least significant byte
+	 * @param index of most significant byte
 	 * @return int with the 16 bit unsigned integer
 	 * @author Arne Kepp
 	 */
-	public static int combineBytes(byte highOrder, byte lowOrder) {
-		int temp = highOrder;
+	public static int bytesToUIntInt(byte[] bytes, int index) {
+		int temp = bytes[index];
 		temp = (temp << 8);
-		temp |= lowOrder;
+		temp |= bytes[index+1];
 		return temp;
 	}
 	
 	/** 
 	 * Combines four bytes (most significant bit first) into a 32 bit unsigned integer.
 	 * 
-	 * @param highOrder most significant byte
-	 * @param highMidOrder 2nd most significant byte
-	 * @param lowMidOrder 3rd most significant byte
-	 * @param lowOrder least significant byte
+	 * @param bytes
+	 * @param index of most significant byte
 	 * @return long with the 32 bit unsigned integer
 	 * @author Arne Kepp
 	 */
-	public static long combineBytes(byte highOrder, byte highMidOrder, byte lowMidOrder, byte lowOrder) {		
-		byte[] arr = new byte[4];
-		arr[0] = lowOrder;
-		arr[1] = lowMidOrder;
-		arr[2] = highMidOrder;
-		arr[3] = highOrder;
-		
+	public static long bytesToUIntLong(byte[] bytes, int index) {
 		long accum = 0;
-		int i = 0;
+		int i = 3;
 		for (int shiftBy = 0; shiftBy < 32; shiftBy += 8 ) {
-			accum |= ( (long)( arr[i] & 0xff ) ) << shiftBy;
-			i++;
+			accum |= ( (long)( bytes[index + i] & 0xff ) ) << shiftBy;
+			i--;
 		}
 		return accum;
 	}
+	
 	
 	/** 
 	 * Print the bits of a byte to standard out. For debugging.

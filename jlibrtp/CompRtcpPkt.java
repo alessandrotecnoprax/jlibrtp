@@ -40,7 +40,7 @@ public class CompRtcpPkt {
 		 //     is a fairly strong check.
 		      
 		while(start < (packetSize - 32)) {
-			int length = StaticProcs.combineBytes(rawPkt[start + 2], rawPkt[start + 3]);
+			int length = StaticProcs.bytesToUIntInt(rawPkt, start + 2);
 			byte[] tmpBuf = new byte[length];
 			
 			int pktType = (int) rawPkt[start + 1];

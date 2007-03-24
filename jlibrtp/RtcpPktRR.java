@@ -35,7 +35,7 @@ public class RtcpPktRR extends RtcpPkt {
 		} else {
 			base = 8;
 			rrCount = super.itemCount;
-			super.ssrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt, 4);
 		}
 		
 		if(rrCount > 0) {
@@ -49,13 +49,14 @@ public class RtcpPktRR extends RtcpPkt {
 
 			for(int i=0; i<rrCount; i++ ) {
 				int pos = base + i*24;
-				reporteeSsrc[i] = StaticProcs.combineBytes(aRawPkt[pos],aRawPkt[pos + 1],aRawPkt[pos + 2],aRawPkt[pos + 3]);
+				reporteeSsrc[i] = StaticProcs.bytesToUIntLong(aRawPkt, pos);
 				lossFraction[i] = (int) aRawPkt[pos + 4];
-				lostPktCount[i] = (int) StaticProcs.combineBytes((byte) 0, aRawPkt[pos + 5],aRawPkt[pos + 6],aRawPkt[pos + 7]);
-				extHighSeqRecv[i] = StaticProcs.combineBytes(aRawPkt[pos + 8],aRawPkt[pos + 9],aRawPkt[pos + 10],aRawPkt[pos + 11]);
-				interArvJitter[i] = StaticProcs.combineBytes(aRawPkt[pos + 12],aRawPkt[pos + 13],aRawPkt[pos + 14],aRawPkt[pos + 15]);
-				timeStampLSR[i] = StaticProcs.combineBytes(aRawPkt[pos + 16],aRawPkt[pos + 17],aRawPkt[pos + 18],aRawPkt[pos + 19]);
-				delaySR[i] = StaticProcs.combineBytes(aRawPkt[pos + 20],aRawPkt[pos + 21],aRawPkt[pos + 22],aRawPkt[pos + 23]);
+				aRawPkt[pos + 4] = (byte) 0;
+				lostPktCount[i] = (int) StaticProcs.bytesToUIntLong(aRawPkt, pos + 4);
+				extHighSeqRecv[i] = StaticProcs.bytesToUIntLong(aRawPkt, pos + 8);
+				interArvJitter[i] = StaticProcs.bytesToUIntLong(aRawPkt, pos + 12);
+				timeStampLSR[i] = StaticProcs.bytesToUIntLong(aRawPkt, pos + 16);
+				delaySR[i] = StaticProcs.bytesToUIntLong(aRawPkt, pos + 20);
 			}
 		}
 	}
@@ -80,7 +81,7 @@ public class RtcpPktRR extends RtcpPkt {
 		
 		//Add our SSRC (as sender)
 		byte[] someBytes;
-		someBytes = StaticProcs.longToByteWord(super.ssrc);
+		someBytes = StaticProcs.uIntLongToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		
 		if(RTPSession.rtpDebugLevel > 9) {
@@ -100,11 +101,11 @@ public class RtcpPktRR extends RtcpPkt {
 		//Write SR stuff
 		for(int i = 0; i<reportees.length; i++) {
 			int offset = 24*i;
-			byte[] someBytes = StaticProcs.longToByteWord(reportees[i].ssrc);
+			byte[] someBytes = StaticProcs.uIntLongToByteWord(reportees[i].ssrc);
 			System.arraycopy(someBytes, 0, ret, offset, 4);
 			
 			//Cumulative number of packets lost
-			someBytes = StaticProcs.longToByteWord(reportees[i].lastSeqNumber - (long) reportees[i].firstSeqNumber);
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].lastSeqNumber - (long) reportees[i].firstSeqNumber);
 		
 			//Calculate the loss fraction COMPLICATED, WAIT FOR NOW.
 			//int lost = 0;
@@ -115,22 +116,22 @@ public class RtcpPktRR extends RtcpPkt {
 			System.arraycopy(someBytes, 0, ret, 4 + offset, 4);
 		
 			// Extended highest sequence received
-			someBytes = StaticProcs.longToByteWord(reportees[i].extHighSeqRecv);
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].extHighSeqRecv);
 			System.arraycopy(someBytes, 0, ret, 8 + offset, 4);
 		
 			// Interarrival jitter COMPLICATED, WAIT FOR NOW.
-			someBytes = StaticProcs.longToByteWord(0);
+			someBytes = StaticProcs.uIntLongToByteWord(0);
 			System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 		
 			// Timestamp last sender report received
-			someBytes = StaticProcs.longToByteWord(reportees[i].timeStampLSR);
+			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].timeStampLSR);
 			System.arraycopy(someBytes, 0, ret, 16 + offset, 4);
 		
 			// Delay since last sender report received, in terms of 1/655536 s = 0.02 ms
 			if(reportees[i].timeReceivedLSR > 0) {
-				someBytes = StaticProcs.longToByteWord((System.currentTimeMillis() - reportees[i].timeStampLSR) / (1000*655536));
+				someBytes = StaticProcs.uIntLongToByteWord((System.currentTimeMillis() - reportees[i].timeStampLSR) / (1000*655536));
 			} else {
-				someBytes = StaticProcs.longToByteWord(0);
+				someBytes = StaticProcs.uIntLongToByteWord(0);
 			}
 			System.arraycopy(someBytes, 0, ret, 20 + offset, 4);
 		}
