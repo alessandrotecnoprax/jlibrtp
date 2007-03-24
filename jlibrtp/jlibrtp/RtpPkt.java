@@ -291,18 +291,18 @@ public class RtpPkt {
 		
 		// The first line contains, version and various bits
 		writeFirstLine();
-		byte[] someBytes = StaticProcs.longToByteWord(timeStamp);
+		byte[] someBytes = StaticProcs.uIntLongToByteWord(timeStamp);
 		for(int i=0;i<4;i++) {
 			rawPkt[i + 4] = someBytes[i];
 		}
 		//System.out.println("writePkt timeStamp:" + rawPkt[7]);
 		
-		someBytes = StaticProcs.longToByteWord(ssrc);
+		someBytes = StaticProcs.uIntLongToByteWord(ssrc);
 		System.arraycopy(someBytes, 0, rawPkt, 8, 4);
 		//System.out.println("writePkt ssrc:" + rawPkt[11]);
 		
 		for(int i=0; i<csrcLen ; i++) {
-			someBytes = StaticProcs.longToByteWord(csrcArray[i]);
+			someBytes = StaticProcs.uIntLongToByteWord(csrcArray[i]);
 			System.arraycopy(someBytes, 0, rawPkt, 12 + 4*i, 4);
 		}
 		// TODO Extension
@@ -323,9 +323,9 @@ public class RtpPkt {
 		aByte |=(marker << 7);
 		aByte |= payloadType;
 		rawPkt[1] = aByte;
-		byte[] someBytes = StaticProcs.intToByteWord(seqNumber);
-		rawPkt[2] = someBytes[2];
-		rawPkt[3] = someBytes[3];
+		byte[] someBytes = StaticProcs.uIntIntToByteWord(seqNumber);
+		rawPkt[2] = someBytes[0];
+		rawPkt[3] = someBytes[1];
 	}
 	//Picks apart the first 4 octets of an RTP packet
 	private void sliceFirstLine() {
@@ -341,16 +341,16 @@ public class RtpPkt {
 	}
 	//Takes the 4 octets representing the timestamp
 	private void sliceTimeStamp() {
-		timeStamp = StaticProcs.combineBytes(rawPkt[4],rawPkt[5],rawPkt[6],rawPkt[7]);
+		timeStamp = StaticProcs.bytesToUIntLong(rawPkt, 4);
 	}
 	//Takes the 4 octets representing the SSRC
 	private void sliceSSRC() {
-		ssrc = StaticProcs.combineBytes(rawPkt[8],rawPkt[9],rawPkt[10],rawPkt[11]);
+		ssrc = StaticProcs.bytesToUIntLong(rawPkt,8);
 	}
 	//Check the length of the csrcArray (set during sliceFirstLine) 
 	private void  sliceCSRCs() {
 		for(int i=0; i< csrcArray.length; i++) {
-			ssrc = StaticProcs.combineBytes(rawPkt[i*4 + 12],rawPkt[i*4 + 13],rawPkt[i*4 + 14],rawPkt[i*4 + 15]);
+			ssrc = StaticProcs.bytesToUIntLong(rawPkt, i*4 + 12);
 		}
 	}
 	//Extensions //TODO

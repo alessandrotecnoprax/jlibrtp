@@ -29,7 +29,7 @@ public class RtcpPktSDES extends RtcpPkt {
 			boolean endReached = false;
 			// Loop over SSRC SDES chunks
 			for(int i=0; i< itemCount; i++) {
-				ssrc = StaticProcs.combineBytes(aRawPkt[curPos],aRawPkt[curPos + 1],aRawPkt[curPos + 2],aRawPkt[curPos + 3]);
+				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, curPos);
 	
 				Participant part = partDb.getParticipant(ssrc);
 				if(part == null) {
@@ -98,7 +98,7 @@ public class RtcpPktSDES extends RtcpPkt {
 	protected void encode(RTPSession session) {	
 		packetType = 202;
 		byte[] temp = new byte[1450];
-		byte[] someBytes = StaticProcs.longToByteWord(session.ssrc);
+		byte[] someBytes = StaticProcs.uIntLongToByteWord(session.ssrc);
 		System.arraycopy(someBytes, 0, temp, 4, 4);
 		
 		int pos = 8;

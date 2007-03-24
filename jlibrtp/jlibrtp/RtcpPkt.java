@@ -45,7 +45,7 @@ public class RtcpPkt {
 		if(packetType < 0) {
 			packetType += 256;
 		}
-		length = StaticProcs.combineBytes(rawPkt[2], rawPkt[3]);
+		length = StaticProcs.bytesToUIntInt(rawPkt, 2);
 		
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println(" <-> RtcpPkt.parseHeaders() version:"+version+" padding:"+padding+" itemCount:"+itemCount
@@ -67,9 +67,9 @@ public class RtcpPkt {
 		aByte = 0;
 		aByte |= packetType;
 		rawPkt[1] = aByte;
-		byte[] someBytes = StaticProcs.intToByteWord(rawPkt.length);
-		rawPkt[2] = someBytes[2];
-		rawPkt[3] = someBytes[3];
+		byte[] someBytes = StaticProcs.uIntIntToByteWord(rawPkt.length);
+		rawPkt[2] = someBytes[0];
+		rawPkt[3] = someBytes[1];
 	}
 	
 	protected void encode() {

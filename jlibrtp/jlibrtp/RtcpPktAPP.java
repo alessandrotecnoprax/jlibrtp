@@ -6,13 +6,12 @@ public class RtcpPktAPP extends RtcpPkt {
 	private byte[] pktData = null;
 	
 	protected RtcpPktAPP(byte[] aRawPkt) {
-		reporterSsrc = 	StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
+		reporterSsrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
 		
 		if(!super.parseHeaders() || packetType != 204) {
 			//Error...
 			this.problem = 1;
 		} else {
-			reporterSsrc = StaticProcs.combineBytes(aRawPkt[4],aRawPkt[5],aRawPkt[6],aRawPkt[7]);
 			if(super.length > 11) {
 				pktName = new byte[4];
 				System.arraycopy(aRawPkt, 8, pktName, 0, 4);

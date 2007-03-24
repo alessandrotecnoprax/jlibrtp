@@ -25,7 +25,7 @@ public class RtcpPktBYE extends RtcpPkt {
 			ssrcArray = new long[super.itemCount];
 			
 			for(int i=0; i<super.itemCount; i++) {
-				ssrcArray[i] = StaticProcs.combineBytes(aRawPkt[i*4 + 4],aRawPkt[i*4 + 5],aRawPkt[i*4 + 6],aRawPkt[i*4 + 7]);
+				ssrcArray[i] = StaticProcs.bytesToUIntLong(aRawPkt, i*4 + 4);
 			}
 			if(super.length > (super.itemCount + 1)) {
 				int reasonLength = (int) aRawPkt[4 + super.itemCount*4];
@@ -56,7 +56,7 @@ public class RtcpPktBYE extends RtcpPkt {
 		
 		// SSRCs
 		for(i=0; i<ssrcArray.length; i++ ) {
-			someBytes = StaticProcs.longToByteWord(ssrcArray[i]);
+			someBytes = StaticProcs.uIntLongToByteWord(ssrcArray[i]);
 			System.arraycopy(someBytes, 0, rawPkt, 4 + 4*i, 4);			
 		}
 		
