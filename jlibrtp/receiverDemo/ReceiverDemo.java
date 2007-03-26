@@ -18,6 +18,8 @@
  */
 package receiverDemo;
 
+import java.net.DatagramSocket;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -46,21 +48,30 @@ public class ReceiverDemo implements RTPAppIntf {
 
 	public void receiveData(byte[] data, String cname, long time) {
 		auline.write(data, 0, data.length);
+		if(pktCount % 100 == 0) {
+			System.out.println("pktCount:" + pktCount);
+		}
 		pktCount++;
 	}
 	
 	public ReceiverDemo(String CNAME,int recvPort)  {
+		DatagramSocket rtpSocket = null;
+		DatagramSocket rtcpSocket = null;
+		
 		try {
-			rtpSession = new RTPSession(recvPort, recvPort + 1, CNAME);
+			rtpSocket = new DatagramSocket(6002);
+			rtcpSocket = new DatagramSocket(6003);
 		} catch (Exception e) {
-			System.out.println("RTPSession failed to obtain port: " + recvPort);
+			System.out.println("RTPSession failed to obtain port");
 		}
+		
+		
+		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 		rtpSession.setNaivePktReception(true);
-		if(rtpSession != null) {
-			rtpSession.RTPSessionRegister(this);
-		} else {
-			System.out.println("Couldn't register");
-		}
+		rtpSession.RTPSessionRegister(this,null);
+		
+		Participant p = new Participant("127.0.0.1", 6004, 6005);		
+		rtpSession.addParticipant(p);
 	}
 
 	/**

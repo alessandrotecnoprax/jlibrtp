@@ -11,10 +11,12 @@ public class RtcpPktRR extends RtcpPkt {
 	protected long[] delaySR = null;//-1; //32 bits
 	
 	protected RtcpPktRR(Participant[] reportees, long ssrc) {
-		// Fetch all the right stuff from the database
-		this.reportees = reportees;
-		super.ssrc = ssrc;
 		super.packetType = 201;
+		// Fetch all the right stuff from the database
+		super.ssrc = ssrc;
+		this.reportees = reportees;
+
+
 	}
 
 	// If rcount < 0 we assume we have to parse the entire packet
@@ -117,7 +119,7 @@ public class RtcpPktRR extends RtcpPkt {
 			System.arraycopy(someBytes, 0, ret, 8 + offset, 4);
 		
 			// Interarrival jitter
-			someBytes = StaticProcs.uIntLongToByteWord(reportees[i].interArrivalJitter);
+			someBytes = StaticProcs.uIntLongToByteWord((long)reportees[i].interArrivalJitter);
 			System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 		
 			// Timestamp last sender report received

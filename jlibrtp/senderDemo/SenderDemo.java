@@ -30,6 +30,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.lang.String;
+import java.net.DatagramSocket;
 
 import jlibrtp.*;
 
@@ -48,17 +49,21 @@ public class SenderDemo implements RTPAppIntf  {
 		LEFT, RIGHT, NORMAL
 	};
 	
-	public SenderDemo(String CNAME,int recvPort, boolean isLocal)  {
+	public SenderDemo(boolean isLocal)  {
+		DatagramSocket rtpSocket = null;
+		DatagramSocket rtcpSocket = null;
+		
 		try {
-			rtpSession = new RTPSession(recvPort, recvPort +1, CNAME);
+			rtpSocket = new DatagramSocket(6004);
+			rtcpSocket = new DatagramSocket(6005);
 		} catch (Exception e) {
-			System.out.println("RTPSession failed to obtain port: " + recvPort);
+			System.out.println("RTPSession failed to obtain port");
 		}
-		if(rtpSession != null) {
-			rtpSession.RTPSessionRegister(this);
-		} else {
-			System.out.println("Couldn't register");
-		}
+		
+		
+		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
+		rtpSession.RTPSessionRegister(this,null);
+		
 		this.local = isLocal;
 	}
 	
@@ -78,8 +83,8 @@ public class SenderDemo implements RTPAppIntf  {
 		if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
 			local = false;
 		}
-		SenderDemo aDemo = new SenderDemo("Sender",4547, local);
-		Participant p = new Participant(args[1], Integer.parseInt(args[2]), Integer.parseInt(args[3]), "Receiver");
+		SenderDemo aDemo = new SenderDemo(local);
+		Participant p = new Participant("127.0.0.1",6002, 6003);
 		aDemo.rtpSession.addParticipant(p);
 		aDemo.filename = args[0];
 		aDemo.run();

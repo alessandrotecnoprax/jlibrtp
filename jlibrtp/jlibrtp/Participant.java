@@ -51,7 +51,7 @@ public class Participant {
 	protected int lastSRRseqNumber = -1;
 	protected long seqRollOverCount = 0;
 	
-	protected long interArrivalJitter = -1;
+	protected double interArrivalJitter = -1.0;
 	protected long lastRtpTimestamp = -1;
 	
 	//protected long prevDelay = -1;
@@ -249,11 +249,12 @@ public class Participant {
 		
 		// Calculate jitter
 		if(this.lastRtpPkt > 0) {
+			
 			long D = (pkt.getTimeStamp() - curTime) - (this.lastRtpTimestamp - this.lastRtpPkt);
 			if(D < 0)
 				D = (-1)*D;
 			
-			this.interArrivalJitter = this.interArrivalJitter + ((D - this.interArrivalJitter) / 16);
+			this.interArrivalJitter += ((double)D - this.interArrivalJitter) / 16.0;
 		}
 
 		lastRtpPkt = curTime;
@@ -286,7 +287,18 @@ public class Participant {
 		return lost;
 	}
 	
-	protected long getInterArrivalJitter() {
+	protected double getInterArrivalJitter() {
 		return this.interArrivalJitter;
+	}
+	
+	public void debugPrint() {
+		System.out.print(" Participant.debugPrint() SSRC:"+this.ssrc+" CNAME:"+this.cname);
+		if(this.rtpAddress != null)
+			System.out.print(" RTP:"+this.rtpAddress.toString());
+		if(this.rtcpAddress != null)
+			System.out.print(" RTCP:"+this.rtcpAddress.toString());
+		System.out.println("");
+		
+		System.out.println("                          Packets received:"+this.receivedPkts);
 	}
 }

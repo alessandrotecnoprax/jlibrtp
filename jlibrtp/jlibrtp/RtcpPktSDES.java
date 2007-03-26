@@ -2,12 +2,15 @@ package jlibrtp;
 
 public class RtcpPktSDES extends RtcpPkt {
 	boolean reportSelf = true;
+	RTPSession rtpSession = null;
 	protected Participant[] participants = null;
 	
-	protected RtcpPktSDES(boolean reportThisSession, Participant[] additionalParticipants) {
+	protected RtcpPktSDES(boolean reportThisSession, RTPSession rtpSession,Participant[] additionalParticipants) {
+		super.packetType = 202;
 		// Fetch all the right stuff from the database
 		reportSelf = reportThisSession;
 		participants = additionalParticipants;
+		this.rtpSession = rtpSession; 
 	}
 	
 	protected RtcpPktSDES(byte[] aRawPkt, ParticipantDatabase partDb) {
@@ -95,10 +98,9 @@ public class RtcpPktSDES extends RtcpPkt {
 	}
 	
 	// For the time being we'll only advertise ourselves.
-	protected void encode(RTPSession session) {	
-		packetType = 202;
+	protected void encode() {	
 		byte[] temp = new byte[1450];
-		byte[] someBytes = StaticProcs.uIntLongToByteWord(session.ssrc);
+		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.rtpSession.ssrc);
 		System.arraycopy(someBytes, 0, temp, 4, 4);
 		
 		int pos = 8;
@@ -106,14 +108,14 @@ public class RtcpPktSDES extends RtcpPkt {
 		String tmpString = null;
 		for(int i=1; i<9;i++) {
 			switch(i) {
-				case 1:  tmpString = session.cname; break;
-				case 2:  tmpString = session.name; break;
-				case 3:  tmpString = session.email; break;
-				case 4:  tmpString = session.phone; break;
-				case 5:  tmpString = session.loc; break;
-				case 6:  tmpString = session.tool; break;
-				case 7:  tmpString = session.note; break;
-				case 8:  tmpString = session.priv; break;
+				case 1:  tmpString = this.rtpSession.cname; break;
+				case 2:  tmpString = this.rtpSession.name; break;
+				case 3:  tmpString = this.rtpSession.email; break;
+				case 4:  tmpString = this.rtpSession.phone; break;
+				case 5:  tmpString = this.rtpSession.loc; break;
+				case 6:  tmpString = this.rtpSession.tool; break;
+				case 7:  tmpString = this.rtpSession.note; break;
+				case 8:  tmpString = this.rtpSession.priv; break;
 			}
 			
 			if(tmpString != null) {
@@ -121,7 +123,7 @@ public class RtcpPktSDES extends RtcpPkt {
 				temp[pos] = (byte) i;
 				temp[pos+1] = (byte) someBytes.length;
 				System.arraycopy(someBytes, 0, temp, pos + 2, someBytes.length);
-				System.out.println("i: "+i+" pos:"+pos+" someBytes.length:"+someBytes.length);
+				//System.out.println("i: "+i+" pos:"+pos+" someBytes.length:"+someBytes.length);
 				pos = pos + someBytes.length + 2;
 			}
 		}
