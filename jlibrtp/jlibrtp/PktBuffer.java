@@ -30,6 +30,9 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class PktBuffer {
+	// Just to get maxBufferSize
+	RTPSession rtpSession;
+	
 	//Used to identify the buffer
 	long SSRC;
 
@@ -48,7 +51,8 @@ public class PktBuffer {
 	 * @param aPkt First packet 
 	 * @param completionLength How many pkts make up a complete frame, depends on paylod type.
 	 */
-	public PktBuffer(RtpPkt aPkt) {
+	public PktBuffer(RTPSession rtpSession, RtpPkt aPkt) {
+		this.rtpSession = rtpSession;
 		SSRC = aPkt.getSsrc();
 		PktBufNode newNode = new PktBufNode(aPkt);
 		oldest = newNode;
@@ -159,10 +163,20 @@ public class PktBuffer {
 			this.debugPrint();
 		}
 		PktBufNode retNode = oldest;
+		
+		/**
+		 * Three scenarios:
+		 * 1) There are no packets available
+		 * 2) The first packet is vailable and in order
+		 * 3) The first packet is not the next on in the sequence
+		 * 		a) We have exceeded the wait buffer
+		 * 		b) We wait
+		 */
 
-		if(retNode != null) {
-			// Pop it off, null all references.
-			if(length == 1) {
+		// Pop it off, null all references.
+		if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0 
+					|| this.length > this.rtpSession.maxReorderBuffer || this.lastSeqNumber < 0)) {
+			if(1 == length) {
 				//There's only one frame
 				newest = null;
 				oldest = null;
@@ -231,12 +245,12 @@ public class PktBuffer {
 	 * Prints out the packet buffer, oldest node first (on top).
 	 */
 	public void debugPrint() {
-		System.out.println("PktBuffer.debugPrint() : length " + length + " SSRC " + SSRC);
+		System.out.println("PktBuffer.debugPrint() : length "+length+" SSRC "+SSRC+" lastSeqNum:"+lastSeqNumber);
 		PktBufNode tmpNode = oldest;
 		int i = 0;
 		while(tmpNode != null) {
 			//String str = tmpNode.timeStamp.toString();
-			System.out.println("   " + i + " timeStamp: " + tmpNode.timeStamp + " pktCount:" + tmpNode.pktCount );
+			System.out.println("   " + i + " seqNum:"+tmpNode.seqNum+" timeStamp: " + tmpNode.timeStamp + " pktCount:" + tmpNode.pktCount );
 			i++;
 			tmpNode = tmpNode.prevFrameQueueNode;
 		}

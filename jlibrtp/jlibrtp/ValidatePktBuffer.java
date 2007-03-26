@@ -18,6 +18,8 @@
  */
 package jlibrtp;
 
+import java.net.DatagramSocket;
+
 
 /**
  * Validates the PktBuffer and associated classes.
@@ -33,6 +35,17 @@ public class ValidatePktBuffer {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		DatagramSocket rtpSocket = null;
+		DatagramSocket rtcpSocket = null;
+		try {
+			rtpSocket = new DatagramSocket(6002);
+			rtcpSocket = new DatagramSocket(6003);
+		} catch (Exception e) {
+			System.out.println("RTPSession failed to obtain port");
+		}
+		RTPSession rtpSession = new RTPSession(rtpSocket, rtcpSocket);
+		
+		
 		String str1 = "ab";
 		String str2 = "cd";
 		String str3 = "ef";
@@ -51,7 +64,7 @@ public class ValidatePktBuffer {
 		RtpPkt pkt6 = new RtpPkt(60, syncSource1, 6, 0, str5.getBytes());
 		RtpPkt pkt7 = new RtpPkt(70, syncSource1, 7, 0, str6.getBytes());
 		
-		PktBuffer pktBuf = new PktBuffer(pkt1);
+		PktBuffer pktBuf = new PktBuffer(rtpSession, pkt1);
 		pktBuf.addPkt(pkt3); //2
 		pktBuf.addPkt(pkt2); //3
 		DataFrame aFrame = pktBuf.popOldestFrame();
