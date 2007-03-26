@@ -80,9 +80,9 @@ public class CompRtcpPkt {
 	
 		// Encode the packets and find the total size
 		int rawPktSize = 0;
+		
 		while(iter.hasNext()) {
 			RtcpPkt aPkt = (RtcpPkt) iter.next();
-			
 			if(aPkt.packetType == 200) {
 				RtcpPktSR pkt = (RtcpPktSR) aPkt;
 				pkt.encode(null);
@@ -104,7 +104,7 @@ public class CompRtcpPkt {
 				pkt.encode();
 				iter.set(pkt);
 			} else {
-				System.out.println("oops");
+				System.out.println("oops aPkt.packetType:" + aPkt.packetType);
 			}
 			
 			rawPktSize += aPkt.rawPkt.length;

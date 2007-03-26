@@ -45,7 +45,8 @@ public class RTCPSenderThread extends Thread {
 		
 			while(enu.hasMoreElements()) {
 				Participant part = (Participant) enu.nextElement();
-				sendCompRtcpPkt(compPkt, part.rtcpAddress);
+				if(!part.unexpected)
+					sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
 		}
 	}
@@ -108,12 +109,22 @@ public class RTCPSenderThread extends Thread {
 			System.out.println("<-> RTCPSenderThread running");
 		}
 		
+		// Give the application a chance to register some participants
+		try { rtpSession.pktBufDataReady.await(100, TimeUnit.MILLISECONDS); } 
+		catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+		
 		// Set up an iterator for the member list
 		Enumeration enu = rtpSession.partDb.getParticipants();
 		
 		while(! rtpSession.endSession) {
-			try { rtpSession.pktBufDataReady.await(rtcpSession.nextDelay, TimeUnit.MILLISECONDS); } 
-			catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+			
+			try { this.sleep(rtcpSession.nextDelay, 0); } 
+			catch (Exception e) { System.out.println("RTCPSenderThread Exception message:" + e.getMessage());}
+			
+			if(RTPSession.rtpDebugLevel > 1) {
+				System.out.println("<-> RTCPSenderThread waking up");
+			}
+			
 			
 			// We'll wait here until a conflict (if any) has been resolved,
 			// so that the bye packets for our current SSRC can be sent.
@@ -127,7 +138,28 @@ public class RTCPSenderThread extends Thread {
 			this.byesSent = false;
 			
 			// Get user stats
+			if(! enu.hasMoreElements()) {
+				
+				// Check iterator
+				enu = rtpSession.partDb.getParticipants();
+				
+				if(! enu.hasMoreElements()) {
+					//Still no participants, take a break
+					continue;
+				}
+			}
+			
 			Participant part = (Participant) enu.nextElement();
+			
+			//Verify that this is someone we want to communicate with
+			while(part.unexpected && enu.hasMoreElements()) {
+				part = (Participant) enu.nextElement();
+			}
+			
+			if(! enu.hasMoreElements()) {
+				//Out of luck
+				continue;
+			}
 			
 			/*********** Figure out what we are going to send ***********/
 			// Check whether this person has sent RTP packets since the last RR.
@@ -164,7 +196,7 @@ public class RTCPSenderThread extends Thread {
 			}
 			
 			// For now we'll stick the SDES on every time, and only for us
-			RtcpPktSDES sdesPkt = new RtcpPktSDES(true, null);
+			RtcpPktSDES sdesPkt = new RtcpPktSDES(true, this.rtpSession, null);
 			compPkt.addPacket(sdesPkt);
 			
 			/*********** Send the packet ***********/
@@ -173,16 +205,12 @@ public class RTCPSenderThread extends Thread {
 			if(rtpSession.mcSession) {
 				datagramLength = this.mcSendCompRtcpPkt(compPkt);
 			} else {
+				part.debugPrint();
 				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
 			
 			
-			/*********** Administrative tasks ***********/
-			// Check iterator
-			if(! enu.hasMoreElements()) {
-				enu = rtpSession.partDb.getParticipants();
-			}
-			
+			/*********** Administrative tasks ***********/			
 			//Update average packet size
 			if(datagramLength > 0) {
 				rtcpSession.updateAvgPacket(datagramLength);

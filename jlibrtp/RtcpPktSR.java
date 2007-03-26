@@ -47,7 +47,7 @@ public class RtcpPktSR extends RtcpPkt {
 		}
 	}
 	
-	protected void encode(RtcpPktRR[] receptionReports) {
+	protected void encode(RtcpPktRR[] receptionReports) {		
 		if(RTPSession.rtpDebugLevel > 9) {
 			if(receptionReports != null) {
 				System.out.println("  -> RtcpPktSR.encode() receptionReports.length: " + receptionReports.length );

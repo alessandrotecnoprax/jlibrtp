@@ -57,20 +57,21 @@ public class AppCallerThread extends Thread {
 				}
 				
 				// Check whether the application has defined a maximum timeout.
-				if(rtpSession.callbackTimeout > 0) {
-					try { rtpSession.pktBufDataReady.await(rtpSession.callbackTimeout, TimeUnit.MILLISECONDS); } 
-					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-				}else{
+				//if(rtpSession.callbackTimeout > 0) {
+				//	try { rtpSession.pktBufDataReady.await(rtpSession.callbackTimeout, TimeUnit.MILLISECONDS); } 
+				//	catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+				//}else{
 					try { rtpSession.pktBufDataReady.await(); } 
 					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-				}
+				//}
 
 		    	// Next loop over all participants and check whether they have anything for us.
 				Enumeration set = rtpSession.partDb.getParticipants();
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					while(p.isSender() && p.pktBuffer != null) {
+					while((p.isSender() || rtpSession.naiveReception) 
+							&& p.pktBuffer != null && p.pktBuffer.length > 0) {
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
 					}

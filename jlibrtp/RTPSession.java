@@ -42,7 +42,7 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 15;
+	 final static public int rtpDebugLevel = 1;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -50,12 +50,11 @@ public class RTPSession {
 	 protected InetAddress mcGroup = null;
 	 
 	 // Internal state
-	 protected boolean mcSession; // Multicast session?
+	 protected boolean mcSession = false; // Multicast session?
 	 protected int payloadType = 0;
 	 protected long ssrc;
 	 protected long lastTimestamp = 0;
 	 protected int seqNum = 0;
-	 //protected String CNAME = "";
 	 protected int sentPktCount = 0;
 	 protected int sentOctetCount = 0;
 	 
@@ -63,7 +62,7 @@ public class RTPSession {
 	 protected Random random = null;
 	 
 	 //Session bandwidth
-	 protected int bandwidth = 0;
+	 protected int bandwidth = 72000;
 	 
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
@@ -117,9 +116,9 @@ public class RTPSession {
 		 mcSession = false;
 		 rtpSock = rtpSocket;
 		 this.generateSsrc();
-		 // Get default value for CNAME
+		 generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
-
+		 System.out.println("mcSession: " + this.mcSession);
 	 }
 	 
 	 /**
@@ -137,7 +136,7 @@ public class RTPSession {
 		 rtpMCSock.joinGroup(mcGroup);
 		 rtcpSock.joinGroup(mcGroup);
 		 this.generateSsrc();
-		 // Get default value for CNAME
+		 generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
 	 }
 	 
@@ -167,7 +166,7 @@ public class RTPSession {
 			recvThrd.start();
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
-		 	
+			System.out.println("mcSession: " + this.mcSession);
 		 	return 0;
 		}
 	}
@@ -182,7 +181,7 @@ public class RTPSession {
 	 public int sendData(byte[] buf) {
 		if(RTPSession.rtpDebugLevel > 5) {
 				System.out.println("-> RTPSession.sendData(byte[])");
-		}  
+		}
 		
 		if(buf.length > 1500) {
 			System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes ("+buf.length+")");
@@ -202,11 +201,14 @@ public class RTPSession {
 			System.out.println("RTPSession.sendData() called while trying to ");
 			return -1;
 		}
-		
+
 		while(iter.hasNext()) {
 			InetSocketAddress receiver = (InetSocketAddress) iter.next();
-			
 			DatagramPacket packet = null;
+			
+			if(RTPSession.rtpDebugLevel > 15) {
+				System.out.println("   Sending to " + receiver.toString());
+			}
 			
 			try {
 				packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
@@ -217,7 +219,7 @@ public class RTPSession {
 			}
 			
 			//Actually send the packet
-			if( this.mcSession ) {
+			if(!this.mcSession) {
 				try {
 					rtpSock.send(packet);
 				} catch (Exception e) {
@@ -345,6 +347,23 @@ public class RTPSession {
 	}
 	
 	/**
+	 * Overrides CNAME, used for outgoing RTCP packets.
+	 * 
+	 * @param cname a string, e.g. username@hostname. Must be unique for session.
+	 */
+	public String getCNAME() {
+		return this.cname;
+	}
+	
+	private void generateCNAME() {
+		cname = System.getProperty ("user.name") + "@";
+		if(this.mcSession) {
+			cname += this.rtpMCSock.getLocalAddress().toString();
+		} else {
+			cname += this.rtpSock.getLocalAddress().toString();
+		}
+	}
+	/**
 	 * Change the RTP port of the session. 
 	 * Peers must be notified through SIP or other signalling protocol.
 	 * Only valid if this is a unicast session to begin with.
@@ -352,7 +371,7 @@ public class RTPSession {
 	 * @param rtpPort integer for new port number, check it is free first.
 	 */
 	//public int updateRTPSock(int rtpPort) throws Exception {
-	//	if(mcSession = false) {
+	//	if(!mcSession) {
 	//		 rtpSock = new DatagramSocket(rtpPort);
 	//		 return 0;
 	//	} else {
@@ -369,7 +388,7 @@ public class RTPSession {
 	 * @param rtcpPort integer for new port number, check it is free first.
 	 */
 	//public int updateRTCPSock(int rtcpPort) throws Exception {
-	//	if(mcSession = false) {
+	//	if(mcSession) {
 	//		 rtpSock = new DatagramSocket(rtcpPort);
 	//		 return 0;
 	//	} else {
@@ -386,7 +405,7 @@ public class RTPSession {
 	 * @param rtpSock the new multicast socket for RTP communication.
 	 */
 	//public int updateRTPSock(MulticastSocket rtpSock) {
-	//	if(mcSession = true) {
+	//	if(mcSession) {
 	//		 rtpMCSock = rtpSock;
 	//		 return 0;
 	//	} else {
@@ -403,7 +422,7 @@ public class RTPSession {
 	 * @param rtcpSock the new multicast socket for RTCP communication.
 	 */
 	//public int updateRTCPSock(MulticastSocket rtcpSock) {
-	//	if(mcSession = true) {
+	//	if(mcSession) {
 	//		 rtcpMCSock = rtcpSock;
 	//		 return 0;
 	//	} else {

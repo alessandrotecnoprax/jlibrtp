@@ -78,10 +78,10 @@ public class ValidateRtcpPkt {
 			}
 		} 
 		System.out.println("****************************** SDES *******************************");
-		RtcpPktSDES sdespkt = new RtcpPktSDES(true,null);
+		RtcpPktSDES sdespkt = new RtcpPktSDES(true,rtpSession,null);
 		rtpSession.cname = "cname123@123";
 		rtpSession.loc = "right here";
-		sdespkt.encode(rtpSession);
+		sdespkt.encode();
 		byte[] rawpkt = sdespkt.rawPkt;
 		//String test2 = new String(rawpkt);
 		//System.out.println(test2);

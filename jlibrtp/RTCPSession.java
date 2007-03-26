@@ -19,8 +19,7 @@ public class RTCPSession {
 
 	// Parent session
 	protected RTPSession rtpSession = null;
-	protected boolean mcSession;
-
+	
 	// Network stuff
 	protected DatagramSocket rtcpSock = null;
 	protected MulticastSocket rtcpMCSock = null;
@@ -31,13 +30,11 @@ public class RTCPSession {
 	protected RTCPSenderThread senderThrd = null;
 
 	protected RTCPSession(RTPSession parent, DatagramSocket rtcpSocket) {
-		mcSession = false;
 		rtcpSock = rtcpSocket;
 		rtpSession = parent;
 	}
 
 	protected RTCPSession(RTPSession parent, MulticastSocket rtcpSocket, InetAddress multicastGroup) {
-		mcSession = true;
 		mcGroup = multicastGroup;
 		rtcpSock = rtcpSocket;
 		rtpSession = parent;
@@ -47,6 +44,8 @@ public class RTCPSession {
 		nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
 		recvThrd = new RTCPReceiverThread(this, this. rtpSession);
 		senderThrd = new RTCPSenderThread(this , this.rtpSession);
+		recvThrd.start();
+		senderThrd.start();
 	}
 
 	protected void sendByes() {
@@ -75,7 +74,7 @@ public class RTCPSession {
 			}
 
 		}
-		if(this.nextDelay < 2000) {
+		if(this.nextDelay < 1000) {
 			System.out.println("RTCPSession.calculateDelay() nextDelay was too short (" 
 					+this.nextDelay+"ms), setting to "+(this.nextDelay = 2000 + rand));
 		}
