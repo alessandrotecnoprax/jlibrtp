@@ -75,8 +75,11 @@ public class RtcpPktSR extends RtcpPkt {
 		super.writeHeaders();
 		
 		// Convert to NTP and chop up
-		ntpTs1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
-		ntpTs2 = System.currentTimeMillis() % 1000
+		long timeNow = System.currentTimeMillis();
+		ntpTs1 = (70*365 + 17)*24*3600 + timeNow/1000;
+		double tmp = (double) Integer.MAX_VALUE*2;
+		// max 32uint * (1000.0 / ms) 
+		ntpTs2 = (long) (tmp * (1000.0 / ((double) timeNow % 1000)));
 		rtpTs = System.currentTimeMillis();
 		
 		//Write SR stuff

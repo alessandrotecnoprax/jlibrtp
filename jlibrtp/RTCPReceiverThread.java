@@ -57,8 +57,17 @@ public class RTCPReceiverThread extends Thread {
 
 					} else {
 						// Calculate sum of ntpTs1 and ntpTs2;
-						p.ntpOffset = (srPkt.ntpTs1 - (70*365 + 17)*24*3600)*1000;
-						p.ntpOffset += srPkt.ntpTs2
+						//Recover the seconds
+						p.ntpOffset = (srPkt.ntpTs1 - (70*365 + 17)*24*3600)*1000;	
+						double tmp = (double) Integer.MAX_VALUE*2;
+						//Recover the milliseconds
+						tmp = (tmp * 1000.0) / (srPkt.ntpTs2);
+						
+						if(tmp > 1025) {
+							System.out.println(" RTCPReceiverThread: There's a bug in the NTP code.");
+						} else {
+							p.ntpOffset += tmp;
+						}
 					}
 					
 					p.lastNtpTs1 = srPkt.ntpTs1;
