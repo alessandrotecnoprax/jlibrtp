@@ -47,9 +47,11 @@ public class ReceiverDemo implements RTPAppIntf {
 	};
 
 	public void receiveData(byte[] data, String cname, long time) {
-		auline.write(data, 0, data.length);
-		if(pktCount % 100 == 0) {
-			System.out.println("pktCount:" + pktCount);
+		if(auline != null) {
+			auline.write(data, 0, data.length);
+			if(pktCount % 100 == 0) {
+				System.out.println("pktCount:" + pktCount);
+			}
 		}
 		pktCount++;
 	}
