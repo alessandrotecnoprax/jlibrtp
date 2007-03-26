@@ -87,7 +87,19 @@ public class RTPReceiverThread extends Thread {
 				System.out.println("Received invalid RTP packet. Ignoring");
 				continue;
 			}
-
+			
+			// Check for loops and SSRC collisions
+			if( rtpSession.ssrc == pkt.getSsrc() )
+				rtpSession.resolveSsrcConflict();
+			
+			long[] csrcArray = pkt.getCsrcArray();
+			if( csrcArray != null) {
+				for(int i=0; i< csrcArray.length; i++) {
+					if(csrcArray[i] == rtpSession.ssrc);
+						rtpSession.resolveSsrcConflict();
+				}
+			}
+			
 			if(RTPSession.rtpDebugLevel > 6) {
 				System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
 				if(RTPSession.rtpDebugLevel > 10) {

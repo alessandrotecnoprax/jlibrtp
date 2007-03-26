@@ -119,7 +119,7 @@ public class ReceiverDemo implements RTPAppIntf {
 			while (nBytesRead != -1) {
 				// Used to write audiot to auline here,
 				// now moved directly to receiveData.
-				try { Thread.sleep(100); } catch(Exception e) { }
+				try { Thread.sleep(1000); } catch(Exception e) { }
 			}
 		} finally {
 			auline.drain();
