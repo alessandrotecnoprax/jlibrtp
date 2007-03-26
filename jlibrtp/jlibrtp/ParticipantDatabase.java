@@ -173,11 +173,11 @@ public class ParticipantDatabase {
 	}
 	
 	protected Iterator getRtpReceivers() {
-		return rtpReceivers.entrySet().iterator();
+		return rtpReceivers.keySet().iterator();
 	}
 	
 	protected Iterator getRtcpReceivers() {
-		return rtpReceivers.entrySet().iterator();
+		return rtpReceivers.keySet().iterator();
 	}
 	
 	protected int receiverCount() {
