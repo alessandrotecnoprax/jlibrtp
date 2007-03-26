@@ -162,7 +162,7 @@ public class SenderDemo implements RTPAppIntf  {
 					if(!this.local) {	
 						auline.write(abData, 0, abData.length);
 					} else {
-						try { Thread.sleep(14);} catch(Exception e) {}
+						try { Thread.sleep(1);} catch(Exception e) {}
 					}
 					pktCount++;
 				}
