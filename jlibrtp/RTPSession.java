@@ -205,7 +205,7 @@ public class RTPSession {
 			return -1;
 		}
 
-		while(iter.hasNext()) {
+		while(iter.hasNext()) {			
 			InetSocketAddress receiver = (InetSocketAddress) iter.next();
 			DatagramPacket packet = null;
 			
