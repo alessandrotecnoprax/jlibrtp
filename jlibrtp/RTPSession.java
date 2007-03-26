@@ -156,6 +156,7 @@ public class RTPSession {
 			return -1;
 		} else {
 			registered = true;
+			generateSeqNum();
 			if(RTPSession.rtpDebugLevel > 0) {
 				System.out.println("-> RTPSessionRegister");
 			}  
@@ -502,15 +503,33 @@ public class RTPSession {
 	private int getNextSeqNum() {
 		seqNum++;
 		// 16 bit number
-		if(seqNum > (2^16)) { 
+		if(seqNum > 65536) { 
 			seqNum = 0;
 		}
 		return seqNum;
 	}
 	
+	private void createRandom() {
+		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());
+	}
+	
+	private void generateSeqNum() {
+		if(this.random == null)
+			createRandom();
+		
+		seqNum = this.random.nextInt();
+		if(seqNum < 0)
+			seqNum = -seqNum;
+		while(seqNum > 65535) {
+			seqNum = seqNum / 10;
+		}
+	}
+	
 	private void generateSsrc() {
+		if(this.random == null)
+			createRandom();
+		
 		// Set an SSRC
-		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());// + this.rtpSock.getInetAddress().hashCode());
 		this.ssrc = this.random.nextInt();
 		if(this.ssrc < 0) {
 			this.ssrc = this.ssrc * -1;
