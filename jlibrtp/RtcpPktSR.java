@@ -1,9 +1,9 @@
 package jlibrtp;
 
 public class RtcpPktSR extends RtcpPkt {
-	protected long ntpTS1 = -1; //32 bits
-	protected long ntpTS2 = -1; //32 bits
-	protected long rtpTS = -1; //32 bits
+	protected long ntpTs1 = -1; //32 bits
+	protected long ntpTs2 = -1; //32 bits
+	protected long rtpTs = -1; //32 bits
 	protected long sendersPktCount = -1; //32 bits
 	protected long sendersOctCount = -1; //32 bits
 	protected RtcpPktRR rReports = null;
@@ -30,9 +30,9 @@ public class RtcpPktSR extends RtcpPkt {
 			this.problem = 1;
 		} else {
 			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
-			ntpTS1 = StaticProcs.bytesToUIntLong(aRawPkt,8);
-			ntpTS2 = StaticProcs.bytesToUIntLong(aRawPkt,12);
-			rtpTS = StaticProcs.bytesToUIntLong(aRawPkt,16);
+			ntpTs1 = StaticProcs.bytesToUIntLong(aRawPkt,8);
+			ntpTs2 = StaticProcs.bytesToUIntLong(aRawPkt,12);
+			rtpTs = StaticProcs.bytesToUIntLong(aRawPkt,16);
 			sendersPktCount = StaticProcs.bytesToUIntLong(aRawPkt,20);
 			sendersOctCount = StaticProcs.bytesToUIntLong(aRawPkt,24);
 			
@@ -75,19 +75,19 @@ public class RtcpPktSR extends RtcpPkt {
 		super.writeHeaders();
 		
 		// Convert to NTP and chop up
-		ntpTS1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
-		ntpTS2 = System.currentTimeMillis() % 1000;
-		rtpTS = System.currentTimeMillis();
+		ntpTs1 = (70*365 + 17)*24*3600 + System.currentTimeMillis()/1000;
+		ntpTs2 = System.currentTimeMillis() % 1000
+		rtpTs = System.currentTimeMillis();
 		
 		//Write SR stuff
 		byte[] someBytes;
 		someBytes = StaticProcs.uIntLongToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
-		someBytes = StaticProcs.uIntLongToByteWord(ntpTS1);
+		someBytes = StaticProcs.uIntLongToByteWord(ntpTs1);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
-		someBytes = StaticProcs.uIntLongToByteWord(ntpTS2);
+		someBytes = StaticProcs.uIntLongToByteWord(ntpTs2);
 		System.arraycopy(someBytes, 0, super.rawPkt, 12, 4);
-		someBytes = StaticProcs.uIntLongToByteWord(rtpTS);
+		someBytes = StaticProcs.uIntLongToByteWord(rtpTs);
 		System.arraycopy(someBytes, 0, super.rawPkt, 16, 4);
 		someBytes = StaticProcs.uIntLongToByteWord(sendersPktCount);
 		System.arraycopy(someBytes, 0, super.rawPkt, 20, 4);
@@ -95,13 +95,13 @@ public class RtcpPktSR extends RtcpPkt {
 		System.arraycopy(someBytes, 0, super.rawPkt, 24, 4);
 		
 		if(RTPSession.rtpDebugLevel > 9) {
-			System.out.println("  <- RtcpPktSR.encode() longs!: ntpTS1: "+ ntpTS1 + " ntpTS2: " + ntpTS2);
+			System.out.println("  <- RtcpPktSR.encode() longs!: ntpTs1: "+ ntpTs1 + " ntpTs2: " + ntpTs2);
 		}
 	}
 
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
-			System.out.println("  SSRC:"+super.ssrc +" ntpTS1:"+ntpTS1+" ntpTS2:"+ntpTS2+" rtpTS:"+rtpTS
+			System.out.println("  SSRC:"+super.ssrc +" ntpTs1:"+ntpTs1+" ntpTS2:"+ntpTs2+" rtpTS:"+rtpTs
 					+" senderPktCount:"+sendersPktCount+" sendersOctetCount:"+sendersOctCount);
 	}
 }

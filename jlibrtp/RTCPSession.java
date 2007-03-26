@@ -61,7 +61,7 @@ public class RTCPSession {
 
 		if(rtpSession.bandwidth != 0) {
 			// This does not distinguish between senders and receivers, yet.
-			double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.size());
+			double numerator = ((double) this.avgPktSize)*((double) (rtpSession.partDb.receiverCount()));
 			double denominator = 0.05 * rtpSession.bandwidth;
 			this.nextDelay = (int) Math.round(1000.0*(numerator/denominator)) + rand;
 		} else {

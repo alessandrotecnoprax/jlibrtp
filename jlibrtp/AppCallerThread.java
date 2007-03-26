@@ -67,13 +67,20 @@ public class AppCallerThread extends Thread {
 
 		    	// Next loop over all participants and check whether they have anything for us.
 				Enumeration set = rtpSession.partDb.getParticipants();
+				
 				while(set.hasMoreElements()) {
 					Participant p = (Participant)set.nextElement();
 					
-					while((p.isSender() || rtpSession.naiveReception) 
+					boolean done = false;
+					while(!done && (p.rtpAddress != null || rtpSession.naiveReception) 
 							&& p.pktBuffer != null && p.pktBuffer.length > 0) {
+						
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
-						appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+						if(aFrame == null) {
+							done = true;
+						} else {
+							appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+						}
 					}
 				}
 		    

@@ -50,9 +50,25 @@ public class RTCPReceiverThread extends Thread {
 			} else if(aPkt.getClass() == RtcpPktSR.class) {
 				RtcpPktSR srPkt = (RtcpPktSR) aPkt;
 				
+				Participant p = rtpSession.partDb.getParticipant(srPkt.ssrc);
+				if(p != null) {
+					if(p.lastNtpTs1 > -1) {
+						//Calculate gradient NTP vs RTP
+
+					} else {
+						// Calculate sum of ntpTs1 and ntpTs2;
+						p.ntpOffset = (srPkt.ntpTs1 - (70*365 + 17)*24*3600)*1000;
+						p.ntpOffset += srPkt.ntpTs2
+					}
+					
+					p.lastNtpTs1 = srPkt.ntpTs1;
+					p.lastNtpTs2 = srPkt.ntpTs2;
+				}
+				
+				
 				if(rtpSession.rtcAppIntf != null) {
-					rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTS1, srPkt.ntpTS2, 
-							srPkt.rtpTS, srPkt.sendersPktCount, srPkt.sendersPktCount );
+					rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+							srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
 				}
 
 				
@@ -76,7 +92,8 @@ public class RTCPReceiverThread extends Thread {
 				
 				for(int i=0; i<byePkt.ssrcArray.length; i++) {
 					partArray[i] = rtpSession.partDb.getParticipant(byePkt.ssrcArray[i]);
-					partArray[i].timestampBYE = time;
+					if(partArray[i] != null)
+						partArray[i].timestampBYE = time;
 				}
 				
 				if(rtpSession.rtcAppIntf != null) {

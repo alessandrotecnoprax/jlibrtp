@@ -23,6 +23,7 @@ import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.concurrent.locks.*;
 import java.util.Random;
@@ -42,7 +43,7 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 1;
+	 final static public int rtpDebugLevel = 15;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -66,8 +67,9 @@ public class RTPSession {
 	 
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
-	 //By default we will call receiveData() only when a new packet arrives.
-	 protected int callbackTimeout = -1;
+	 
+	 //Maximum number of packets used for reordering
+	 protected int maxReorderBuffer = 5;
 	 
 	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
@@ -195,7 +197,7 @@ public class RTPSession {
 		byte[] pktBytes = pkt.encode();
 		
 		// Loop over recipients
-		Iterator iter = partDb.getReceivers();
+		Iterator iter = partDb.getRtpReceivers();
 		
 		// Pre-flight check, are resolving an SSRC conflict?
 		if(this.conflict) {
@@ -257,43 +259,32 @@ public class RTPSession {
 	  *
 	  * @param p A participant.
 	  */
-	public void addParticipant(Participant p) {
-		if(RTPSession.rtpDebugLevel > 1) {
-			System.out.println("<-> RTPSession.addParticipant("+p.cname+ ","+p.ssrc+")");
-		}		
+	public int addParticipant(Participant p) {
+		//if(RTPSession.rtpDebugLevel > 1) {
+		//	System.out.println("<-> RTPSession.addParticipant("+p.cname+ ","+p.ssrc+")");
+		//}		
 		
-		// Check whether the paticipant has an SSRC, if so, update.
-		Participant tmp = null;
-		if(p.ssrc > 0) {
-			tmp = partDb.getParticipant(ssrc);
-			if(tmp != null) {
-				tmp.ssrc = p.ssrc;
-				tmp.isReceiver = p.isReceiver;
-				tmp.isSender = p.isSender;
-				
-				partDb.updateParticipant(tmp);
-			}
+		if(partDb.all.contains(p)) {
+			return -1;
 		}
 		
-		// Otherwise, the participant is presumably known only by cname.
-		Participant tmp2 = null;
-		if(p.cname != null) {
-			tmp2 = partDb.getParticipant(p.cname);
-			if(tmp2 != null) {
-				tmp.cname = p.cname;
-				tmp.isReceiver = p.isReceiver;
-				tmp.isSender = p.isSender;
-				
-				partDb.updateParticipant(tmp2);
-			}
-		}
+		//Check whether this participant already is in the database
+		Enumeration enu = this.partDb.getParticipants();
 		
-		// This is a completely unknown participant.
-		if(tmp == null && tmp2 == null) {
-			partDb.addParticipant(p);
+		while(enu.hasMoreElements()) {
+			Participant tmp = (Participant) enu.nextElement();
 			
-			// Send SDES message
+			if(tmp.rtpAddress == null && tmp.rtpReceivedFromAddress.equals(p.rtpAddress)) {
+				tmp.rtpAddress = p.rtpAddress;
+				tmp.rtcpAddress = p.rtcpAddress;
+				partDb.updateParticipant(tmp);
+				
+				return 1;
+			}
 		}
+		
+		partDb.addParticipant(p);
+		return 0;
 	}
 	
 	 /**
@@ -301,23 +292,8 @@ public class RTPSession {
 	  *
 	  * @param p A participant.
 	  */
-	 void removeParticipant(Participant p) {
+	 public void removeParticipant(Participant p) {
 		partDb.removeParticipant(p);
-	 }
-	 
-	 /**
-	  * Remove a participant from the database. All buffered packets will be destroyed.
-	  *
-	  * @param cname The cname of the participant.
-	  */
-	 public int removeParticipant(String cname) {
-		Participant p = partDb.getParticipant(cname);
-		if(p == null) {
-			partDb.removeParticipant(p);
-			return 0;
-		} else {
-			return -1;
-		}
 	 }
 	 
 	 /**
@@ -325,7 +301,7 @@ public class RTPSession {
 	  * 
 	  * RTCP related threads may require several seconds to wake up and terminate.
 	  */
-	void endSession() {
+	public void endSession() {
 		this.endSession = true;
 	}
 	
@@ -473,21 +449,12 @@ public class RTPSession {
 		return naiveReception;
 	}
 	
-	/**
-	 * The maximum number of milliseconds that should pass before the callback
-	 * interface is called with receiveData(). Note that the actual time
-	 * may vary due to thread scheduling. A negative number will disable this feature.
-	 * 
-	 * @param milliseconds the number of milliseconds to wait before calling receiveData()
-	 * @return the 
-	 */
-	public int setCallbackTimeout(int milliseconds) {
-		if(milliseconds > 0) {
-			callbackTimeout = milliseconds;
+	public void setMaxReorderBuffer(int numberOfPackets) {
+		if(numberOfPackets >= 0) {
+			this.maxReorderBuffer = numberOfPackets;
 		} else {
-			callbackTimeout = -1;
+			this.maxReorderBuffer = -1;
 		}
-		return milliseconds;
 	}
 	
 	/**
@@ -496,8 +463,8 @@ public class RTPSession {
 	 * 
 	 * @return the number of milliseconds that can pass, a negative number means infinite.
 	 */
-	public int callbackTimeout() {
-		return callbackTimeout;
+	public int getMaxReorderBuffer() {
+		return this.maxReorderBuffer;
 	}
 	
 	private int getNextSeqNum() {
@@ -510,7 +477,8 @@ public class RTPSession {
 	}
 	
 	private void createRandom() {
-		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() - Thread.currentThread().hashCode());
+		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() 
+				- Thread.currentThread().hashCode());
 	}
 	
 	private void generateSeqNum() {

@@ -30,7 +30,10 @@ public class Participant {
 	protected boolean isReceiver = false;
 	protected boolean unexpected = false;
 	protected InetSocketAddress rtpAddress = null; 	
-	protected InetSocketAddress rtcpAddress = null; 
+	protected InetSocketAddress rtcpAddress = null;
+	//These are used for matchin SSRC packets without owners
+	protected InetSocketAddress rtpReceivedFromAddress = null;
+	protected InetSocketAddress rtcpReceivedFromAddress = null;
 	
 	// SDES Items
 	protected long ssrc = -1;
@@ -66,9 +69,11 @@ public class Participant {
 	protected long reportedOctetsOffset = -1;
 	protected long receivedPkts = -1;
 	protected long receivedOctets = -1;
-	protected long ntpRelativeOffset = 0; //Offset between our clock and his
-	protected long ntpRtpOffset = 0;	//Offset between his RTP timestamps and his NTP
-	
+	protected double ntpGradient = -1; //Offset between our clock and his
+	protected long ntpOffset = -1;	//Offset between his RTP timestamps and his NTP
+	protected long lastNtpTs1 = -1; //32 bits
+	protected long lastNtpTs2 = -1; //32 bits
+	protected long lastRtpTs = -1; //32 bits
 	// BYE Items
 	protected long timestampBYE = -1;	// The user said BYE at this time
 	
