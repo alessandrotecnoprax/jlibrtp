@@ -62,8 +62,8 @@ public class RTPSession {
 	 //Save the random seed
 	 protected Random random = null;
 	 
-	 //Session bandwidth in bits per second
-	 protected int bandwidth = 64000;
+	 //Session bandwidth in BYTES per second
+	 protected int bandwidth = 8000;
 	 
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
