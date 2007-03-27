@@ -42,7 +42,7 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 2;
+	 final static public int rtpDebugLevel =15;
 	 final static public int rtcpDebugLevel = 10;
 	 
 	 // Network stuff
@@ -339,7 +339,38 @@ public class RTPSession {
 	  */
 	public void endSession() {
 		this.endSession = true;
+		
+		// No more RTP packets, please
+		if(this.mcSession) {
+			this.rtpMCSock.close();
+		} else {
+			this.rtpSock.close();
+		}
+		
+		// Signal the thread that pushes data to application
+		this.pktBufLock.lock();
+		try { this.pktBufDataReady.signalAll(); } finally {
+			this.pktBufLock.unlock();
+		}
+		
+		// Interrupt what may be sleeping
+		this.rtcpSession.senderThrd.interrupt();
+		this.maintThrd.interrupt();
+		this.appCallerThrd.interrupt();
+
+		// Give things a chance to cool down.
+		try { Thread.sleep(10); } catch (Exception e){ };
+		
+		if(this.rtcpSession != null) {		
+			// No more RTP packets, please
+			if(this.mcSession) {
+				this.rtcpSession.rtcpMCSock.close();
+			} else {
+				this.rtcpSession.rtcpSock.close();
+			}
+		}
 	}
+
 	
 	 /**
 	  * Check whether this session is ending.
@@ -368,6 +399,9 @@ public class RTPSession {
 		return this.cname;
 	}
 	
+	public long getSsrc() {
+		return this.ssrc;
+	}
 	private void generateCNAME() {
 		cname = System.getProperty ("user.name") + "@";
 		if(this.mcSession) {
@@ -376,6 +410,7 @@ public class RTPSession {
 			cname += this.rtpSock.getLocalAddress().toString();
 		}
 	}
+	
 	/**
 	 * Change the RTP port of the session. 
 	 * Peers must be notified through SIP or other signalling protocol.

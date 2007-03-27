@@ -149,14 +149,22 @@ public class RTCPReceiverThread extends Thread {
 				try {
 					rtcpSession.rtcpSock.receive(packet);
 				} catch (IOException e) {
-					e.printStackTrace();
+					if(!rtpSession.endSession) {
+						e.printStackTrace();
+					} else {
+						continue;
+					}
 				}
 			} else {
 				//Multicast
 				try {
 					rtcpSession.rtcpMCSock.receive(packet);
 				} catch (IOException e) {
-					e.printStackTrace();
+					if(!rtpSession.endSession) {
+						e.printStackTrace();
+					} else {
+						continue;
+					}
 				}
 			}
 			

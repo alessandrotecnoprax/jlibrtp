@@ -84,7 +84,7 @@ public class AppCallerThread extends Thread {
 			
 		}
 		if(RTPSession.rtpDebugLevel > 3) {
-			System.out.println("<- AppCallerThread.run()");
+			System.out.println("<- AppCallerThread.run() terminating");
 		}  
 	}
 
