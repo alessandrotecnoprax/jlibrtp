@@ -262,34 +262,39 @@ public class RTPSession {
 	  *
 	  * @param p A participant.
 	  */
-	public int addParticipant(Participant p) {
-		//if(RTPSession.rtpDebugLevel > 1) {
-		//	System.out.println("<-> RTPSession.addParticipant("+p.cname+ ","+p.ssrc+")");
-		//}		
-		
+	public int addParticipant(Participant p) {		
 		if(partDb.all.contains(p)) {
+			System.out.println("RTPSession.addParticipant() Can't add existing participant.");
 			return -1;
 		}
 		
-		//Check whether this participant already is in the database
-		Enumeration enu = this.partDb.getParticipants();
-		
-		while(enu.hasMoreElements()) {
-			Participant tmp = (Participant) enu.nextElement();
-			
-			if(tmp.rtpAddress == null && 
-					(tmp.rtpReceivedFromAddress.getAddress().equals(p.rtpAddress.getAddress()) 
-							|| tmp.rtpReceivedFromAddress.getAddress().equals(p.rtcpAddress.getAddress()))) {
-				tmp.rtpAddress = p.rtpAddress;
-				tmp.rtcpAddress = p.rtcpAddress;
-				partDb.updateParticipant(tmp);
-				
-				return 1;
-			}
+		if(p.rtcpAddress == null) {
+			System.out.println("RTPSession.addParticipant() Participant missing InetSocketAdddress");
+			return -1;
+		} else {
+			if(RTPSession.rtpDebugLevel > 1) {
+				System.out.println("<-> RTPSession.addParticipant("+p.rtpAddress.toString()+")");
+			}		
 		}
 		
-		partDb.addParticipant(p);
-		return 0;
+		//Check whether there is a match for this participant in the database
+		Participant tmp = this.partDb.getParticipant(p.rtpAddress.getAddress());
+		if(tmp == null)
+			tmp = this.partDb.getParticipant(p.rtcpAddress.getAddress());
+		
+		if(tmp == null) {
+			// New participant
+			partDb.addParticipant(p);
+			return 0;
+		} else {
+			// We already got an RTP or RTCP packet from this one
+			tmp.rtpAddress = p.rtpAddress;
+			tmp.rtcpAddress = p.rtcpAddress;
+			tmp.unexpected = false;
+			partDb.updateParticipant(tmp);
+				
+			return 1;
+		}
 	}
 	
 	 /**

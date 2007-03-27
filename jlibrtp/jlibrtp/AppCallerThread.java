@@ -18,7 +18,7 @@
  */
 package jlibrtp;
 
-import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 /**
  * The purpose of this thread is to check whether there are packets ready from 
@@ -56,20 +56,14 @@ public class AppCallerThread extends Thread {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
 				
-				// Check whether the application has defined a maximum timeout.
-				//if(rtpSession.callbackTimeout > 0) {
-				//	try { rtpSession.pktBufDataReady.await(rtpSession.callbackTimeout, TimeUnit.MILLISECONDS); } 
-				//	catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-				//}else{
-					try { rtpSession.pktBufDataReady.await(); } 
+				try { rtpSession.pktBufDataReady.await(); } 
 					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-				//}
 
 		    	// Next loop over all participants and check whether they have anything for us.
-				Enumeration set = rtpSession.partDb.getParticipants();
+				Iterator iter = rtpSession.partDb.getParticipants();
 				
-				while(set.hasMoreElements()) {
-					Participant p = (Participant)set.nextElement();
+				while(iter.hasNext()) {
+					Participant p = (Participant) iter.next();
 					
 					boolean done = false;
 					while(!done && (p.rtpAddress != null || rtpSession.naiveReception) 
