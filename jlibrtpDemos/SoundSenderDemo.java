@@ -92,7 +92,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		}
 	}
 	
-	public void receiveData(byte[] dummy1, String dummy2, long dummy3) {
+	public void receiveData(byte[] dummy1, Participant dummy2, long dummy3) {
 		// We don't expect any data.
 	}
 	

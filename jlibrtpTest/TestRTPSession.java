@@ -29,9 +29,9 @@ public class TestRTPSession implements RTPAppIntf {
 	}
 	
 	
-	public void receiveData(byte[] buff, String Cname, long time) {
+	public void receiveData(byte[] buff, Participant p, long time) {
 	String s = new String(buff);
-		System.out.println("The Data has been received: "+s+ " , thank you " + Cname);
+		System.out.println("The Data has been received: "+s+" , thank you "+p.getCNAME()+"("+p.getSSRC()+")");
 	}
 	
 	public static void main(String[] args) {
