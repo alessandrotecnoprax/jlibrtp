@@ -26,9 +26,10 @@ import java.net.InetAddress;
  * these objects, packets are processed and statistics generated for RTCP.
  */
 public class Participant {
-	protected boolean isSender = false;
+	//protected boolean isSender = false;
 	protected boolean isReceiver = false;
 	protected boolean unexpected = false;
+	protected boolean persistent = false;
 	protected InetSocketAddress rtpAddress = null; 	
 	protected InetSocketAddress rtcpAddress = null;
 	//These are used for matchin SSRC packets without owners
@@ -57,23 +58,24 @@ public class Participant {
 	protected double interArrivalJitter = -1.0;
 	protected long lastRtpTimestamp = -1;
 	
-	//protected long prevDelay = -1;
-	
-	protected long timeStampLSR = -1;		//The timestamp of the last SR
+	protected long timeStampLSR = -1;		//Middle 32 bits of the NTP timestamp in the last SR
 	protected long timeReceivedLSR = -1; 	//The time when we actually got it
 	
 	// Sender Report Items
-	protected long reportedPkts = -1;
-	protected long reportedOctets = -1;
-	protected long reportedPktsOffset = -1;
-	protected long reportedOctetsOffset = -1;
+	//protected long reportedPkts = -1;
+	//protected long reportedOctets = -1;
+	//protected long reportedPktsOffset = -1;
+	//protected long reportedOctetsOffset = -1;
 	protected long receivedPkts = -1;
 	protected long receivedOctets = -1;
-	protected double ntpGradient = -1; //Offset between our clock and his
-	protected long ntpOffset = -1;	//Offset between his RTP timestamps and his NTP
+	
+	protected double ntpGradient = -1; // How many ms for each RTP time unit
+	protected long ntpOffset = -1;	// NTP offset in ms, compared to our system time
+	
 	protected long lastNtpTs1 = -1; //32 bits
 	protected long lastNtpTs2 = -1; //32 bits
-	protected long lastRtpTs = -1; //32 bits
+	protected long lastSRRtpTs = -1; //32 bits
+	
 	// BYE Items
 	protected long timestampBYE = -1;	// The user said BYE at this time
 	
@@ -81,7 +83,9 @@ public class Participant {
 	protected PktBuffer pktBuffer = null;
 
 	//To check whether this participant has sent anything recently
-	protected long lastRtpPkt = -1; //Timestamp of last RTP packet
+	protected long lastRtpPkt = -1; //Time of last RTP packet
+	protected long lastRtcpPkt = -1; //Time of last RTCP packet
+	protected long addedByApp = -1; //Time the participant was added by application
 	protected long lastRtcpRRPkt = -1; //Timestamp of last time we sent this person an RR packet
 	protected long secondLastRtcpRRPkt = -1; //Timestamp of 2nd to last time we sent this person an RR Packet
 	
@@ -106,7 +110,7 @@ public class Participant {
 			} catch (Exception e) {
 				System.out.println("Couldn't resolve " + networkAddress);
 			}
-			isReceiver = true;
+			//isReceiver = true;
 		}
 		
 		// RTCP 
@@ -119,7 +123,7 @@ public class Participant {
 		}
 		
 		//By default this is a sender
-		isSender = true;
+		//isSender = true;
 	}
 	
 	// We got a packet, but we don't know this person yet.
@@ -135,18 +139,18 @@ public class Participant {
 	 * 
 	 * @param doesSend true if we expect packets from this participant.
 	 */
-	public void isSender(boolean doesSend) {
-		isSender = doesSend;
-	}
+	//public void isSender(boolean doesSend) {
+	//	isSender = doesSend;
+	//}
 
 	/**
 	 * Check whether we expect packets from this participant or not.
 	 * 
 	 * @return true if we expect packets from this source.
 	 */
-	public boolean isSender() {
-		return isSender;
-	}
+	//public boolean isSender() {
+	//	return isSender;
+	//}
 	
 	/**
 	 * Toggle whether this participant should receive packets from us or not.
@@ -293,6 +297,28 @@ public class Participant {
 	
 	protected double getInterArrivalJitter() {
 		return this.interArrivalJitter;
+	}
+	
+	protected void setTimeStampLSR(long ntp1, long ntp2) {
+		// Use what we've got
+		byte[] high = StaticProcs.uIntLongToByteWord(ntp1);
+		byte[] low = StaticProcs.uIntLongToByteWord(ntp2);
+		low[3] = low[1];
+		low[2] = low[0];
+		low[1] = high[3];
+		low[0] = high[2];
+		
+		this.timeStampLSR = StaticProcs.bytesToUIntLong(low, 0);
+	}
+	
+	protected long delaySinceLastSR() {
+		if(this.timeReceivedLSR < 1) 
+			return 0;
+			
+		long delay = System.currentTimeMillis() - this.timeReceivedLSR;
+		
+		//Convert ms into 1/65536s = 1/65.536ms
+		return (long) ((double)delay / 65.536);
 	}
 	
 	public void debugPrint() {

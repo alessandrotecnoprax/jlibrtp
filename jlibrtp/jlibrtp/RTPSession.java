@@ -23,7 +23,6 @@ import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.concurrent.locks.*;
 import java.util.Random;
@@ -72,6 +71,9 @@ public class RTPSession {
 	 //Maximum number of packets used for reordering
 	 protected int maxReorderBuffer = 5;
 	 
+	 //Milliseconds between Participant database cleanups, 100s
+	 protected long maintenanceInterval = 100000;
+	 
 	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
 	 // Handles to application
@@ -81,6 +83,7 @@ public class RTPSession {
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
+	 protected MaintenanceThread maintThrd = null;
 	 
 	 // Locks
 	 final protected Lock pktBufLock = new ReentrantLock();
@@ -169,6 +172,8 @@ public class RTPSession {
 			this.rtcAppIntf = rtcpApp;
 			recvThrd = new RTPReceiverThread(this);
 			appCallerThrd = new AppCallerThread(this, rtpApp);
+			if(this.maintenanceInterval > 0)
+				maintThrd = new MaintenanceThread(this);
 			recvThrd.start();
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
@@ -181,10 +186,21 @@ public class RTPSession {
 	  * Send data to all participants registered as receivers, using the current timeStamp and
 	  * payload type.
 	  * 
-	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.	
+	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
 	  * @return	-1 if there was a problem sending the data, 0 otherwise.
 	  */
 	 public int sendData(byte[] buf) {
+		 return this.sendData(buf, null);
+	 }
+	 /**
+	  * Send data to all participants registered as receivers, using the current timeStamp and
+	  * payload type.
+	  * 
+	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
+	  * @param csrcArray an array with the SSRCs of contributing sources
+	  * @return	-1 if there was a problem sending the data, 0 otherwise.
+	  */
+	 public int sendData(byte[] buf, long[] csrcArray) {
 		if(RTPSession.rtpDebugLevel > 5) {
 				System.out.println("-> RTPSession.sendData(byte[])");
 		}
@@ -195,6 +211,10 @@ public class RTPSession {
 		
 		// Create a new RTP Packet
 		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),this.ssrc,getNextSeqNum(),this.payloadType,buf);
+		
+		if(csrcArray != null) {
+			pkt.setCsrcs(csrcArray);
+		}
 		
 		// Creates a raw packet
 		byte[] pktBytes = pkt.encode();
@@ -262,7 +282,11 @@ public class RTPSession {
 	  *
 	  * @param p A participant.
 	  */
-	public int addParticipant(Participant p) {		
+	public int addParticipant(Participant p) {
+		//For now we make all participants added this way persistent
+		p.persistent = true;
+		p.isReceiver = true;
+		
 		if(partDb.all.contains(p)) {
 			System.out.println("RTPSession.addParticipant() Can't add existing participant.");
 			return -1;
@@ -284,6 +308,7 @@ public class RTPSession {
 		
 		if(tmp == null) {
 			// New participant
+			p.addedByApp = System.currentTimeMillis();
 			partDb.addParticipant(p);
 			return 0;
 		} else {
@@ -291,6 +316,7 @@ public class RTPSession {
 			tmp.rtpAddress = p.rtpAddress;
 			tmp.rtcpAddress = p.rtcpAddress;
 			tmp.unexpected = false;
+			tmp.addedByApp = System.currentTimeMillis();
 			partDb.updateParticipant(tmp);
 				
 			return 1;
@@ -357,15 +383,15 @@ public class RTPSession {
 	 * 
 	 * @param rtpPort integer for new port number, check it is free first.
 	 */
-	//public int updateRTPSock(int rtpPort) throws Exception {
-	//	if(!mcSession) {
-	//		 rtpSock = new DatagramSocket(rtpPort);
-	//		 return 0;
-	//	} else {
-	//		System.out.println("Can't switch from multicast to unicast.");
-	//		return -1;
-	//	}
-	//}
+	public int updateRTPSock(DatagramSocket newSocket) {
+		if(!mcSession) {
+			 rtpSock = newSocket;
+			 return 0;
+		} else {
+			System.out.println("Can't switch from multicast to unicast.");
+			return -1;
+		}
+	}
 	
 	/**
 	 * Change the RTCP port of the session. 
@@ -374,15 +400,15 @@ public class RTPSession {
 	 * 
 	 * @param rtcpPort integer for new port number, check it is free first.
 	 */
-	//public int updateRTCPSock(int rtcpPort) throws Exception {
-	//	if(mcSession) {
-	//		 rtpSock = new DatagramSocket(rtcpPort);
-	//		 return 0;
-	//	} else {
-	//		System.out.println("Can't switch from multicast to unicast.");
-	//		return -1;
-	//	}
-	//}
+	public int updateRTCPSock(DatagramSocket newSocket) {
+		if(!mcSession) {
+			this.rtcpSession.rtcpSock = newSocket;
+			return 0;
+		} else {
+			System.out.println("Can't switch from multicast to unicast.");
+			return -1;
+		}
+	}
 	
 	/**
 	 * Change the RTP multicast socket of the session. 
@@ -408,15 +434,15 @@ public class RTPSession {
 	 * 
 	 * @param rtcpSock the new multicast socket for RTCP communication.
 	 */
-	//public int updateRTCPSock(MulticastSocket rtcpSock) {
-	//	if(mcSession) {
-	//		 rtcpMCSock = rtcpSock;
-	//		 return 0;
-	//	} else {
-	//		System.out.println("Can't switch from unicast to multicast.");
-	//		return -1;
-	//	}
-	//}
+	public int updateRTCPSock(MulticastSocket newSock) {
+		if(mcSession) {
+			this.rtpMCSock = newSock;
+			return 0;
+		} else {
+			System.out.println("Can't switch from unicast to multicast.");
+			return -1;
+		}
+	}
 	
 	/**
 	 * Update the payload type used for the session. It is represented as a 7 bit integer, whose meaning must be negotiated elsewhere (see IETF RFCs <a href="http://www.ietf.org/rfc/rfc3550.txt">3550</a> and <a href="http://www.ietf.org/rfc/rfc3550.txt">3551</a>)
@@ -476,6 +502,29 @@ public class RTPSession {
 	public int getMaxReorderBuffer() {
 		return this.maxReorderBuffer;
 	}
+	
+	public long getMaintenanceInterval() {
+		return this.maintenanceInterval;
+	}
+	
+	public long setMaintenanceInterval(long time) {
+		if(time > 0) {
+			if(this.maintenanceInterval > 0) {
+				//Just update existing thread
+				this.maintenanceInterval = time;
+			} else {
+				//Spawn a new thread
+				this.maintenanceInterval = time;
+				maintThrd = new MaintenanceThread(this);
+			}
+			return 0;
+		} else {
+			//No need to go that far below zero
+			this.maintenanceInterval = -1;
+			return -1;
+		}
+	}
+	
 	
 	private int getNextSeqNum() {
 		seqNum++;

@@ -26,6 +26,8 @@ public class RTCPReceiverThread extends Thread {
 		//Loop over the information
 		Iterator iter = compPkt.rtcpPkts.iterator();
 		
+		long curTime = System.currentTimeMillis();
+		
 		while(iter.hasNext()) {
 			RtcpPkt aPkt = (RtcpPkt) iter.next();
 			
@@ -41,6 +43,9 @@ public class RTCPReceiverThread extends Thread {
 			if(	aPkt.getClass() == RtcpPktRR.class) {
 				RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
 				
+				Participant p = rtpSession.partDb.getParticipant(rrPkt.ssrc);
+				p.lastRtcpPkt = curTime;
+					
 				if(rtpSession.rtcAppIntf != null) {
 					rtpSession.rtcAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
 							rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
@@ -52,31 +57,34 @@ public class RTCPReceiverThread extends Thread {
 				RtcpPktSR srPkt = (RtcpPktSR) aPkt;
 				
 				Participant p = rtpSession.partDb.getParticipant(srPkt.ssrc);
+				p.lastRtcpPkt = curTime;
+				
 				if(p != null) {
-					if(p.lastNtpTs1 > -1) {
+					
+					if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
 						//Calculate gradient NTP vs RTP
-
-					} else {
-						// Calculate sum of ntpTs1 and ntpTs2;
-						//Recover the seconds
-						p.ntpOffset = (srPkt.ntpTs1 - (70*365 + 17)*24*3600)*1000;	
-						double tmp = (double) Integer.MAX_VALUE*2;
-						//Recover the milliseconds
-						tmp = (tmp * 1000.0) / (srPkt.ntpTs2);
+						long newTime = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
 						
-						if(tmp > 1025) {
-							System.out.println(" RTCPReceiverThread: There's a bug in the NTP code.");
-						} else {
-							p.ntpOffset += tmp;
-						}
+						p.ntpGradient = ((double) (newTime - p.ntpOffset))/((double) srPkt.rtpTs - p.lastSRRtpTs);
+					} else if(p.ntpOffset < 0) {
+						// Calculate sum of ntpTs1 and ntpTs2 in milliseconds
+						p.ntpOffset = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
+						
+						// For calculating the gradient of NTP time vs RTP time
+						p.lastNtpTs1 = srPkt.ntpTs1;
+						p.lastNtpTs2 = srPkt.ntpTs2;
+						p.lastSRRtpTs = srPkt.rtpTs;
 					}
 					
-					p.lastNtpTs1 = srPkt.ntpTs1;
-					p.lastNtpTs2 = srPkt.ntpTs2;
+					// For the next RR
+					p.timeReceivedLSR = curTime;
+					p.setTimeStampLSR(srPkt.ntpTs1,srPkt.ntpTs2);
+					
 				}
 				
 				
 				if(rtpSession.rtcAppIntf != null) {
+					// Should also return attached RRs
 					rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
 							srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
 				}
@@ -155,9 +163,9 @@ public class RTCPReceiverThread extends Thread {
 			// Check whether this is one of our own
 			if( (rtpSession.mcSession && ! packet.getSocketAddress().equals(rtcpSession.rtcpMCSock) )
 					|| ! packet.getSocketAddress().equals(rtcpSession.rtcpSock) ) {
-				rtpSession.partDb.debugPrint();
+				//rtpSession.partDb.debugPrint();
 				parsePacket(packet, rawPkt);
-				rtpSession.partDb.debugPrint();
+				//rtpSession.partDb.debugPrint();
 			}			
 		}
 		if(RTPSession.rtcpDebugLevel > 1) {

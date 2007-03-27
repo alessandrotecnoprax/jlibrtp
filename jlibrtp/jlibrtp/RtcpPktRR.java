@@ -128,7 +128,7 @@ public class RtcpPktRR extends RtcpPkt {
 		
 			// Delay since last sender report received, in terms of 1/655536 s = 0.02 ms
 			if(reportees[i].timeReceivedLSR > 0) {
-				someBytes = StaticProcs.uIntLongToByteWord((System.currentTimeMillis() - reportees[i].timeStampLSR) / (1000*655536));
+				someBytes = StaticProcs.uIntLongToByteWord(reportees[i].delaySinceLastSR());
 			} else {
 				someBytes = StaticProcs.uIntLongToByteWord(0);
 			}
