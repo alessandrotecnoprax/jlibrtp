@@ -275,6 +275,7 @@ public class Participant {
 		} else {
 			fraction = 0;
 		}
+		
 		//Clear counters 
 		receivedSinceLastSR = 0;
 		lastSRRseqNumber = lastSeqNumber;

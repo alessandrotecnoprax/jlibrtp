@@ -41,7 +41,7 @@ public class ParticipantDatabase {
 	Hashtable ssrcTable = new Hashtable();
 	Hashtable ipTable = new Hashtable();
 	HashMap<InetSocketAddress, Integer> rtpReceivers = new HashMap<InetSocketAddress, Integer>();
-	HashMap<InetSocketAddress, Integer> rtcpReceivers = new HashMap<InetSocketAddress, Integer>();
+	//HashMap<InetSocketAddress, Integer> rtcpReceivers = new HashMap<InetSocketAddress, Integer>();
 	HashSet<Participant> all = new HashSet<Participant>();
 	
 	int senderCount = 0;
@@ -80,16 +80,16 @@ public class ParticipantDatabase {
 			}
 
 			// Add to RTCP receivers?
-			if(p.rtcpAddress != null) {
-				Integer anInt = rtcpReceivers.get(p.rtcpAddress);
-				if(anInt != null) {
-					anInt = new Integer(anInt.intValue() + 1);
-					rtcpReceivers.put(p.rtcpAddress, anInt);
-				} else {
-					anInt = new Integer(1);
-					rtcpReceivers.put(p.rtcpAddress, anInt);
-				}
-			}
+			//if(p.rtcpAddress != null) {
+			//	Integer anInt = rtcpReceivers.get(p.rtcpAddress);
+			//	if(anInt != null) {
+			//		anInt = new Integer(anInt.intValue() + 1);
+			//		rtcpReceivers.put(p.rtcpAddress, anInt);
+			//	} else {
+			//		anInt = new Integer(1);
+			//		rtcpReceivers.put(p.rtcpAddress, anInt);
+			//	}
+			//}
 		}
 		return 0;
 	}
@@ -121,17 +121,17 @@ public class ParticipantDatabase {
 			}
 
 			// Remove from RCTP receivers?
-			if(p.rtcpAddress != null) {
-				Integer anInt = rtcpReceivers.get(p.rtcpAddress);
-				if(anInt != null) {
-					if(anInt.intValue() > 1) {
-						anInt = new Integer(anInt.intValue() - 1);
-						rtcpReceivers.put(p.rtcpAddress, anInt);
-					} else {
-						rtcpReceivers.remove(p.rtcpAddress);
-					}
-				}
-			}
+			//if(p.rtcpAddress != null) {
+			//	Integer anInt = rtcpReceivers.get(p.rtcpAddress);
+			//	if(anInt != null) {
+			//		if(anInt.intValue() > 1) {
+			//			anInt = new Integer(anInt.intValue() - 1);
+			//			rtcpReceivers.put(p.rtcpAddress, anInt);
+			//		} else {
+			//			rtcpReceivers.remove(p.rtcpAddress);
+			//		}
+			//	}
+			//}
 		}
 
 	}
@@ -168,17 +168,17 @@ public class ParticipantDatabase {
 		return p; 
 	}
 	
-	protected Enumeration getParticipants() {
-		return ssrcTable.elements();
+	protected Iterator getParticipants() {
+		return all.iterator();
 	}
 	
 	protected Iterator getRtpReceivers() {
 		return rtpReceivers.keySet().iterator();
 	}
 	
-	protected Iterator getRtcpReceivers() {
-		return rtpReceivers.keySet().iterator();
-	}
+	//protected Iterator getRtcpReceivers() {
+	//	return rtpReceivers.keySet().iterator();
+	//}
 	
 	protected int receiverCount() {
 		return rtpReceivers.size();
@@ -210,12 +210,12 @@ public class ParticipantDatabase {
 			Integer anInt = rtpReceivers.get(inetAdr);
 			System.out.println("           rtpReceivers: "+inetAdr.toString() + "  count:" + anInt.intValue());
 		}
-		aSet = rtcpReceivers.keySet();
-		iter = aSet.iterator();
-		while(iter.hasNext()) {
-			InetSocketAddress inetAdr = (InetSocketAddress) iter.next();
-			Integer anInt = rtcpReceivers.get(inetAdr);
-			System.out.println("           rtcpReceivers: "+inetAdr.toString() + "  count:" + anInt.intValue());
-		}
+		//aSet = rtcpReceivers.keySet();
+		//iter = aSet.iterator();
+		//while(iter.hasNext()) {
+		//	InetSocketAddress inetAdr = (InetSocketAddress) iter.next();
+		//	Integer anInt = rtcpReceivers.get(inetAdr);
+		//	System.out.println("           rtcpReceivers: "+inetAdr.toString() + "  count:" + anInt.intValue());
+		//}
 	}
 }
