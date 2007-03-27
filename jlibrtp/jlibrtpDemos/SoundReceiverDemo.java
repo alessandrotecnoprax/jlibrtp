@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package receiverDemo;
+package jlibrtpDemos;
 
 import java.net.DatagramSocket;
 
@@ -32,7 +32,7 @@ import jlibrtp.*;
 /**
  * @author Arne Kepp
  */
-public class ReceiverDemo implements RTPAppIntf {
+public class SoundReceiverDemo implements RTPAppIntf {
 	//test
 	RTPSession rtpSession = null;
 	private Position curPosition;
@@ -56,7 +56,7 @@ public class ReceiverDemo implements RTPAppIntf {
 		pktCount++;
 	}
 	
-	public ReceiverDemo(String CNAME,int recvPort)  {
+	public SoundReceiverDemo(String CNAME,int recvPort)  {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;
 		
@@ -81,7 +81,7 @@ public class ReceiverDemo implements RTPAppIntf {
 	 */
 	public static void main(String[] args) {
 		System.out.println("Setup");
-		ReceiverDemo aDemo = new ReceiverDemo("Test",4545);
+		SoundReceiverDemo aDemo = new SoundReceiverDemo("Test",4545);
 		aDemo.doStuff();
 		System.out.println("Done");
 	}

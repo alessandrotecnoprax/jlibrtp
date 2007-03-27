@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package senderDemo;
+package jlibrtpDemos;
 
 
 import java.io.File;
@@ -37,7 +37,7 @@ import jlibrtp.*;
 /**
  * @author Arne Kepp
  */
-public class SenderDemo implements RTPAppIntf  {
+public class SoundSenderDemo implements RTPAppIntf  {
 	public RTPSession rtpSession = null;
 	static int pktCount = 0;
 	private String filename;
@@ -49,7 +49,7 @@ public class SenderDemo implements RTPAppIntf  {
 		LEFT, RIGHT, NORMAL
 	};
 	
-	public SenderDemo(boolean isLocal)  {
+	public SoundSenderDemo(boolean isLocal)  {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;
 		
@@ -83,7 +83,7 @@ public class SenderDemo implements RTPAppIntf  {
 		if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
 			local = false;
 		}
-		SenderDemo aDemo = new SenderDemo(local);
+		SoundSenderDemo aDemo = new SoundSenderDemo(local);
 		Participant p = new Participant("127.0.0.1",6002, 6003);
 		aDemo.rtpSession.addParticipant(p);
 		aDemo.filename = args[0];
