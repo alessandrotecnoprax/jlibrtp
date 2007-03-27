@@ -62,8 +62,8 @@ public class RTPSession {
 	 //Save the random seed
 	 protected Random random = null;
 	 
-	 //Session bandwidth
-	 protected int bandwidth = 72000;
+	 //Session bandwidth in bits per second
+	 protected int bandwidth = 64000;
 	 
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
@@ -417,15 +417,15 @@ public class RTPSession {
 	 * 
 	 * @param rtpSock the new multicast socket for RTP communication.
 	 */
-	//public int updateRTPSock(MulticastSocket rtpSock) {
-	//	if(mcSession) {
-	//		 rtpMCSock = rtpSock;
-	//		 return 0;
-	//	} else {
-	//		System.out.println("Can't switch from unicast to multicast.");
-	//		return -1;
-	//	}
-	//}
+	public int updateRTPSock(MulticastSocket newSock) {
+		if(mcSession) {
+			 this.rtpMCSock = newSock;
+			 return 0;
+		} else {
+			System.out.println("Can't switch from unicast to multicast.");
+			return -1;
+		}
+	}
 	
 	/**
 	 * Change the RTCP multicast socket of the session. 
@@ -436,7 +436,7 @@ public class RTPSession {
 	 */
 	public int updateRTCPSock(MulticastSocket newSock) {
 		if(mcSession) {
-			this.rtpMCSock = newSock;
+			this.rtcpSession.rtcpMCSock = newSock;
 			return 0;
 		} else {
 			System.out.println("Can't switch from unicast to multicast.");
