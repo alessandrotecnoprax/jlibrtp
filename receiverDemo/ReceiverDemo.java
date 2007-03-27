@@ -61,8 +61,8 @@ public class ReceiverDemo implements RTPAppIntf {
 		DatagramSocket rtcpSocket = null;
 		
 		try {
-			rtpSocket = new DatagramSocket(6002);
-			rtcpSocket = new DatagramSocket(6003);
+			rtpSocket = new DatagramSocket(6003);
+			rtcpSocket = new DatagramSocket(6013);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port");
 		}
