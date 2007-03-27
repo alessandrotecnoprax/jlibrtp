@@ -146,21 +146,14 @@ public class RTCPSenderThread extends Thread {
 			
 			// Get user stats
 			if(! iter.hasNext()) {
-				
-				// Check iterator
-				// TODO Change to rtcpReceivers
 				iter = rtpSession.partDb.getParticipants();
-				
-				if(! iter.hasNext()) {
-					//Still no participants, take a break
-					continue;
-				}
 			}
 			
+			//Grab the next person
 			Participant part = (Participant) iter.next();
 			
-			//Verify that this is someone we want to communicate with
-			while(part.unexpected && iter.hasNext()) {
+			//Find someone we actually want to communicate with
+			while((part.rtcpAddress == null || part.unexpected) && iter.hasNext()) {
 				part = (Participant) iter.next();
 			}
 			

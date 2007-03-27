@@ -83,9 +83,7 @@ public class ValidateRtcpPkt {
 		rtpSession.loc = "right here";
 		sdespkt.encode();
 		byte[] rawpkt = sdespkt.rawPkt;
-		//String test2 = new String(rawpkt);
-		//System.out.println(test2);
-		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
+		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, 0, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
 		decsdespkt.debugPrint();
 		partDb.debugPrint();
 		
@@ -97,7 +95,7 @@ public class ValidateRtcpPkt {
 		byepkt.encode();
 		rawpkt = byepkt.rawPkt;
 		
-		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpkt);
+		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpkt,0);
 		byepkt2 .debugPrint();
 
 	}

@@ -42,8 +42,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel =15;
-	 final static public int rtcpDebugLevel = 10;
+	 final static public int rtpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 15;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -172,12 +172,11 @@ public class RTPSession {
 			this.rtcAppIntf = rtcpApp;
 			recvThrd = new RTPReceiverThread(this);
 			appCallerThrd = new AppCallerThread(this, rtpApp);
-			if(this.maintenanceInterval > 0)
-				maintThrd = new MaintenanceThread(this);
+			//if(this.maintenanceInterval > 0)
+			//	maintThrd = new MaintenanceThread(this);
 			recvThrd.start();
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
-			System.out.println("mcSession: " + this.mcSession);
 		 	return 0;
 		}
 	}
@@ -355,7 +354,7 @@ public class RTPSession {
 		
 		// Interrupt what may be sleeping
 		this.rtcpSession.senderThrd.interrupt();
-		this.maintThrd.interrupt();
+		//this.maintThrd.interrupt();
 		this.appCallerThrd.interrupt();
 
 		// Give things a chance to cool down.

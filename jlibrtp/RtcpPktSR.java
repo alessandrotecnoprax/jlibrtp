@@ -16,29 +16,34 @@ public class RtcpPktSR extends RtcpPkt {
 		sendersOctCount = octCount;
 	}
 	
-	protected RtcpPktSR(byte[] aRawPkt) {
+	protected RtcpPktSR(byte[] aRawPkt, int start, int length) {
 		if(RTPSession.rtpDebugLevel > 9) {
 				System.out.println("  -> RtcpPktSR(rawPkt)");
 		}
 		
 		super.rawPkt = aRawPkt;
 
-		if(!super.parseHeaders() || packetType != 200 || super.length < 28) {
+		if(!super.parseHeaders(start) || packetType != 200) {
 			if(RTPSession.rtpDebugLevel > 2) {
-				System.out.println(" <-> RtcpPktSR.parseHeaders() etc. problem: "+ (!super.parseHeaders() ) + " " + packetType + " " + super.length);
+				System.out.println(" <-> RtcpPktSR.parseHeaders() etc. problem: "+ (!super.parseHeaders(start) ) + " " + packetType + " " + super.length);
 			}
 			this.problem = 1;
 		} else {
-			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
-			ntpTs1 = StaticProcs.bytesToUIntLong(aRawPkt,8);
-			ntpTs2 = StaticProcs.bytesToUIntLong(aRawPkt,12);
-			rtpTs = StaticProcs.bytesToUIntLong(aRawPkt,16);
-			sendersPktCount = StaticProcs.bytesToUIntLong(aRawPkt,20);
-			sendersOctCount = StaticProcs.bytesToUIntLong(aRawPkt,24);
+			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
+			if(length > 11)
+				ntpTs1 = StaticProcs.bytesToUIntLong(aRawPkt,8+start);
+			if(length > 15)
+				ntpTs2 = StaticProcs.bytesToUIntLong(aRawPkt,12+start);
+			if(length > 19)
+				rtpTs = StaticProcs.bytesToUIntLong(aRawPkt,16+start);
+			if(length > 23)
+				sendersPktCount = StaticProcs.bytesToUIntLong(aRawPkt,20+start);
+			if(length > 27)
+				sendersOctCount = StaticProcs.bytesToUIntLong(aRawPkt,24+start);
 			
 			// RRs attached?
 			if(itemCount > 0) {
-				rReports = new RtcpPktRR(rawPkt,itemCount);
+				rReports = new RtcpPktRR(rawPkt,start,itemCount);
 			}
 		}
 		
@@ -98,7 +103,8 @@ public class RtcpPktSR extends RtcpPkt {
 		System.arraycopy(someBytes, 0, super.rawPkt, 24, 4);
 		
 		if(RTPSession.rtpDebugLevel > 9) {
-			System.out.println("  <- RtcpPktSR.encode() longs!: ntpTs1: "+ ntpTs1 + " ntpTs2: " + ntpTs2);
+			System.out.println("  <- RtcpPktSR.encode() ntpTs1: "
+					+ Long.toString(ntpTs1) + " ntpTs2: " + Long.toString(ntpTs2));
 		}
 	}
 

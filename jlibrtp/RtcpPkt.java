@@ -37,15 +37,15 @@ public class RtcpPkt {
 	// Contains the actual data (eventually)
 	protected byte[] rawPkt = null;
 	
-	protected boolean parseHeaders() {
-		version = ((rawPkt[0] & 0xC0) >>> 6);
-		padding = ((rawPkt[0] & 0x20) >>> 5);
-		itemCount = (rawPkt[0] & 0x1F);
-		packetType = (int) rawPkt[1];
+	protected boolean parseHeaders(int start) {
+		version = ((rawPkt[start+0] & 0xC0) >>> 6);
+		padding = ((rawPkt[start+0] & 0x20) >>> 5);
+		itemCount = (rawPkt[start+0] & 0x1F);
+		packetType = (int) rawPkt[start+1];
 		if(packetType < 0) {
 			packetType += 256;
 		}
-		length = StaticProcs.bytesToUIntInt(rawPkt, 2);
+		length = StaticProcs.bytesToUIntInt(rawPkt, start+2);
 		
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println(" <-> RtcpPkt.parseHeaders() version:"+version+" padding:"+padding+" itemCount:"+itemCount

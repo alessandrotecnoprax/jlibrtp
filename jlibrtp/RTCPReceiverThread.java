@@ -19,105 +19,144 @@ public class RTCPReceiverThread extends Thread {
 
 	}
 	
-	private void parsePacket(DatagramPacket packet, byte[] rawPkt) {
-		// Parse the received compound RTCP (?) packet
-		CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), (InetSocketAddress) packet.getSocketAddress(), rtpSession.partDb);
-		
-		//Loop over the information
-		Iterator iter = compPkt.rtcpPkts.iterator();
-		
-		long curTime = System.currentTimeMillis();
-		
-		while(iter.hasNext()) {
-			RtcpPkt aPkt = (RtcpPkt) iter.next();
-			
-			// Our own packets should already have been filtered out.
-			if(aPkt.ssrc == rtpSession.ssrc) {
-				System.out.println("RTCPReceiverThread() received RTCP packet" 
-						+ " with conflicting SSRC from " + packet.getSocketAddress().toString());
-				rtpSession.resolveSsrcConflict();
-				return;
+	private Participant findParticipant(long ssrc, DatagramPacket packet) {
+		Participant p = rtpSession.partDb.getParticipant(ssrc);
+		if(p == null) {
+			Iterator iter = rtpSession.partDb.getParticipants();
+			while(iter.hasNext()) {
+				Participant tmp = (Participant) iter.next();
+				if(tmp.ssrc < 0 && 
+						(tmp.rtcpAddress.getAddress().equals(packet.getAddress())
+						|| tmp.rtpAddress.getAddress().equals(packet.getAddress()))) {
+					
+					// Buest guess
+					System.out.println("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
+							+ ssrc  + " @" + packet.getAddress().toString() + ", WAS able to match it." );
+					
+					tmp.ssrc = ssrc;
+					return tmp;
+				}
 			}
+			// Create an unknown sender
+			System.out.println("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
+					+ ssrc  + " @" + packet.getAddress().toString() + ", was NOT able to match it." );
+			p = new Participant((InetSocketAddress) null, (InetSocketAddress) packet.getSocketAddress(), ssrc);
+			rtpSession.partDb.addParticipant(p);
+		}
+		return p;
+	}
+	
+	private int parsePacket(DatagramPacket packet) {
+
+		if(packet.getLength() % 4 != 0) {
+			if(RTPSession.rtcpDebugLevel > 2) {
+				System.out.println("RTCPReceiverThread.parsePacket got packet that had length " + packet.getLength());
+			}
+			return -1;
+		} else {
+			byte[] rawPkt = packet.getData();
 			
-			/**        Receiver Reports        **/
-			if(	aPkt.getClass() == RtcpPktRR.class) {
-				RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
-				
-				Participant p = rtpSession.partDb.getParticipant(rrPkt.ssrc);
-				p.lastRtcpPkt = curTime;
-					
-				if(rtpSession.rtcAppIntf != null) {
-					rtpSession.rtcAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
-							rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
-							rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
+			// Parse the received compound RTCP (?) packet
+			CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), 
+					(InetSocketAddress) packet.getSocketAddress(), rtpSession.partDb);
+
+			//Loop over the information
+			Iterator iter = compPkt.rtcpPkts.iterator();
+
+			long curTime = System.currentTimeMillis();
+
+			while(iter.hasNext()) {
+				RtcpPkt aPkt = (RtcpPkt) iter.next();
+
+				// Our own packets should already have been filtered out.
+				if(aPkt.ssrc == rtpSession.ssrc) {
+					System.out.println("RTCPReceiverThread() received RTCP packet" 
+							+ " with conflicting SSRC from " + packet.getSocketAddress().toString());
+					rtpSession.resolveSsrcConflict();
+					return -1;
 				}
-			
-			/**        Sender Reports        **/
-			} else if(aPkt.getClass() == RtcpPktSR.class) {
-				RtcpPktSR srPkt = (RtcpPktSR) aPkt;
-				
-				Participant p = rtpSession.partDb.getParticipant(srPkt.ssrc);
-				p.lastRtcpPkt = curTime;
-				
-				if(p != null) {
-					
-					if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
-						//Calculate gradient NTP vs RTP
-						long newTime = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
-						
-						p.ntpGradient = ((double) (newTime - p.ntpOffset))/((double) srPkt.rtpTs - p.lastSRRtpTs);
-					} else if(p.ntpOffset < 0) {
-						// Calculate sum of ntpTs1 and ntpTs2 in milliseconds
-						p.ntpOffset = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
-						
-						// For calculating the gradient of NTP time vs RTP time
-						p.lastNtpTs1 = srPkt.ntpTs1;
-						p.lastNtpTs2 = srPkt.ntpTs2;
-						p.lastSRRtpTs = srPkt.rtpTs;
+
+				/**        Receiver Reports        **/
+				if(	aPkt.getClass() == RtcpPktRR.class) {
+					RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
+
+					Participant p = findParticipant(rrPkt.ssrc, packet);
+					p.lastRtcpPkt = curTime;
+
+					if(rtpSession.rtcAppIntf != null) {
+						rtpSession.rtcAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
+								rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
+								rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
 					}
-					
-					// For the next RR
-					p.timeReceivedLSR = curTime;
-					p.setTimeStampLSR(srPkt.ntpTs1,srPkt.ntpTs2);
-					
-				}
-				
-				
-				if(rtpSession.rtcAppIntf != null) {
-					// Should also return attached RRs
-					rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
-							srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
-				}
 
-			/**        Source Descriptions       **/
-			} else if(aPkt.getClass() == RtcpPktSDES.class) {
-				RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;				
-				
-				// The the participant database is updated
-				// when the SDES packet is reconstructed by CompRtcpPkt	
-				if(rtpSession.rtcAppIntf != null) {
-					rtpSession.rtcAppIntf.SDESPktReceived(sdesPkt.participants);
-				}
+					/**        Sender Reports        **/
+				} else if(aPkt.getClass() == RtcpPktSR.class) {
+					RtcpPktSR srPkt = (RtcpPktSR) aPkt;
 
-			/**        Bye Packets       **/
-			} else if(aPkt.getClass() == RtcpPktBYE.class) {
-				RtcpPktBYE byePkt = (RtcpPktBYE) aPkt;
-				
-				long time = System.currentTimeMillis();
-				Participant[] partArray = new Participant[byePkt.ssrcArray.length];
-				
-				for(int i=0; i<byePkt.ssrcArray.length; i++) {
-					partArray[i] = rtpSession.partDb.getParticipant(byePkt.ssrcArray[i]);
-					if(partArray[i] != null)
-						partArray[i].timestampBYE = time;
-				}
-				
-				if(rtpSession.rtcAppIntf != null) {
-					rtpSession.rtcAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
+					Participant p = findParticipant(srPkt.ssrc, packet);
+					p.lastRtcpPkt = curTime;
+
+					if(p != null) {
+
+						if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
+							//Calculate gradient NTP vs RTP
+							long newTime = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
+
+							p.ntpGradient = ((double) (newTime - p.ntpOffset))/((double) srPkt.rtpTs - p.lastSRRtpTs);
+						} else if(p.ntpOffset < 0) {
+							// Calculate sum of ntpTs1 and ntpTs2 in milliseconds
+							p.ntpOffset = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
+
+							// For calculating the gradient of NTP time vs RTP time
+							p.lastNtpTs1 = srPkt.ntpTs1;
+							p.lastNtpTs2 = srPkt.ntpTs2;
+							p.lastSRRtpTs = srPkt.rtpTs;
+						}
+
+						// For the next RR
+						p.timeReceivedLSR = curTime;
+						p.setTimeStampLSR(srPkt.ntpTs1,srPkt.ntpTs2);
+
+					}
+
+
+					if(rtpSession.rtcAppIntf != null) {
+						// Should also return attached RRs
+						rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+								srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
+					}
+
+					/**        Source Descriptions       **/
+				} else if(aPkt.getClass() == RtcpPktSDES.class) {
+					RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;				
+
+					// The the participant database is updated
+					// when the SDES packet is reconstructed by CompRtcpPkt	
+					if(rtpSession.rtcAppIntf != null) {
+						rtpSession.rtcAppIntf.SDESPktReceived(sdesPkt.participants);
+					}
+
+					/**        Bye Packets       **/
+				} else if(aPkt.getClass() == RtcpPktBYE.class) {
+					RtcpPktBYE byePkt = (RtcpPktBYE) aPkt;
+
+					long time = System.currentTimeMillis();
+					Participant[] partArray = new Participant[byePkt.ssrcArray.length];
+
+					for(int i=0; i<byePkt.ssrcArray.length; i++) {
+						partArray[i] = rtpSession.partDb.getParticipant(byePkt.ssrcArray[i]);
+						if(partArray[i] != null)
+							partArray[i].timestampBYE = time;
+					}
+
+					if(rtpSession.rtcAppIntf != null) {
+						rtpSession.rtcAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
+					}
 				}
 			}
 		}
-		
+		return 0;
+
 	}
 
 	public void run() {
@@ -171,8 +210,8 @@ public class RTCPReceiverThread extends Thread {
 			// Check whether this is one of our own
 			if( (rtpSession.mcSession && ! packet.getSocketAddress().equals(rtcpSession.rtcpMCSock) )
 					|| ! packet.getSocketAddress().equals(rtcpSession.rtcpSock) ) {
-				//rtpSession.partDb.debugPrint();
-				parsePacket(packet, rawPkt);
+				//System.out.println("Packet received from: " + packet.getSocketAddress().toString());
+				parsePacket(packet);
 				//rtpSession.partDb.debugPrint();
 			}			
 		}

@@ -21,12 +21,12 @@ public class RtcpPktRR extends RtcpPkt {
 
 	// If rcount < 0 we assume we have to parse the entire packet
 	// otherwise we'll just parse the body. 
-	protected RtcpPktRR(byte[] aRawPkt, int rrCount) {
+	protected RtcpPktRR(byte[] aRawPkt, int start, int rrCount) {
 		super.rawPkt = aRawPkt;
 		
-		if(!super.parseHeaders() || packetType != 201 || super.length < 7) {
+		if(!super.parseHeaders(start) || packetType != 201 || super.length < 1) {
 			if(RTPSession.rtpDebugLevel > 2) {
-				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders())+" "+packetType+" "+super.length);
+				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders(start))+" "+packetType+" "+super.length);
 			}
 			this.problem = 1;
 		}

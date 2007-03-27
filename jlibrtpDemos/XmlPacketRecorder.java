@@ -28,7 +28,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		RTPSession rtpSession = null;
 		// The number of packets we have received
 		int packetCount = 0;
-		final int maxPacketCount = 1000;
+		final int maxPacketCount = 10;
 		
 		// For the document
 		Document sessionDocument = null;
@@ -91,7 +91,8 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		 * RTP
 		 */
 		public void receiveData(byte[] buff, Participant participant, long timeMs) {
-			this.sessionElement.addContent(new Element("BYE"));	
+			System.out.println(" RECEIVING RECEIVING ");
+			this.sessionElement.addContent(new Element("DATA"));	
 			this.packetCount++;	
 		}
 		
