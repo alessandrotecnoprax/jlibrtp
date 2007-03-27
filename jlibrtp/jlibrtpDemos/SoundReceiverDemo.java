@@ -46,7 +46,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		LEFT, RIGHT, NORMAL
 	};
 
-	public void receiveData(byte[] data, String cname, long time) {
+	public void receiveData(byte[] data, Participant p, long time) {
 		if(auline != null) {
 			auline.write(data, 0, data.length);
 			if(pktCount % 100 == 0) {

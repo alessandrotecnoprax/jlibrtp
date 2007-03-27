@@ -19,7 +19,7 @@ public class CCRTPSender implements RTPAppIntf {
 		// Do nothing;
 	}
 	
-	public void receiveData(byte[] data, String cname, long time) {
+	public void receiveData(byte[] data, Participant p, long time) {
 		System.out.println("Got data: " + new String(data));
 	}
 	/**
