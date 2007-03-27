@@ -20,6 +20,7 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.InetSocketAddress;
 
 /**
  * The RTP receiver thread waits on the designated UDP socket for new packets.
@@ -88,8 +89,10 @@ public class RTPReceiverThread extends Thread {
 				continue;
 			}
 			
+			long pktSsrc = pkt.getSsrc();
+			
 			// Check for loops and SSRC collisions
-			if( rtpSession.ssrc == pkt.getSsrc() )
+			if( rtpSession.ssrc == pktSsrc )
 				rtpSession.resolveSsrcConflict();
 			
 			long[] csrcArray = pkt.getCsrcArray();
@@ -100,23 +103,39 @@ public class RTPReceiverThread extends Thread {
 				}
 			}
 			
-			if(RTPSession.rtpDebugLevel > 6) {
-				System.out.println("-> RTPReceiverThread.run() received packet with sequence number " + pkt.getSeqNumber() );
+			if(RTPSession.rtpDebugLevel > 17) {
+				System.out.println("-> RTPReceiverThread.run() rcvd packet, seqNum " + pktSsrc );
 				if(RTPSession.rtpDebugLevel > 10) {
 					String str = new String(pkt.getPayload());
 					System.out.println("-> RTPReceiverThread.run() payload is " + str );
 				}
 			}
- 
+			
 			//Find the participant in the database based on SSRC
-			Participant part = rtpSession.partDb.getParticipant(pkt.getSsrc());
+			Participant part = rtpSession.partDb.getParticipant(pktSsrc);
 
 			if(part == null) {
-				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString() );
-				//Create an unknown sender
-				part = new Participant(packet.getAddress(),pkt.getSsrc());
-				part.unexpected = true;
-				rtpSession.addParticipant(part);
+				//Check whether the application has added someone with this ip-address:
+				part = rtpSession.partDb.getParticipant(packet.getAddress());
+				
+				if(part != null) {
+					// There was a match based on IP address.
+					
+					System.out.println("RTPReceiverThread: Got an unexpected packet from SSRC:" 
+							+ pktSsrc  + " @" + packet.getAddress().toString() + ", WAS able to match it." );
+					
+					part.ssrc = pktSsrc;
+					rtpSession.partDb.updateParticipant(part);
+				} else {
+					// Create an unknown sender
+					System.out.println("RTPReceiverThread: Got an unexpected packet from SSRC:" 
+							+ pktSsrc  + " @" + packet.getAddress().toString() + ", was NOT able to match it." );
+					
+					InetSocketAddress nullSocket = null;
+					part = new Participant((InetSocketAddress) packet.getSocketAddress(), nullSocket, pkt.getSsrc());
+					part.unexpected = true;
+					rtpSession.partDb.addParticipant(part);
+				}
 			}
 
 			// Do checks on whether the datagram came from the expected source for that SSRC.

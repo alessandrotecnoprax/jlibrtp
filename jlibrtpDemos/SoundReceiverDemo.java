@@ -56,13 +56,13 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		pktCount++;
 	}
 	
-	public SoundReceiverDemo(String CNAME,int recvPort)  {
+	public SoundReceiverDemo()  {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;
 		
 		try {
 			rtpSocket = new DatagramSocket(6003);
-			rtcpSocket = new DatagramSocket(6013);
+			rtcpSocket = new DatagramSocket(6004);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port");
 		}
@@ -72,7 +72,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		rtpSession.setNaivePktReception(true);
 		rtpSession.RTPSessionRegister(this,null);
 		
-		Participant p = new Participant("127.0.0.1", 6004, 6005);		
+		Participant p = new Participant("127.0.0.1", 6001, 6002);		
 		rtpSession.addParticipant(p);
 	}
 
@@ -81,7 +81,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 	 */
 	public static void main(String[] args) {
 		System.out.println("Setup");
-		SoundReceiverDemo aDemo = new SoundReceiverDemo("Test",4545);
+		SoundReceiverDemo aDemo = new SoundReceiverDemo();
 		aDemo.doStuff();
 		System.out.println("Done");
 	}

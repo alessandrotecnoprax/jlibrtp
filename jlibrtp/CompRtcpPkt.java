@@ -1,7 +1,7 @@
 package jlibrtp;
 
 import java.util.*;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 public class CompRtcpPkt {
 	protected LinkedList rtcpPkts = new LinkedList();
@@ -20,7 +20,7 @@ public class CompRtcpPkt {
 		rtcpPkts.add(aPkt);
 	}
 	
-	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetAddress adr, ParticipantDatabase partDb) {
+	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, ParticipantDatabase partDb) {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + partDb.getClass() + ")");
 		}
@@ -54,7 +54,7 @@ public class CompRtcpPkt {
 			if(pktType == 201 )
 				addPacket(new RtcpPktRR(tmpBuf, -1));
 			if(pktType == 202)
-				addPacket(new RtcpPktSDES(tmpBuf, partDb));
+				addPacket(new RtcpPktSDES(tmpBuf, adr, partDb));
 			if(pktType == 203 )
 				addPacket(new RtcpPktBYE(tmpBuf));
 			if(pktType == 204)

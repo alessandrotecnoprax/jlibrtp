@@ -43,7 +43,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 15;
+	 final static public int rtpDebugLevel = 2;
+	 final static public int rtcpDebugLevel = 10;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -85,9 +86,6 @@ public class RTPSession {
 	 final protected Lock pktBufLock = new ReentrantLock();
 	 final protected Condition pktBufDataReady = pktBufLock.newCondition();
 	 
-	 //final protected Lock conflictResLock = new ReentrantLock();
-	 //final protected Condition conflictResolved = conflictResLock.newCondition();
-	 
 	 // Enough is enough, set to true when you want to quit.
 	 protected boolean endSession = false;
 	 // Only one registered application, please
@@ -120,7 +118,9 @@ public class RTPSession {
 		 this.generateSsrc();
 		 generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
-		 System.out.println("mcSession: " + this.mcSession);
+		 
+		 // The sockets are not always imediately available?
+		 try { Thread.sleep(1); } catch (InterruptedException e) { System.out.println("RTPSession sleep failed"); }
 	 }
 	 
 	 /**
@@ -140,6 +140,9 @@ public class RTPSession {
 		 this.generateSsrc();
 		 generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
+		 
+		 // The sockets are not always imediately available?
+		 try { Thread.sleep(1); } catch (InterruptedException e) { System.out.println("RTPSession sleep failed"); }
 	 }
 	 
 	 /**
@@ -274,7 +277,9 @@ public class RTPSession {
 		while(enu.hasMoreElements()) {
 			Participant tmp = (Participant) enu.nextElement();
 			
-			if(tmp.rtpAddress == null && tmp.rtpReceivedFromAddress.equals(p.rtpAddress)) {
+			if(tmp.rtpAddress == null && 
+					(tmp.rtpReceivedFromAddress.getAddress().equals(p.rtpAddress.getAddress()) 
+							|| tmp.rtpReceivedFromAddress.getAddress().equals(p.rtcpAddress.getAddress()))) {
 				tmp.rtpAddress = p.rtpAddress;
 				tmp.rtcpAddress = p.rtcpAddress;
 				partDb.updateParticipant(tmp);

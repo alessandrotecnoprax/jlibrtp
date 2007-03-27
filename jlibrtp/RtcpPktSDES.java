@@ -1,5 +1,7 @@
 package jlibrtp;
 
+import java.net.InetSocketAddress;
+
 public class RtcpPktSDES extends RtcpPkt {
 	boolean reportSelf = true;
 	RTPSession rtpSession = null;
@@ -13,7 +15,7 @@ public class RtcpPktSDES extends RtcpPkt {
 		this.rtpSession = rtpSession; 
 	}
 	
-	protected RtcpPktSDES(byte[] aRawPkt, ParticipantDatabase partDb) {
+	protected RtcpPktSDES(byte[] aRawPkt, InetSocketAddress socket, ParticipantDatabase partDb) {
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktSDES(byte[], ParticipantDabase)");
 		}
@@ -40,7 +42,8 @@ public class RtcpPktSDES extends RtcpPkt {
 						System.out.println("RtcpPktSDES(byte[], ParticipantDabase) adding new participant, ssrc:"+ssrc);
 					}
 					
-					part = new Participant(ssrc);
+					InetSocketAddress nullSocket = null;
+					part = new Participant(nullSocket, socket , ssrc);
 					partDb.addParticipant(part);
 				}
 				curPos += 4;

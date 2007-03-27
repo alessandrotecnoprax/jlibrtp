@@ -2,6 +2,7 @@ package jlibrtp;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.InetSocketAddress;
 import java.util.Iterator;
 
 public class RTCPReceiverThread extends Thread {
@@ -20,7 +21,7 @@ public class RTCPReceiverThread extends Thread {
 	
 	private void parsePacket(DatagramPacket packet, byte[] rawPkt) {
 		// Parse the received compound RTCP (?) packet
-		CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), packet.getAddress(), rtpSession.partDb);
+		CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), (InetSocketAddress) packet.getSocketAddress(), rtpSession.partDb);
 		
 		//Loop over the information
 		Iterator iter = compPkt.rtcpPkts.iterator();
@@ -36,8 +37,7 @@ public class RTCPReceiverThread extends Thread {
 				return;
 			}
 			
-			
-			
+			/**        Receiver Reports        **/
 			if(	aPkt.getClass() == RtcpPktRR.class) {
 				RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
 				
@@ -46,7 +46,8 @@ public class RTCPReceiverThread extends Thread {
 							rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
 							rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
 				}
-
+			
+			/**        Sender Reports        **/
 			} else if(aPkt.getClass() == RtcpPktSR.class) {
 				RtcpPktSR srPkt = (RtcpPktSR) aPkt;
 				
@@ -80,20 +81,18 @@ public class RTCPReceiverThread extends Thread {
 							srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
 				}
 
-				
+			/**        Source Descriptions       **/
 			} else if(aPkt.getClass() == RtcpPktSDES.class) {
-				RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;
+				RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;				
 				
 				// The the participant database is updated
-				// when the SDES packet is reconstructed by CompRtcpPkt
-				
+				// when the SDES packet is reconstructed by CompRtcpPkt	
 				if(rtpSession.rtcAppIntf != null) {
 					rtpSession.rtcAppIntf.SDESPktReceived(sdesPkt.participants);
 				}
 
-				
+			/**        Bye Packets       **/
 			} else if(aPkt.getClass() == RtcpPktBYE.class) {
-				
 				RtcpPktBYE byePkt = (RtcpPktBYE) aPkt;
 				
 				long time = System.currentTimeMillis();
@@ -114,7 +113,7 @@ public class RTCPReceiverThread extends Thread {
 	}
 
 	public void run() {
-		if(RTPSession.rtpDebugLevel > 1) {
+		if(RTPSession.rtcpDebugLevel > 1) {
 			if(rtpSession.mcSession) {
 				System.out.println("-> RTCPReceiverThread.run() starting on MC " + rtcpSession.rtcpMCSock.getLocalPort() );
 			} else {
@@ -124,7 +123,7 @@ public class RTCPReceiverThread extends Thread {
 
 		while(!rtpSession.endSession) {
 			
-			if(RTPSession.rtpDebugLevel > 6) {
+			if(RTPSession.rtcpDebugLevel > 4) {
 				if(rtpSession.mcSession) {
 					System.out.println("-> RTCPReceiverThread.run() waiting for packet on MC " + rtcpSession.rtcpMCSock.getLocalPort() );
 				} else {
@@ -156,10 +155,12 @@ public class RTCPReceiverThread extends Thread {
 			// Check whether this is one of our own
 			if( (rtpSession.mcSession && ! packet.getSocketAddress().equals(rtcpSession.rtcpMCSock) )
 					|| ! packet.getSocketAddress().equals(rtcpSession.rtcpSock) ) {
+				rtpSession.partDb.debugPrint();
 				parsePacket(packet, rawPkt);
+				rtpSession.partDb.debugPrint();
 			}			
 		}
-		if(RTPSession.rtpDebugLevel > 1) {
+		if(RTPSession.rtcpDebugLevel > 1) {
 			System.out.println("<-> RTCPReceiverThread terminating");
 		}
 	}
