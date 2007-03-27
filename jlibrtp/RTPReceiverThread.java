@@ -157,6 +157,8 @@ public class RTPReceiverThread extends Thread {
 
 			// Statistics for receiver report.
 			part.updateRRStats(packet.getLength(), pkt);
+			// Upate liveness
+			part.lastRtpPkt = System.currentTimeMillis();
 
 			if(RTPSession.rtpDebugLevel > 15) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");

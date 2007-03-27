@@ -89,6 +89,20 @@ public class StaticProcs {
 		return accum;
 	}
 	
+	public static long undoNtpMess(long ntpTs1, long ntpTs2) {
+		long timeVal = (ntpTs1 - (70*365 + 17)*24*3600)*1000;
+		
+		double tmp = (double) Integer.MAX_VALUE*2;
+
+		tmp = (tmp * 1000.0) / (ntpTs2);
+	
+		if(tmp > 1050) {
+			System.out.println("StaticProcs.undoNtpMess("+ntpTs2+","+ntpTs2+") created a mess.");
+		} else {
+			timeVal += tmp;
+		}
+		return timeVal;
+	}
 	
 	/** 
 	 * Print the bits of a byte to standard out. For debugging.
