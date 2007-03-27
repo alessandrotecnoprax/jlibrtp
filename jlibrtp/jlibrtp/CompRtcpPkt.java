@@ -104,7 +104,7 @@ public class CompRtcpPkt {
 				pkt.encode();
 				iter.set(pkt);
 			} else {
-				System.out.println("oops aPkt.packetType:" + aPkt.packetType);
+				System.out.println("CompRtcpPkt aPkt.packetType:" + aPkt.packetType);
 			}
 			
 			rawPktSize += aPkt.rawPkt.length;

@@ -5,6 +5,7 @@ public class RtcpPktBYE extends RtcpPkt {
 	protected byte[] reason = null;
 	
 	protected RtcpPktBYE(long[] ssrcs,byte[] aReason) {
+		super.packetType = 203;
 		// Fetch all the right stuff from the database
 		reason = aReason;
 		ssrcArray = ssrcs;
@@ -37,9 +38,7 @@ public class RtcpPktBYE extends RtcpPkt {
 		}
 	}
 	
-	protected void encode() {	
-		packetType = 203;
-		
+	protected void encode() {			
 		itemCount = ssrcArray.length;
 		length = 4*ssrcArray.length;
 		

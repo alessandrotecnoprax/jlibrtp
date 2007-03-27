@@ -69,14 +69,22 @@ public class RTPReceiverThread extends Thread {
 				try {
 					rtpSession.rtpSock.receive(packet);
 				} catch (IOException e) {
-					e.printStackTrace();
+					if(!rtpSession.endSession) {
+						e.printStackTrace();
+					} else {
+						continue;
+					}
 				}
 			} else {
 				//Multicast 
 				try {
 					rtpSession.rtpMCSock.receive(packet);
 				} catch (IOException e) {
-					e.printStackTrace();
+					if(!rtpSession.endSession) {
+						e.printStackTrace();
+					} else {
+						continue;
+					}
 				}
 			}
 
