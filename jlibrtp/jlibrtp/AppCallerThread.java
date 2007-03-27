@@ -58,7 +58,7 @@ public class AppCallerThread extends Thread {
 				
 				try { rtpSession.pktBufDataReady.await(); } 
 					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
-
+					
 		    	// Next loop over all participants and check whether they have anything for us.
 				Iterator iter = rtpSession.partDb.getParticipants();
 				
@@ -66,6 +66,8 @@ public class AppCallerThread extends Thread {
 					Participant p = (Participant) iter.next();
 					
 					boolean done = false;
+					//System.out.println(p.ssrc + " " + !done +" " + p.rtpAddress 
+					//		+ " " + rtpSession.naiveReception + " " + p.pktBuffer);
 					while(!done && (p.rtpAddress != null || rtpSession.naiveReception) 
 							&& p.pktBuffer != null && p.pktBuffer.length > 0) {
 						

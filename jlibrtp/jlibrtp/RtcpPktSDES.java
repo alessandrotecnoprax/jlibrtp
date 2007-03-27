@@ -15,26 +15,26 @@ public class RtcpPktSDES extends RtcpPkt {
 		this.rtpSession = rtpSession; 
 	}
 	
-	protected RtcpPktSDES(byte[] aRawPkt, InetSocketAddress socket, ParticipantDatabase partDb) {
+	protected RtcpPktSDES(byte[] aRawPkt,int start, InetSocketAddress socket, ParticipantDatabase partDb) {
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktSDES(byte[], ParticipantDabase)");
 		}
 		rawPkt = aRawPkt;
 
-		if(! super.parseHeaders() || packetType != 202) {
+		if(! super.parseHeaders(start) || packetType != 202) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktSDES.parseHeaders() etc. problem");
 			}
 			this.problem = 1;
 		} else {
-			int curPos = 4;
+			int curPos = 4 + start;
 			int curLength;
 			int curType;
 			long ssrc;
 			boolean endReached = false;
 			// Loop over SSRC SDES chunks
 			for(int i=0; i< itemCount; i++) {
-				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, curPos);
+				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, start + curPos);
 	
 				Participant part = partDb.getParticipant(ssrc);
 				if(part == null) {
@@ -47,7 +47,6 @@ public class RtcpPktSDES extends RtcpPkt {
 					partDb.addParticipant(part);
 				}
 				curPos += 4;
-				System.out.println("Temp: curPos:"+curPos);
 				
 				while(!endReached && (curPos/4) <= this.length) {
 					curType = (int) aRawPkt[curPos];
@@ -59,11 +58,11 @@ public class RtcpPktSDES extends RtcpPkt {
 						
 					} else {
 						curLength  = (int) aRawPkt[curPos + 1];
-						System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
+						//System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
 
 						if(curLength > 0) {
 							byte[] item = new byte[curLength];
-							System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
+							//System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
 							System.arraycopy(aRawPkt, curPos + 2, item, 0, curLength);
 
 							switch(curType) {

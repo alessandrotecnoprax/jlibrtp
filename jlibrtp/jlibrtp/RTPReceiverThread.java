@@ -147,7 +147,7 @@ public class RTPReceiverThread extends Thread {
 			}
 
 			// Do checks on whether the datagram came from the expected source for that SSRC.
-			if(packet.getAddress().equals(part.rtpAddress.getAddress())) {
+			if(part.rtpAddress == null || packet.getAddress().equals(part.rtpAddress.getAddress())) {
 				PktBuffer pktBuffer = part.pktBuffer;
 
 				if(pktBuffer != null) {
@@ -159,8 +159,9 @@ public class RTPReceiverThread extends Thread {
 					part.pktBuffer = pktBuffer;
 				}
 			} else {
-				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() + "@" + toString()
-						+ ", the sending ip-address was " + packet.getAddress().toString() + ", we expected from " + part.rtpAddress.toString());
+				System.out.println("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() 
+						+ " the sending ip-address was " + packet.getAddress().toString() 
+						+ ", we expected from " + part.rtpAddress.toString());
 			}
 
 			// Statistics for receiver report.

@@ -14,10 +14,10 @@ public class RtcpPktBYE extends RtcpPkt {
 		}
 	}
 	
-	protected RtcpPktBYE(byte[] aRawPkt) {
+	protected RtcpPktBYE(byte[] aRawPkt, int start) {
 		rawPkt = aRawPkt;
 
-		if(!super.parseHeaders() || packetType != 203) {
+		if(!super.parseHeaders(start) || packetType != 203) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktBYE.parseHeaders() etc. problem");
 			}
@@ -26,13 +26,13 @@ public class RtcpPktBYE extends RtcpPkt {
 			ssrcArray = new long[super.itemCount];
 			
 			for(int i=0; i<super.itemCount; i++) {
-				ssrcArray[i] = StaticProcs.bytesToUIntLong(aRawPkt, i*4 + 4);
+				ssrcArray[i] = StaticProcs.bytesToUIntLong(aRawPkt, start + (i+1)*4);
 			}
 			if(super.length > (super.itemCount + 1)) {
-				int reasonLength = (int) aRawPkt[4 + super.itemCount*4];
+				int reasonLength = (int) aRawPkt[start + (super.itemCount+1)*4];
 				//System.out.println("super.itemCount:"+super.itemCount+" reasonLength:"+reasonLength+" start:"+(super.itemCount*4 + 4 + 1));
 				reason = new byte[reasonLength];
-				System.arraycopy(aRawPkt, super.itemCount*4 + 4 + 1, reason, 0, reasonLength);
+				System.arraycopy(aRawPkt, start + (super.itemCount + 1)*4 + 1, reason, 0, reasonLength);
 				//System.out.println("test:" + new String(reason));
 			}
 		}

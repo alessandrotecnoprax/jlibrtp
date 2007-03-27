@@ -24,41 +24,35 @@ public class CompRtcpPkt {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + partDb.getClass() + ")");
 		}
+		//System.out.println("rawPkt.length:" + rawPkt.length + " packetSize:" + packetSize);
 		
 		// Chop it up
 		int start = 0;
-		
-		 //  o  The payload type field of the first RTCP packet in a compound
-		 //     packet must be equal to SR or RR.
 
-		 //  o  The padding bit (P) should be zero for the first packet of a
-		 //     compound RTCP packet because padding should only be applied, if it
-		 //     is needed, to the last packet.
+		while(start < packetSize) {
 
-		 //  o  The length fields of the individual RTCP packets must add up to
-		 //     the overall length of the compound RTCP packet as received.  This
-		 //     is a fairly strong check.
-		      
-		while(start < (packetSize - 32)) {
-			int length = StaticProcs.bytesToUIntInt(rawPkt, start + 2);
-			byte[] tmpBuf = new byte[length];
-			
+			int length = 4* (StaticProcs.bytesToUIntInt(rawPkt, start + 2) + 1);
 			int pktType = (int) rawPkt[start + 1];
+			
 			if(pktType < 0) {
 				pktType += 256;
 			}
-			
-			System.arraycopy(rawPkt, start, tmpBuf, 0, length);
-			if(pktType == 200)
-				addPacket(new RtcpPktSR(tmpBuf));
-			if(pktType == 201 )
-				addPacket(new RtcpPktRR(tmpBuf, -1));
-			if(pktType == 202)
-				addPacket(new RtcpPktSDES(tmpBuf, adr, partDb));
-			if(pktType == 203 )
-				addPacket(new RtcpPktBYE(tmpBuf));
-			if(pktType == 204)
-				addPacket(new RtcpPktAPP(tmpBuf));
+
+			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );
+
+			if(pktType == 200) {
+				addPacket(new RtcpPktSR(rawPkt,start,length));
+			} else if(pktType == 201 ) {
+				addPacket(new RtcpPktRR(rawPkt,start, -1));
+			} else if(pktType == 202) {
+				addPacket(new RtcpPktSDES(rawPkt,start, adr, partDb));
+			} else if(pktType == 203 ) {
+				addPacket(new RtcpPktBYE(rawPkt,start));
+			} else if(pktType == 204) {
+				addPacket(new RtcpPktAPP(rawPkt,start));
+			} else {
+				System.out.println("CompRtcpPkt Ooops");
+			}
 			start += length;
 			
 			if(RTPSession.rtpDebugLevel > 12) {

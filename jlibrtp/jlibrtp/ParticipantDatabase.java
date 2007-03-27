@@ -42,8 +42,9 @@ public class ParticipantDatabase {
 	Hashtable ipTable = new Hashtable();
 	HashMap<InetSocketAddress, Integer> rtpReceivers = new HashMap<InetSocketAddress, Integer>();
 	//HashMap<InetSocketAddress, Integer> rtcpReceivers = new HashMap<InetSocketAddress, Integer>();
-	HashSet<Participant> all = new HashSet<Participant>();
-	
+	//HashSet<Participant> all = ;
+	Set<Participant> all = Collections.synchronizedSet(new HashSet<Participant>());
+	//Map m = Collections.synchronizedMap(new HashMap(...));
 	int senderCount = 0;
 	
 	public ParticipantDatabase(RTPSession parent) {
