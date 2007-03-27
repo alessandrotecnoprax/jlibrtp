@@ -73,7 +73,7 @@ public class AppCallerThread extends Thread {
 						if(aFrame == null) {
 							done = true;
 						} else {
-							appl.receiveData(aFrame.data,p.getCNAME(),aFrame.timeStamp);
+							appl.receiveData(aFrame.data,p, aFrame.timeStamp);
 						}
 					}
 				}

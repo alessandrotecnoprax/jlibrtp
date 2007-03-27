@@ -83,7 +83,7 @@ public class RTCPSenderThread extends Thread {
 		
 		//Create datagram
 		try {
-			System.out.println("receiver: " + receiver);
+			//System.out.println("receiver: " + receiver);
 			packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
 		} catch (Exception e) {
 			System.out.println("RCTPSenderThread.SendCompRtcpPkt() packet creation failed.");
@@ -93,7 +93,7 @@ public class RTCPSenderThread extends Thread {
 		
 		//Send packet
 		if(RTPSession.rtcpDebugLevel > 5) {
-			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() unicast");
+			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() unicast " + receiver);
 		}
 		try {
 			rtcpSession.rtcpSock.send(packet);
@@ -213,7 +213,7 @@ public class RTCPSenderThread extends Thread {
 			if(rtpSession.mcSession) {
 				datagramLength = this.mcSendCompRtcpPkt(compPkt);
 			} else {
-				part.debugPrint();
+				//part.debugPrint();
 				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
 			

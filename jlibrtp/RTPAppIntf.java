@@ -35,9 +35,8 @@ public interface RTPAppIntf {
 	 * receive any new packets until this call returns.
 	 * 
 	 * @param buff a byte-buffer containing the data received
-	 * @param cName the cName (as determined through SSRC lookup) who sent it
-	 * @param time the time when this packet was created, as set by the sender 
+	 * @param Participant participant
+	 * @param timeMs the time when this packet was created, as set by the sender, converted to System.currentTimeMillis()
 	 */
-	public void receiveData(byte[] buff, String cName, long time);
-	
+	public void receiveData(byte[] buff, Participant participant, long timeMs);
 }
