@@ -30,20 +30,20 @@ public class RTCPSession {
 	protected RTCPSenderThread senderThrd = null;
 
 	protected RTCPSession(RTPSession parent, DatagramSocket rtcpSocket) {
-		rtcpSock = rtcpSocket;
+		this.rtcpSock = rtcpSocket;
 		rtpSession = parent;
 	}
 
 	protected RTCPSession(RTPSession parent, MulticastSocket rtcpSocket, InetAddress multicastGroup) {
 		mcGroup = multicastGroup;
-		rtcpSock = rtcpSocket;
+		this.rtcpSock = rtcpSocket;
 		rtpSession = parent;
 	}
 
 	protected void start() {
 		nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
-		recvThrd = new RTCPReceiverThread(this, this. rtpSession);
-		senderThrd = new RTCPSenderThread(this , this.rtpSession);
+		recvThrd = new RTCPReceiverThread(this, this.rtpSession);
+		senderThrd = new RTCPSenderThread(this, this.rtpSession);
 		recvThrd.start();
 		senderThrd.start();
 	}

@@ -28,10 +28,10 @@ public class ValidateRtcpPkt {
 		part1.ssrc = 123;
 		part2.ssrc = 345;
 		
-		InetAddress testadr = null;
+		InetSocketAddress testadr = null;
 		
 		try {
-			testadr = InetAddress.getByName("127.0.0.1");
+			testadr = InetSocketAddress.createUnresolved("localhost", 12371);
 		} catch (Exception e) {
 			// Do nothing
 		}
@@ -85,7 +85,7 @@ public class ValidateRtcpPkt {
 		byte[] rawpkt = sdespkt.rawPkt;
 		//String test2 = new String(rawpkt);
 		//System.out.println(test2);
-		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, partDb);
+		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
 		decsdespkt.debugPrint();
 		partDb.debugPrint();
 		

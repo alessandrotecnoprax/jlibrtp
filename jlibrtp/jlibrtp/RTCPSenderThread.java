@@ -64,7 +64,7 @@ public class RTCPSenderThread extends Thread {
 		}
 		
 		// Send packet
-		if(RTPSession.rtpDebugLevel > 6) {
+		if(RTPSession.rtcpDebugLevel > 5) {
 			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() multicast");
 		}
 		try {
@@ -83,6 +83,7 @@ public class RTCPSenderThread extends Thread {
 		
 		//Create datagram
 		try {
+			System.out.println("receiver: " + receiver);
 			packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
 		} catch (Exception e) {
 			System.out.println("RCTPSenderThread.SendCompRtcpPkt() packet creation failed.");
@@ -91,7 +92,7 @@ public class RTCPSenderThread extends Thread {
 		}
 		
 		//Send packet
-		if(RTPSession.rtpDebugLevel > 6) {
+		if(RTPSession.rtcpDebugLevel > 5) {
 			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() unicast");
 		}
 		try {
@@ -105,26 +106,32 @@ public class RTCPSenderThread extends Thread {
 	}
 	
 	public void run() {
-		if(RTPSession.rtpDebugLevel > 1) {
+		if(RTPSession.rtcpDebugLevel > 1) {
 			System.out.println("<-> RTCPSenderThread running");
 		}
 		
 		// Give the application a chance to register some participants
-		try { rtpSession.pktBufDataReady.await(100, TimeUnit.MILLISECONDS); } 
-		catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+		try { Thread.sleep(100); } 
+		catch (Exception e) { System.out.println("RTCPSenderThread didn't get any initial rest."); }
 		
 		// Set up an iterator for the member list
+		// TODO Change to rtcpReceivers
 		Enumeration enu = rtpSession.partDb.getParticipants();
 		
 		while(! rtpSession.endSession) {
+			if(RTPSession.rtcpDebugLevel > 6) {
+				System.out.println("<-> RTCPSenderThread sleeping for " +rtcpSession.nextDelay+" ms");
+			}
 			
-			try { this.sleep(rtcpSession.nextDelay, 0); } 
+			try { Thread.sleep(rtcpSession.nextDelay); } 
 			catch (Exception e) { System.out.println("RTCPSenderThread Exception message:" + e.getMessage());}
 			
-			if(RTPSession.rtpDebugLevel > 1) {
+			if(RTPSession.rtcpDebugLevel > 6) {
 				System.out.println("<-> RTCPSenderThread waking up");
 			}
 			
+			// Regenerate nextDelay, before anything happens.
+			rtcpSession.calculateDelay();
 			
 			// We'll wait here until a conflict (if any) has been resolved,
 			// so that the bye packets for our current SSRC can be sent.
@@ -141,6 +148,7 @@ public class RTCPSenderThread extends Thread {
 			if(! enu.hasMoreElements()) {
 				
 				// Check iterator
+				// TODO Change to rtcpReceivers
 				enu = rtpSession.partDb.getParticipants();
 				
 				if(! enu.hasMoreElements()) {
@@ -156,7 +164,7 @@ public class RTCPSenderThread extends Thread {
 				part = (Participant) enu.nextElement();
 			}
 			
-			if(! enu.hasMoreElements()) {
+			if(part == null) {
 				//Out of luck
 				continue;
 			}
@@ -209,21 +217,20 @@ public class RTCPSenderThread extends Thread {
 				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
 			
+
+			
 			
 			/*********** Administrative tasks ***********/			
 			//Update average packet size
 			if(datagramLength > 0) {
 				rtcpSession.updateAvgPacket(datagramLength);
 			}
-			
-			// Regenerate nextDelay
-			rtcpSession.calculateDelay();
 		}
 
 		// Be polite, say Bye to everone
 		sendByes();
 		
-		if(RTPSession.rtpDebugLevel > 1) {
+		if(RTPSession.rtcpDebugLevel > 0) {
 			System.out.println("<-> RTCPSenderThread terminating");
 		}
 	}

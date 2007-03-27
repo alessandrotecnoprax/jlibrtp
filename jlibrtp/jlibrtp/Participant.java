@@ -123,14 +123,9 @@ public class Participant {
 	}
 	
 	// We got a packet, but we don't know this person yet.
-	protected Participant(InetAddress adr, long SSRC) {
-		rtpAddress = new InetSocketAddress(adr,0);
-		ssrc = SSRC;
-		unexpected = true;
-	}
-	
-	// Surprise through SDES
-	protected Participant(long SSRC) {
+	protected Participant(InetSocketAddress rtpAdr, InetSocketAddress rtcpAdr, long SSRC) {
+		rtpReceivedFromAddress = rtpAdr;
+		rtpReceivedFromAddress = rtcpAdr;
 		ssrc = SSRC;
 		unexpected = true;
 	}
@@ -272,11 +267,14 @@ public class Participant {
 	protected int getFractionLost() {
 		int denominator = (lastSeqNumber - lastSRRseqNumber);
 		if(denominator < 0)
-			denominator = 10^16 + denominator;
+			denominator = (10^16) + denominator;
 
 		int fraction = 256*receivedSinceLastSR;
-		fraction = fraction / denominator;
-		
+		if(denominator > 0) {
+			fraction = (fraction / denominator);
+		} else {
+			fraction = 0;
+		}
 		//Clear counters 
 		receivedSinceLastSR = 0;
 		lastSRRseqNumber = lastSeqNumber;

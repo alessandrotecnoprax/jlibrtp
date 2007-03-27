@@ -54,8 +54,8 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		DatagramSocket rtcpSocket = null;
 		
 		try {
-			rtpSocket = new DatagramSocket(6004);
-			rtcpSocket = new DatagramSocket(6005);
+			rtpSocket = new DatagramSocket(6001);
+			rtcpSocket = new DatagramSocket(6002);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port");
 		}
@@ -74,21 +74,21 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		for(int i=0;i<args.length;i++) {
 			System.out.println("args["+i+"]" + args[i]);
 		}
-		if(args.length < 4) {
+		if(args.length < 3) {
 			System.out.println("Please specify filename, ip-address and ports.");
 		} else {
-		// TODO Auto-generated method stub
-		System.out.println("Setup");
-		boolean local = true;
-		if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
-			local = false;
-		}
-		SoundSenderDemo aDemo = new SoundSenderDemo(local);
-		Participant p = new Participant("127.0.0.1",6002, 6003);
-		aDemo.rtpSession.addParticipant(p);
-		aDemo.filename = args[0];
-		aDemo.run();
-		System.out.println("pktCount: " + pktCount);
+
+			System.out.println("Setup");
+			boolean local = true;
+			if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
+				local = false;
+			}
+			SoundSenderDemo aDemo = new SoundSenderDemo(local);
+			Participant p = new Participant("127.0.0.1",Integer.parseInt(args[2]),Integer.parseInt(args[2]) + 1);
+			aDemo.rtpSession.addParticipant(p);
+			aDemo.filename = args[0];
+			aDemo.run();
+			System.out.println("pktCount: " + pktCount);
 		}
 	}
 	
@@ -162,7 +162,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 					if(!this.local) {	
 						auline.write(abData, 0, abData.length);
 					} else {
-						try { Thread.sleep(1);} catch(Exception e) {}
+						try { Thread.sleep(14);} catch(Exception e) {}
 					}
 					pktCount++;
 				}
