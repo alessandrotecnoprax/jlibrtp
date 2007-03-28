@@ -36,6 +36,9 @@ public class ValidateStaticProcs {
 		long two = 1;
 		long three = 9999000;
 		
+		byte aByte = (byte) 7;
+		System.out.println("aByte.hex: " + StaticProcs.hexOfByte(aByte));
+			
 		//byte[] oneb = StaticProcs.longToByteWord(one);
 		byte[] twob = StaticProcs.uIntLongToByteWord(two);
 		//byte[] threeb = StaticProcs.longToByteWord(three);

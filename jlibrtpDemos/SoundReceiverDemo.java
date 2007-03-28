@@ -46,9 +46,9 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		LEFT, RIGHT, NORMAL
 	};
 
-	public void receiveData(byte[] data, Participant p, long time) {
+	public void receiveData(DataFrame frame, Participant p) {
 		if(auline != null) {
-			auline.write(data, 0, data.length);
+			auline.write(frame.getData(), 0, frame.getData().length);
 			if(pktCount % 100 == 0) {
 				System.out.println("pktCount:" + pktCount);
 			}

@@ -134,6 +134,10 @@ public class Participant {
 		unexpected = true;
 	}
 	
+	// Dummy constructor to ease testing
+	protected Participant() {
+		System.out.println("Don't use the Participan(void) Constructor!");
+	}
 	/**
 	 * Toggle whether this participant is expected to send packets to us or not.
 	 * 
