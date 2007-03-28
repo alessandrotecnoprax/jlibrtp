@@ -81,10 +81,11 @@ public class RtcpPktSR extends RtcpPkt {
 		
 		// Convert to NTP and chop up
 		long timeNow = System.currentTimeMillis();
-		ntpTs1 = (70*365 + 17)*24*3600 + timeNow/1000;
-		double tmp = (double) Integer.MAX_VALUE*2;
-		// max 32uint * (1000.0 / ms) 
-		ntpTs2 = (long) (tmp * (1000.0 / ((double) timeNow % 1000)));
+		ntpTs1 = 2208988800L + (timeNow/1000);
+		long ms = timeNow % 1000;
+		double tmp = ((double)ms) / 1000.0;
+		tmp = tmp * (double)4294967295L;
+		ntpTs2 = (long) tmp;
 		rtpTs = System.currentTimeMillis();
 		
 		//Write SR stuff

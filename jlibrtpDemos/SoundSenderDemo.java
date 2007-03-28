@@ -165,6 +165,9 @@ public class SoundSenderDemo implements RTPAppIntf  {
 						try { Thread.sleep(14);} catch(Exception e) {}
 					}
 					pktCount++;
+					//if(pktCount == 100) {
+					//	System.out.println("Time!!!!!!!!! " + Long.toString(System.currentTimeMillis()));
+					//}
 				}
 			}
 		} catch (IOException e) {
@@ -172,6 +175,8 @@ public class SoundSenderDemo implements RTPAppIntf  {
 			return;
 		}
 		System.out.println("Time: " + (System.currentTimeMillis() - start)/1000 + " s");
+		this.rtpSession.endSession();
+		try { Thread.sleep(150);} catch(Exception e) {}
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<- Run()");
 		} 

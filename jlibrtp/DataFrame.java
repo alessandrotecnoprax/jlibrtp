@@ -57,9 +57,9 @@ public class DataFrame {
 		
 		// Check whether we can compute an NTPish timestamp? Requires two SR reports 
 		if(p.ntpGradient > 0) {
-			timestamp =  p.ntpOffset + (long) p.ntpGradient*this.rtpTimestamp;
+			//System.out.print(Long.toString(p.ntpOffset)+" " 
+			timestamp =  p.ntpOffset + (long) (p.ntpGradient*(double)(this.rtpTimestamp-p.lastSRRtpTs));
 		}
-		
 		
 		// Make data the right length
 		int payloadLength = aPkt.getPayloadLength();
