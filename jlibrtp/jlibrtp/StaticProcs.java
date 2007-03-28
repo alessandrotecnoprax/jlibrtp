@@ -65,10 +65,13 @@ public class StaticProcs {
 	 * @author Arne Kepp
 	 */
 	public static int bytesToUIntInt(byte[] bytes, int index) {
-		int temp = (int) bytes[index];
-		temp *= 256;
-		temp += (int) bytes[index+1];
-		return temp;
+		int accum = 0;
+		int i = 1;
+		for (int shiftBy = 0; shiftBy < 16; shiftBy += 8 ) {
+			accum |= ( (long)( bytes[index + i] & 0xff ) ) << shiftBy;
+			i--;
+		}
+		return accum;
 	}
 	
 	/** 

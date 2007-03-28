@@ -271,7 +271,7 @@ public class RTPSession {
 		this.sentOctetCount++;
 		
 		if(RTPSession.rtpDebugLevel > 5) {
-				System.out.println("<- RTPSession.sendData(byte[])");
+				System.out.println("<- RTPSession.sendData(byte[]) " + pkt.getSeqNumber());
 		}  
 		
 		 return 0;

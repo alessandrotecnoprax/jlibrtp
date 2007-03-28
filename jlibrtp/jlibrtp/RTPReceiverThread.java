@@ -99,6 +99,7 @@ public class RTPReceiverThread extends Thread {
 			
 			long pktSsrc = pkt.getSsrc();
 			
+			//System.out.println(" " + pkt.getSeqNumber());
 			// Check for loops and SSRC collisions
 			if( rtpSession.ssrc == pktSsrc )
 				rtpSession.resolveSsrcConflict();
