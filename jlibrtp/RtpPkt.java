@@ -335,9 +335,7 @@ public class RtpPkt {
 		csrcArray = new long[(rawPkt[0] & 0x0F)];
 		marker = ((rawPkt[1] & 0x80) >> 7);
 		payloadType = (rawPkt[1] & 0x7F);
-		seqNumber = (int) rawPkt[2];
-		seqNumber = seqNumber*256;
-		seqNumber += (int) rawPkt[3];
+		seqNumber = StaticProcs.bytesToUIntInt(rawPkt, 2);
 	}
 	//Takes the 4 octets representing the timestamp
 	private void sliceTimeStamp() {

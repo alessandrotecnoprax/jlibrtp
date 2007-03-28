@@ -202,7 +202,8 @@ public class PktBuffer {
 		} else {
 			// If we get here we have little to show for.
 			if(RTPSession.rtpDebugLevel > 2) {
-				System.out.println("<- PktBuffer.popOldestFrame() returns null");
+				System.out.println("<- PktBuffer.popOldestFrame() returns null " + retNode.seqNum + " " + this.lastSeqNumber);
+				this.debugPrint();
 			}
 			return null;
 		}

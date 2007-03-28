@@ -107,8 +107,66 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		}
 		
 		public void SDESPktReceived(Participant[] relevantParticipants) {
-			//Do nothing
-			this.sessionElement.addContent(new Element("SDESPkt"));	
+			Element SDESPkt = new Element("SDESPkt");
+			this.sessionElement.addContent(new Element("SDESPkt"));
+			
+			if(relevantParticipants != null) {
+			for(int i=0;i<relevantParticipants.length;i++) {
+				Participant part = relevantParticipants[i];
+				
+				Element SDESBlock = new Element("SDESBlock");
+				SDESPkt.addContent(SDESBlock);
+				
+				Element SSRC = new Element("SSRC");
+				SSRC.addContent(Long.toString(part.getSSRC()));
+				SDESBlock.addContent(SSRC);
+				
+				if(part.getCNAME() != null) {
+					Element CNAME = new Element("CNAME");
+					CNAME.addContent(part.getCNAME());
+					SDESBlock.addContent(CNAME);
+				}
+				
+				if(part.getNAME() != null) {
+					Element NAME = new Element("NAME");
+					NAME.addContent(part.getNAME());
+					SDESBlock.addContent(NAME);
+				}
+				if(part.getEmail() != null) {
+					Element EMAIL = new Element("EMAIL");
+					EMAIL.addContent(part.getEmail());
+					SDESBlock.addContent(EMAIL);
+				}
+				if(part.getPhone() != null) {
+					Element PHONE = new Element("PHONE");
+					PHONE.addContent(part.getPhone());
+					SDESBlock.addContent(PHONE);
+				}
+				if(part.getLocation() != null) {
+					Element LOC = new Element("LOC");
+					LOC.addContent(part.getLocation());
+					SDESBlock.addContent(LOC);
+				}
+				if(part.getNote() != null) {
+					Element NOTE = new Element("NOTE");
+					NOTE.addContent(part.getNote());
+					SDESBlock.addContent(NOTE);
+				}
+				if(part.getPriv() != null) {
+					Element PRIV = new Element("PRIV");
+					PRIV.addContent(part.getPriv());
+					SDESBlock.addContent(PRIV);
+				}
+				if(part.getTool() != null) {
+					Element TOOL = new Element("TOOL");
+					TOOL.addContent(part.getTool());
+					SDESBlock.addContent(TOOL);
+				}
+			}
+			} else {
+				System.out.println("SDES with no participants?");
+			}
+			
 			this.packetCount++;	
 		}
 		

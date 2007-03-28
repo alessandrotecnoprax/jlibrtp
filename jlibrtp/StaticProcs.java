@@ -33,7 +33,7 @@ public class StaticProcs {
 	 * @return byte[2] representing the integer as unsigned, most significant bit first. 
 	 * @author Arne Kepp
 	 */
-	public static byte[] uIntIntToByteWord(int i) {
+	public static byte[] uIntIntToByteWord(int i) {		
 		byte[] byteWord = new byte[2];
 		byteWord[0] = (byte) ((i >> 8) & 0x000000FF);
 		byteWord[1] = (byte) (i & 0x00FF);
@@ -65,9 +65,9 @@ public class StaticProcs {
 	 * @author Arne Kepp
 	 */
 	public static int bytesToUIntInt(byte[] bytes, int index) {
-		int temp = bytes[index];
-		temp = (temp << 8);
-		temp |= bytes[index+1];
+		int temp = (int) bytes[index];
+		temp *= 256;
+		temp += (int) bytes[index+1];
 		return temp;
 	}
 	

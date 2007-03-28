@@ -42,8 +42,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 0;
-	 final static public int rtcpDebugLevel = 15;
+	 final static public int rtpDebugLevel = 5;
+	 final static public int rtcpDebugLevel = 5;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -119,7 +119,7 @@ public class RTPSession {
 		 mcSession = false;
 		 rtpSock = rtpSocket;
 		 this.generateSsrc();
-		 generateCNAME();
+		 this.generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
 		 
 		 // The sockets are not always imediately available?
@@ -141,7 +141,7 @@ public class RTPSession {
 		 rtpMCSock.joinGroup(mcGroup);
 		 rtcpSock.joinGroup(mcGroup);
 		 this.generateSsrc();
-		 generateCNAME();
+		 this.generateCNAME();
 		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
 		 
 		 // The sockets are not always imediately available?
@@ -219,6 +219,8 @@ public class RTPSession {
 		// Creates a raw packet
 		byte[] pktBytes = pkt.encode();
 		
+		//System.out.println(Integer.toString(StaticProcs.bytesToUIntInt(pktBytes, 2)));
+		
 		// Loop over recipients
 		Iterator iter = partDb.getRtpReceivers();
 		
@@ -268,7 +270,7 @@ public class RTPSession {
 		this.sentPktCount++;
 		this.sentOctetCount++;
 		
-		if(RTPSession.rtpDebugLevel > 3) {
+		if(RTPSession.rtpDebugLevel > 5) {
 				System.out.println("<- RTPSession.sendData(byte[])");
 		}  
 		
