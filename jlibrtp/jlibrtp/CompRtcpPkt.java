@@ -51,9 +51,9 @@ public class CompRtcpPkt {
 			} else if(pktType == 204) {
 				addPacket(new RtcpPktAPP(rawPkt,start));
 			} else {
-				System.out.println("CompRtcpPkt Ooops");
+				System.out.println("CompRtcpPkt Ooops:" + pktType);
 			}
-			start += length;
+			start += (4 + 4*length);
 			
 			if(RTPSession.rtpDebugLevel > 12) {
 				System.out.println("  parsing " + " pktType " + pktType + " length: " + length + " ");

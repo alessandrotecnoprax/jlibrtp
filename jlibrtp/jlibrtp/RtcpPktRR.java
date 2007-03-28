@@ -15,8 +15,6 @@ public class RtcpPktRR extends RtcpPkt {
 		// Fetch all the right stuff from the database
 		super.ssrc = ssrc;
 		this.reportees = reportees;
-
-
 	}
 
 	// If rcount < 0 we assume we have to parse the entire packet
@@ -68,16 +66,18 @@ public class RtcpPktRR extends RtcpPkt {
 			System.out.println("  -> RtcpPktRR.encode()");
 		}
 		
+		byte[] rRs = null;
 		//Gather up the actual receiver reports
-		byte[] rRs = this.encodeRR();
-		if(rRs != null) {
+		if(this.reportees != null) {
+			rRs = this.encodeRR();
 			super.rawPkt = new byte[rRs.length + 8];
 			System.arraycopy(rRs, 0, super.rawPkt, 8, rRs.length);
+			super.itemCount = reportees.length;
+		} else {
+			super.rawPkt = new byte[8];
+			super.itemCount = 0;	
 		}
 		
-		//Set item count?
-		super.itemCount = reportees.length;
-			
 		//Write the common header
 		super.writeHeaders();
 		

@@ -59,7 +59,7 @@ public class PktBuffer {
 		PktBufNode newNode = new PktBufNode(aPkt);
 		oldest = newNode;
 		newest = newNode;
-		//lastSeqNumber = aPkt.getSeqNumber();
+		//lastSeqNumber = (aPkt.getSeqNumber() - 1);
 		//lastTimestamp = aPkt.getTimeStamp();
 		length = 1;
 	}
@@ -174,6 +174,10 @@ public class PktBuffer {
 		 * 		a) We have exceeded the wait buffer
 		 * 		b) We wait
 		 */
+		
+		//System.out.println(" Debug:" +(retNode != null) + " " + (retNode.seqNum == this.lastSeqNumber + 1)
+		//		+ " " + ( retNode.seqNum == 0 ) + " " +  (this.length > this.rtpSession.maxReorderBuffer)
+		//		+ " " + (this.lastSeqNumber < 0));
 
 		// Pop it off, null all references.
 		if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0 
