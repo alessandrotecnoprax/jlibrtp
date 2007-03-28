@@ -29,9 +29,10 @@ public class TestRTPSession implements RTPAppIntf {
 	}
 	
 	
-	public void receiveData(byte[] buff, Participant p, long time) {
-	String s = new String(buff);
-		System.out.println("The Data has been received: "+s+" , thank you "+p.getCNAME()+"("+p.getSSRC()+")");
+	public void receiveData(DataFrame frame, Participant p) {
+		String s = new String(frame.getData());
+		System.out.println("The Data has been received: "+s+" , thank you "
+				+p.getCNAME()+"("+p.getSSRC()+")");
 	}
 	
 	public static void main(String[] args) {
@@ -39,8 +40,7 @@ public class TestRTPSession implements RTPAppIntf {
 		try { Thread.currentThread().sleep(10000); } catch (Exception e) {  };
 	
 		int i=0;
-		while(i<1000)
-		{
+		while(i<1000) {
 				String str = "abcd";
 				test.rtpSession.sendData(str.getBytes());
 				try { Thread.currentThread().sleep(500); } catch (Exception e) {  };

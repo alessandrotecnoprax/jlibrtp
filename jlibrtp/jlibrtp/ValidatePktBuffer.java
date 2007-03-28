@@ -64,11 +64,13 @@ public class ValidatePktBuffer {
 		RtpPkt pkt6 = new RtpPkt(60, syncSource1, 6, 0, str5.getBytes());
 		RtpPkt pkt7 = new RtpPkt(70, syncSource1, 7, 0, str6.getBytes());
 		
-		PktBuffer pktBuf = new PktBuffer(rtpSession, pkt1);
+		Participant p = new Participant();
+		
+		PktBuffer pktBuf = new PktBuffer(rtpSession, p, pkt1);
 		pktBuf.addPkt(pkt3); //2
 		pktBuf.addPkt(pkt2); //3
 		DataFrame aFrame = pktBuf.popOldestFrame();
-		String outStr = new String(aFrame.data);
+		String outStr = new String(aFrame.getData());
 		System.out.println("** 1 Data from first frame: " + outStr + ", should be ab");
 		pktBuf.addPkt(pkt4); //3
 		pktBuf.addPkt(pkt7); //4
@@ -78,12 +80,12 @@ public class ValidatePktBuffer {
 		pktBuf.addPkt(pkt3); //5
 		// Pop second frame
 		aFrame = pktBuf.popOldestFrame(); //4
-		outStr = new String(aFrame.data);
+		outStr = new String(aFrame.getData());
 		System.out.println("** 3 Data from second frame: " + outStr + ", should be cd");
 		
 		// Pop third frame
 		aFrame = pktBuf.popOldestFrame(); //3
-		outStr = new String(aFrame.data);
+		outStr = new String(aFrame.getData());
 		System.out.println("** 4 Data from third frame: " + outStr + ", should be ef");
 		System.out.println("** 5 pktBuf.getLength is " + pktBuf.getLength() + ", should be 3");
 		
@@ -91,15 +93,15 @@ public class ValidatePktBuffer {
 		pktBuf.addPkt(pkt2);
 		
 		aFrame = pktBuf.popOldestFrame();
-		outStr = new String(aFrame.data);
+		outStr = new String(aFrame.getData());
 		System.out.println("** 7 Data from fourth frame: " + outStr + ", should be gh");
 		
 		aFrame = pktBuf.popOldestFrame();
-		outStr = new String(aFrame.data);
+		outStr = new String(aFrame.getData());
 		System.out.println("** 8 Data from fifth frame: " + outStr + ", should be ij");
 
 		aFrame = pktBuf.popOldestFrame();
-		outStr = new String(aFrame.data);
+		outStr = new String(aFrame.getData());
 		System.out.println("** 9 Data from fifth frame: " + outStr + ", should be kl");
 	}
 

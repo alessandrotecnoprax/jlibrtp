@@ -41,7 +41,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 	public RTPSession rtpSession = null;
 	static int pktCount = 0;
 	private String filename;
-	private final int EXTERNAL_BUFFER_SIZE = 320;
+	private final int EXTERNAL_BUFFER_SIZE = 160;
 	SourceDataLine auline;
 	private Position curPosition;
 	boolean local;
@@ -54,8 +54,8 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		DatagramSocket rtcpSocket = null;
 		
 		try {
-			rtpSocket = new DatagramSocket(6001);
-			rtcpSocket = new DatagramSocket(6002);
+			rtpSocket = new DatagramSocket(16386);
+			rtcpSocket = new DatagramSocket(16387);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port");
 		}
@@ -92,7 +92,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		}
 	}
 	
-	public void receiveData(byte[] dummy1, Participant dummy2, long dummy3) {
+	public void receiveData(DataFrame dummy1, Participant dummy2) {
 		// We don't expect any data.
 	}
 	
@@ -155,7 +155,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		byte[] abData = new byte[EXTERNAL_BUFFER_SIZE];
 		long start = System.currentTimeMillis();
 		try {
-			while (nBytesRead != -1) {
+			while (nBytesRead != -1 && pktCount < 500) {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
 				if (nBytesRead >= 0) {
 					rtpSession.sendData(abData);

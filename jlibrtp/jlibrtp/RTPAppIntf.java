@@ -38,5 +38,5 @@ public interface RTPAppIntf {
 	 * @param Participant participant
 	 * @param timeMs the time when this packet was created, as set by the sender, converted to System.currentTimeMillis()
 	 */
-	public void receiveData(byte[] buff, Participant participant, long timeMs);
+	public void receiveData(DataFrame frame, Participant participant);
 }

@@ -94,15 +94,71 @@ public class StaticProcs {
 		
 		double tmp = (double) Integer.MAX_VALUE*2;
 
-		tmp = (tmp * 1000.0) / (ntpTs2);
+		tmp = tmp  / (ntpTs2);
 	
 		if(tmp > 1050) {
-			System.out.println("StaticProcs.undoNtpMess("+ntpTs2+","+ntpTs2+") created a mess.");
+			System.out.println("StaticProcs.undoNtpMess("+ntpTs1+","+ntpTs2+") created a mess.");
 		} else {
-			timeVal += tmp;
+		//	timeVal += (long) 1000.0 * tmp;
 		}
 		return timeVal;
 	}
+	
+	/** 
+	 * Get the bits of a byte
+	 * 
+	 * @param aByte the byte you wish to convert
+	 * @return a String of 1's and 0's
+	 * @author Arne Kepp
+	 */
+	public static String bitsOfByte(byte aByte) {
+		int temp;
+		String out = "";
+		for(int i=7; i>=0; i--) {
+			temp = (aByte >>> i);
+			temp &= 0x0001;
+			out += (""+temp);
+		}
+		return out;
+	}
+	
+	/** 
+	 * Get the hex representation of a byte
+	 * 
+	 * @param aByte the byte you wish to convert
+	 * @return a String of two chars 0-1,A-F
+	 * @author Arne Kepp
+	 */
+	public static String hexOfByte(byte aByte) {
+		String out = "";
+
+		for(int i=0; i<2; i++) {
+			int temp = (int) aByte;
+			if(temp < 0) {
+				temp +=256;
+			}
+			if(i == 0) {
+				temp = temp/16;
+			} else {
+				temp = temp%16;
+			}
+			
+			if( temp > 9) {
+				switch(temp) {
+				case 10: out += "A"; break;
+				case 11: out += "B"; break;
+				case 12: out += "C"; break;
+				case 13: out += "D"; break;
+				case 14: out += "E"; break;
+				case 15: out += "F"; break;
+				}
+			} else {
+				out += ""+temp;
+			}
+		}
+		return out;
+	}
+	
 	
 	/** 
 	 * Print the bits of a byte to standard out. For debugging.

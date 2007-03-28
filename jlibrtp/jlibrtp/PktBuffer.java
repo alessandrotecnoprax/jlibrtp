@@ -35,7 +35,8 @@ public class PktBuffer {
 	
 	//Used to identify the buffer
 	long SSRC;
-
+	Participant p;
+	
 	//Bookkeeping
 	int length = 0;
 
@@ -51,8 +52,9 @@ public class PktBuffer {
 	 * @param aPkt First packet 
 	 * @param completionLength How many pkts make up a complete frame, depends on paylod type.
 	 */
-	public PktBuffer(RTPSession rtpSession, RtpPkt aPkt) {
+	public PktBuffer(RTPSession rtpSession, Participant p, RtpPkt aPkt) {
 		this.rtpSession = rtpSession;
+		this.p = p;
 		SSRC = aPkt.getSsrc();
 		PktBufNode newNode = new PktBufNode(aPkt);
 		oldest = newNode;
@@ -196,7 +198,7 @@ public class PktBuffer {
 				System.out.println("<- PktBuffer.popOldestFrame() returns frame");
 			}
 			
-			return new DataFrame(retNode, 1);
+			return new DataFrame(retNode, this.p,1);
 		} else {
 			// If we get here we have little to show for.
 			if(RTPSession.rtpDebugLevel > 2) {

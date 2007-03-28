@@ -19,8 +19,8 @@ public class CCRTPReceiver implements RTPAppIntf {
 		// Do nothing;
 	}
 	
-	public void receiveData(byte[] data, Participant p, long time) {
-		System.out.println("Got data: " + new String(data));
+	public void receiveData(DataFrame frame, Participant p) {
+		System.out.println("Got data: " + new String(frame.getData()));
 	}
 	/**
 	 * @param args

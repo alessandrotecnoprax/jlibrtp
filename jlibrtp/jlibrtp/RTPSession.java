@@ -189,7 +189,7 @@ public class RTPSession {
 	  * @return	-1 if there was a problem sending the data, 0 otherwise.
 	  */
 	 public int sendData(byte[] buf) {
-		 return this.sendData(buf, null);
+		 return this.sendData(buf, null, false);
 	 }
 	 /**
 	  * Send data to all participants registered as receivers, using the current timeStamp and
@@ -199,7 +199,7 @@ public class RTPSession {
 	  * @param csrcArray an array with the SSRCs of contributing sources
 	  * @return	-1 if there was a problem sending the data, 0 otherwise.
 	  */
-	 public int sendData(byte[] buf, long[] csrcArray) {
+	 public int sendData(byte[] buf, long[] csrcArray, boolean marker) {
 		if(RTPSession.rtpDebugLevel > 5) {
 				System.out.println("-> RTPSession.sendData(byte[])");
 		}
@@ -211,9 +211,10 @@ public class RTPSession {
 		// Create a new RTP Packet
 		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),this.ssrc,getNextSeqNum(),this.payloadType,buf);
 		
-		if(csrcArray != null) {
+		if(csrcArray != null)
 			pkt.setCsrcs(csrcArray);
-		}
+		
+		pkt.setMarked(marker);
 		
 		// Creates a raw packet
 		byte[] pktBytes = pkt.encode();

@@ -29,27 +29,37 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class DataFrame {
-	public long timeStamp;
-	public long SSRC;
-	public long[] CSRCs;
-	public int payloadType;
-	public int dataLength;
-	public byte[] data;
+	private long rtpTimestamp;
+	private long timestamp = -1;
+	private long SSRC;
+	private long[] CSRCs;
+	private int payloadType;
+	private boolean marked; 
+	//private int dataLength;
+	private byte[] data;
 	
 	/**
 	 * The usual way to construct a frame is by giving it a PktBufNode,
 	 * which contains links to all the other pkts that make it up.
 	 */
-	public DataFrame(PktBufNode aBufNode, int noPkts) {
+	protected DataFrame(PktBufNode aBufNode, Participant p, int noPkts) {
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("-> DataFrame(PktBufNode, noPkts = " + noPkts +")");
 		}
 		RtpPkt aPkt = aBufNode.pkt;
 		
-		// All this data should be shared, so we just get it from the 
-		timeStamp = aPkt.getTimeStamp();
+		this.marked = aPkt.isMarked();
+		
+		// All this data should be shared, so we just get it from the first one
+		this.rtpTimestamp = aPkt.getTimeStamp();
 		SSRC = aPkt.getSsrc();
 		CSRCs = aPkt.getCsrcArray();
+		
+		// Check whether we can compute an NTPish timestamp? Requires two SR reports 
+		if(p.ntpGradient > 0) {
+			timestamp =  p.ntpOffset + (long) p.ntpGradient*this.rtpTimestamp;
+		}
+		
 		
 		// Make data the right length
 		int payloadLength = aPkt.getPayloadLength();
@@ -66,5 +76,33 @@ public class DataFrame {
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("<- DataFrame(PktBufNode, noPkt), data length: " + data.length);
 		}
+	}
+	
+	public byte[] getData() {
+		return this.data;
+	}
+	
+	public long getTimestamp() {
+		return this.timestamp;
+	}
+	
+	public long getRTPTimestamp() {
+		return this.rtpTimestamp;
+	}
+	
+	public int getPayloadType() {
+		return this.payloadType;
+	}
+	
+	public boolean firstPacketMarked() {
+		return this.marked;
+	}
+	
+	public long getSSRC() {
+		return this.SSRC;
+	}
+	
+	public long[] getCSRCs() {
+		return this.CSRCs;
 	}
 }

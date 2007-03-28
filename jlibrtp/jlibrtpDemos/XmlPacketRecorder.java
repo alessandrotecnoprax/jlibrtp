@@ -28,7 +28,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		RTPSession rtpSession = null;
 		// The number of packets we have received
 		int packetCount = 0;
-		final int maxPacketCount = 10;
+		final int maxPacketCount = 500;
 		
 		// For the document
 		Document sessionDocument = null;
@@ -42,8 +42,8 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			DatagramSocket rtcpSocket = null;
 			
 			try {
-				rtpSocket = new DatagramSocket(6002);
-				rtcpSocket = new DatagramSocket(6003);
+				rtpSocket = new DatagramSocket(16384);
+				rtcpSocket = new DatagramSocket(16385);
 			} catch (Exception e) {
 				System.out.println("RTPSession failed to obtain port");
 			}
@@ -52,7 +52,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 			this.rtpSession.RTPSessionRegister(this,this);
 			
-			Participant p = new Participant("127.0.0.1", 6004, 6005);
+			Participant p = new Participant("127.0.0.1", 16386, 16387);
 			this.rtpSession.addParticipant(p);
 		}
 		
@@ -64,7 +64,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 				long rtpTimestamp, long packetCount, long octetCount ) {
 				
 			
-			this.sessionElement.addContent(new Element("SR"));
+			this.sessionElement.addContent(new Element("SRPkt"));
 			this.packetCount++;
 		}
 		
@@ -72,27 +72,71 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 				int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 
 				long[] interArrivalJitter, long[] lastSRTimeStamp, long[] delayLastSR) {
 				
-			this.sessionElement.addContent(new Element("RR"));			
+			this.sessionElement.addContent(new Element("RRPkt"));			
 			this.packetCount++;	
 		}
 		
 		public void SDESPktReceived(Participant[] relevantParticipants) {
 			//Do nothing
-			this.sessionElement.addContent(new Element("SDES"));	
+			this.sessionElement.addContent(new Element("SDESPkt"));	
 			this.packetCount++;	
 		}
 		
 		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {
-			this.sessionElement.addContent(new Element("BYE"));	
+			this.sessionElement.addContent(new Element("BYEPkt"));	
 			this.packetCount++;	
 		}
 		
 		/**
 		 * RTP
 		 */
-		public void receiveData(byte[] buff, Participant participant, long timeMs) {
-			System.out.println(" RECEIVING RECEIVING ");
-			this.sessionElement.addContent(new Element("DATA"));	
+		public void receiveData(DataFrame frame, Participant part) {
+			//System.out.println(" RECEIVING RECEIVING ");
+			Element RTPPkt = new Element("RTPpacket");
+			this.sessionElement.addContent(RTPPkt);
+			
+			Element ArrivalTimestamp = new Element("ArrivalTimestamp");
+			ArrivalTimestamp.addContent(Long.toString(System.currentTimeMillis()));
+			RTPPkt.addContent(ArrivalTimestamp);
+			
+			Element RTPTimestamp = new Element("RTPTimestamp");
+			RTPTimestamp.addContent(Long.toString(frame.getRTPTimestamp()));
+			RTPPkt.addContent(RTPTimestamp);
+			
+			if(frame.getTimestamp() > 0) {
+				Element Timestamp = new Element("Timestamp");
+				Timestamp.addContent(Long.toString(frame.getTimestamp()));
+				RTPPkt.addContent(Timestamp);
+			}
+			
+			Element PayloadType = new Element("PayloadType");
+			PayloadType.addContent(Integer.toString(frame.getPayloadType()));
+			RTPPkt.addContent(PayloadType);
+			
+			Element Marked = new Element("Marked");
+			Marked.addContent(Boolean.toString(frame.firstPacketMarked()));
+			RTPPkt.addContent(Marked);
+			
+			Element SSRC = new Element("SSRC");
+			SSRC.addContent(Long.toString(frame.getSSRC()));
+			RTPPkt.addContent(SSRC);
+			
+			long[] csrcArray = frame.getCSRCs();
+			for(int i=0; i< csrcArray.length; i++) {
+				Element CSRC = new Element("CSRC");
+				CSRC.addContent(Long.toString(csrcArray[i]));
+				RTPPkt.addContent(CSRC);
+			}
+			
+			Element Payload = new Element("Payload");
+			byte[] payload = frame.getData();
+			StringBuffer buf = new StringBuffer();
+			for(int i=0; i<payload.length && i<64; i++ ) {
+				buf.append(StaticProcs.hexOfByte(payload[i]));
+			}
+			Payload.addContent(buf.toString());
+			RTPPkt.addContent(Payload);
+			
 			this.packetCount++;	
 		}
 		
