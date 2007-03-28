@@ -75,7 +75,7 @@ public class RTCPReceiverThread extends Thread {
 					rtpSession.resolveSsrcConflict();
 					return -1;
 				}
-
+				
 				/**        Receiver Reports        **/
 				if(	aPkt.getClass() == RtcpPktRR.class) {
 					RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
@@ -95,7 +95,7 @@ public class RTCPReceiverThread extends Thread {
 
 					Participant p = findParticipant(srPkt.ssrc, packet);
 					p.lastRtcpPkt = curTime;
-
+					
 					if(p != null) {
 
 						if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
@@ -103,7 +103,7 @@ public class RTCPReceiverThread extends Thread {
 							long newTime = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
 							p.ntpGradient = ((double) (newTime - p.ntpOffset))/((double) srPkt.rtpTs - p.lastSRRtpTs);
 							if(RTPSession.rtcpDebugLevel > 4) {
-								System.out.println("RTCPReceiverThread calcualted NTP vs RTP gradient: " + Double.toString(p.ntpGradient));
+								System.out.println("RTCPReceiverThread calculated NTP vs RTP gradient: " + Double.toString(p.ntpGradient));
 							}
 						} else {
 							// Calculate sum of ntpTs1 and ntpTs2 in milliseconds

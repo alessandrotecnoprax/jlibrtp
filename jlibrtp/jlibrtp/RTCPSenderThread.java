@@ -159,17 +159,17 @@ public class RTCPSenderThread extends Thread {
 				while((part.rtcpAddress == null || part.unexpected) && iter.hasNext()) {
 					part = (Participant) iter.next();
 				}
-				
-				if(part == null) {
-					//Out of luck
-					continue;
-				}
 			} catch (Exception e) { }
+			
+			if(part == null) {
+				//Out of luck
+				continue;
+			}
 			
 			/*********** Figure out what we are going to send ***********/
 			// Check whether this person has sent RTP packets since the last RR.
 			boolean incRR = false;
-			if(part.secondLastRtcpRRPkt > part.lastRtcpRRPkt) { 
+			if(part.secondLastRtcpRRPkt > part.lastRtcpRRPkt) {
 				incRR = true;
 				part.secondLastRtcpRRPkt = part.lastRtcpRRPkt;
 				part.lastRtcpRRPkt = System.currentTimeMillis();
@@ -196,7 +196,7 @@ public class RTCPSenderThread extends Thread {
 			//If we got anything from this participant since we sent the 2nd to last RtcpPkt
 			if(incRR) {
 				Participant[] partArray = {part};
-				RtcpPktRR rrPkt = new RtcpPktRR( partArray, rtpSession.ssrc);
+				RtcpPktRR rrPkt = new RtcpPktRR(partArray, rtpSession.ssrc);
 				compPkt.addPacket(rrPkt);
 			}
 			
@@ -213,9 +213,6 @@ public class RTCPSenderThread extends Thread {
 				//part.debugPrint();
 				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
-			
-
-			
 			
 			/*********** Administrative tasks ***********/			
 			//Update average packet size

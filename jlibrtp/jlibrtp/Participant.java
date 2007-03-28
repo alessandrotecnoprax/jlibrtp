@@ -175,24 +175,6 @@ public class Participant {
 	}
 	
 	/**
-	 * RTP port we expect peer to listen on.
-	 * 
-	 * @return the UDP port number
-	 */
-	//public int getRtpDestPort() {
-	//	return rtpDestPort;
-	//}
-	
-	/**
-	 * RTCP port we expect peer to listen on.
-	 * 
-	 * @return the UDP port number
-	 */
-	//public int getRtcpDestPort() {
-	//	return rtcpDestPort;
-	//}
-	
-	/**
 	 * RTP Address registered with this participant.
 	 * 
 	 * @return address of participant
@@ -210,6 +192,29 @@ public class Participant {
 	InetSocketAddress getRtcpSocketAddress() {
 		return rtcpAddress;
 	}
+
+	/**
+	 * InetSocketAddress this participant has used to
+	 * send us RTP packets.
+	 * 
+	 * @return address of participant
+	 */
+	InetSocketAddress getRtpReceivedFromAddress() {
+		return rtpAddress;
+	}
+
+	
+	
+	/**
+	 * InetSocketAddress this participant has used to
+	 * send us RTCP packets.
+	 * 
+	 * @return address of participant
+	 */
+	InetSocketAddress getRtcpReceivedFromAddress() {
+		return rtcpAddress;
+	}
+	
 	
 	/**
 	 * CNAME registered for this participant.
@@ -220,6 +225,70 @@ public class Participant {
 		return cname;
 	}
 	
+	
+	/**
+	 * NAME registered for this participant.
+	 * 
+	 * @return the name
+	 */
+	public String getNAME() {
+		return name;
+	}
+	
+	/**
+	 * EMAIL registered for this participant.
+	 * 
+	 * @return the email address
+	 */
+	public String getEmail() {
+		return email;
+	}
+	
+	/**
+	 * PHONE registered for this participant.
+	 * 
+	 * @return the phone number
+	 */
+	public String getPhone() {
+		return phone;
+	}
+	
+	/**
+	 * LOCATION registered for this participant.
+	 * 
+	 * @return the location
+	 */
+	public String getLocation() {
+		return loc;
+	}
+	
+	/**
+	 * NOTE registered for this participant.
+	 * 
+	 * @return the note
+	 */
+	public String getNote() {
+		return note;
+	}
+	
+	/**
+	 * PRIVATE something registered for this participant.
+	 * 
+	 * @return the private-string
+	 */
+	public String getPriv() {
+		return priv;
+	}
+	
+	/**
+	 * TOOL something registered for this participant.
+	 * 
+	 * @return the tool
+	 */
+	public String getTool() {
+		return tool;
+	}
+		
 	/**
 	 * SSRC for participant, determined through RTCP SDES
 	 * 

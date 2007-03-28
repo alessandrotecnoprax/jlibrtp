@@ -32,21 +32,25 @@ public class RtcpPktSDES extends RtcpPkt {
 			int curType;
 			long ssrc;
 			boolean endReached = false;
+			this.participants = new Participant[itemCount];
+			
 			// Loop over SSRC SDES chunks
 			for(int i=0; i< itemCount; i++) {
-				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, start + curPos);
-	
+				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, curPos);
 				Participant part = partDb.getParticipant(ssrc);
 				if(part == null) {
 					if(RTPSession.rtpDebugLevel > 1) {
 						System.out.println("RtcpPktSDES(byte[], ParticipantDabase) adding new participant, ssrc:"+ssrc);
 					}
 					
-					InetSocketAddress nullSocket = null;
-					part = new Participant(nullSocket, socket , ssrc);
+					//InetSocketAddress nullSocket = null;
+					//This needs to be sorted out anyway
+					part = new Participant(socket, socket , ssrc);
 					partDb.addParticipant(part);
 				}
 				curPos += 4;
+				
+				this.participants[i] = part;
 				
 				while(!endReached && (curPos/4) <= this.length) {
 					curType = (int) aRawPkt[curPos];
@@ -54,8 +58,6 @@ public class RtcpPktSDES extends RtcpPkt {
 					if(curType == 0) {	
 						curPos += 4 - (curPos % 4);
 						endReached = true;
-						System.out.println("End: curPos:"+curPos+" curType:"+curType);
-						
 					} else {
 						curLength  = (int) aRawPkt[curPos + 1];
 						//System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
@@ -104,7 +106,6 @@ public class RtcpPktSDES extends RtcpPkt {
 		byte[] temp = new byte[1450];
 		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.rtpSession.ssrc);
 		System.arraycopy(someBytes, 0, temp, 4, 4);
-		
 		int pos = 8;
 	
 		String tmpString = null;
@@ -147,9 +148,9 @@ public class RtcpPktSDES extends RtcpPkt {
 		
 		// Here we ought to loop over participants
 		
-		rawPkt = new byte[pos];
+		super.rawPkt = new byte[pos];
 		itemCount = 1;
-		System.arraycopy(temp, 0, rawPkt, 0, pos);
+		System.arraycopy(temp, 0, super.rawPkt, 0, pos);
 		writeHeaders();
 	}
 	
@@ -161,7 +162,7 @@ public class RtcpPktSDES extends RtcpPkt {
 				System.out.println("     part.ssrc: " + part.ssrc + "  part.cname: " + part.cname);
 			}
 		} else {
-			System.out.println("     nothing to report");
+			System.out.println("     nothing to report (only valid for received packets)");
 		}
 	}
 }
