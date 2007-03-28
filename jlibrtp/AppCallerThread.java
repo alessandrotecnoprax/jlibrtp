@@ -52,7 +52,7 @@ public class AppCallerThread extends Thread {
 			
 			rtpSession.pktBufLock.lock();
 		    try {
-				if(RTPSession.rtpDebugLevel > 15) {
+				if(RTPSession.rtpDebugLevel > 4) {
 					System.out.println("<-> AppCallerThread going to Sleep");
 				}
 				

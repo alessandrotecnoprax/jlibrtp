@@ -16,7 +16,6 @@ public class RtcpPktBYE extends RtcpPkt {
 	
 	protected RtcpPktBYE(byte[] aRawPkt, int start) {
 		rawPkt = aRawPkt;
-
 		if(!super.parseHeaders(start) || packetType != 203) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktBYE.parseHeaders() etc. problem");
@@ -65,7 +64,6 @@ public class RtcpPktBYE extends RtcpPkt {
 			rawPkt[(4 + 4*ssrcArray.length)] = (byte) reason.length;
 			System.arraycopy(reason, 0, rawPkt, 4+4*i +1, reason.length);		
 		}
-		
 		super.writeHeaders();
 	}
 	

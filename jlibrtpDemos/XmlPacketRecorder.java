@@ -29,6 +29,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		// The number of packets we have received
 		int packetCount = 0;
 		final int maxPacketCount = 500;
+		boolean noBye = true;
 		
 		// For the document
 		Document sessionDocument = null;
@@ -54,6 +55,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			
 			Participant p = new Participant("127.0.0.1", 16386, 16387);
 			this.rtpSession.addParticipant(p);
+			this.rtpSession.setNaivePktReception(true);
 		}
 		
 		
@@ -108,10 +110,8 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		
 		public void SDESPktReceived(Participant[] relevantParticipants) {
 			Element SDESPkt = new Element("SDESPkt");
-
-			SDESPkt.addContent("test");
+			this.sessionElement.addContent(SDESPkt);
 			
-			System.out.println("SDES! " + relevantParticipants.length);
 			if(relevantParticipants != null) {
 				for(int i=0;i<relevantParticipants.length;i++) {
 					Participant part = relevantParticipants[i];
@@ -169,13 +169,38 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 				System.out.println("SDES with no participants?");
 			}
 
-			this.sessionElement.addContent(new Element("SDESPkt"));
 			this.packetCount++;	
 		}
 		
 		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {
-			this.sessionElement.addContent(new Element("BYEPkt"));	
+			//System.out.println("BYE!");
+			Element BYEPkt = new Element("BYEPkt");
+			this.sessionElement.addContent(BYEPkt);
+			
+			if(relevantParticipants != null) {
+				for(int i=0;i<relevantParticipants.length;i++) {
+					Element Participant = new Element("Participant");
+					BYEPkt.addContent(Participant);
+					
+					Element SSRC = new Element("SSRC");
+					SSRC.addContent(Long.toString(relevantParticipants[i].getSSRC()));
+					Participant.addContent(SSRC);
+					
+					if(relevantParticipants[i].getCNAME() != null) {
+						Element CNAME = new Element("CNAME");
+						CNAME.addContent(relevantParticipants[i].getCNAME());
+						Participant.addContent(CNAME);
+					}					
+				}
+			}
+			if(reason != null) {
+				Element Reason = new Element("Reason");
+				Reason.addContent(reason);
+				BYEPkt.addContent(Reason);
+			}
+			
 			this.packetCount++;	
+			this.noBye = false;
 		}
 		
 		/**
@@ -269,7 +294,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			
 			System.out.print("Waiting for packets");
 			int prevCount = 0;
-			while(recorder.packetCount < recorder.maxPacketCount) {	
+			while(recorder.packetCount < recorder.maxPacketCount && recorder.noBye) {	
 				if(recorder.packetCount > prevCount)
 					System.out.print(".");
 				prevCount = recorder.packetCount;
@@ -278,6 +303,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			}
 			System.out.println();
 			
+			try { Thread.sleep(200); } catch (Exception e) { System.out.println("oops."); }
 			
 			System.out.println("Writing XML");
 			try {

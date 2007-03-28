@@ -99,7 +99,6 @@ public class RTPReceiverThread extends Thread {
 			
 			long pktSsrc = pkt.getSsrc();
 			
-			//System.out.println(" " + pkt.getSeqNumber());
 			// Check for loops and SSRC collisions
 			if( rtpSession.ssrc == pktSsrc )
 				rtpSession.resolveSsrcConflict();
@@ -170,7 +169,7 @@ public class RTPReceiverThread extends Thread {
 			// Upate liveness
 			part.lastRtpPkt = System.currentTimeMillis();
 
-			if(RTPSession.rtpDebugLevel > 15) {
+			if(RTPSession.rtpDebugLevel > 5) {
 				System.out.println("<-> RTPReceiverThread signalling pktBufDataReady");
 			}
 			

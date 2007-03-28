@@ -42,8 +42,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 5;
-	 final static public int rtcpDebugLevel = 5;
+	 final static public int rtpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 0;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -354,14 +354,18 @@ public class RTPSession {
 		try { this.pktBufDataReady.signalAll(); } finally {
 			this.pktBufLock.unlock();
 		}
-		
 		// Interrupt what may be sleeping
 		this.rtcpSession.senderThrd.interrupt();
+		
+		// Give things a chance to cool down.
+		try { Thread.sleep(50); } catch (Exception e){ };
+		
+
 		//this.maintThrd.interrupt();
 		this.appCallerThrd.interrupt();
 
 		// Give things a chance to cool down.
-		try { Thread.sleep(10); } catch (Exception e){ };
+		try { Thread.sleep(50); } catch (Exception e){ };
 		
 		if(this.rtcpSession != null) {		
 			// No more RTP packets, please
@@ -625,7 +629,7 @@ public class RTPSession {
 			
 		} else {
 			System.out.println("Too many conflicts. There is probably a loop in the network.");
-			this.endSession = true;
+			this.endSession();
 		}
 	}
 }

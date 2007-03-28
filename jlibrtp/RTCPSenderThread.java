@@ -187,15 +187,19 @@ public class RTCPSenderThread extends Thread {
 			CompRtcpPkt compPkt = new CompRtcpPkt();
 			
 			//If we're sending packets we'll use a SR for header
-			if(incSR || !incRR) {
+			if(incSR) {
 				RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
 						this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount);
 				compPkt.addPacket(srPkt);
 			}
 			
 			//If we got anything from this participant since we sent the 2nd to last RtcpPkt
-			if(incRR) {
+			if(incRR || !incSR) {
 				Participant[] partArray = {part};
+				
+				if(part.receivedPkts < 1)
+					partArray = null;
+				
 				RtcpPktRR rrPkt = new RtcpPktRR(partArray, rtpSession.ssrc);
 				compPkt.addPacket(rrPkt);
 			}
