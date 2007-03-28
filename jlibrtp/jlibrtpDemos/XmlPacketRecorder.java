@@ -62,9 +62,39 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		 */
 		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
 				long rtpTimestamp, long packetCount, long octetCount ) {
-				
 			
-			this.sessionElement.addContent(new Element("SRPkt"));
+			Element SRPkt = new Element("SRPkt");
+			this.sessionElement.addContent(SRPkt);
+			
+			Element ArrivalTimestamp = new Element("ArrivalTimestamp");
+			ArrivalTimestamp.addContent(Long.toString(System.currentTimeMillis()));
+			SRPkt.addContent(ArrivalTimestamp);
+			
+			Element RTPTimestamp = new Element("RTPTimestamp");
+			RTPTimestamp.addContent(Long.toString(rtpTimestamp));
+			SRPkt.addContent(RTPTimestamp);
+			
+			Element NTPHigh = new Element("NTPHigh");
+			NTPHigh.addContent(Long.toString(ntpHighOrder));
+			SRPkt.addContent(NTPHigh);
+			
+			Element NTPLow = new Element("NTPLow");
+			NTPLow.addContent(Long.toString(ntpLowOrder));
+			SRPkt.addContent(NTPLow);
+			
+			Element SSRC = new Element("SSRC");
+			SSRC.addContent(Long.toString(ssrc));
+			SRPkt.addContent(SSRC);
+			
+			Element PacketCount = new Element("PacketCount");
+			PacketCount.addContent(Long.toString(packetCount));
+			SRPkt.addContent(PacketCount);
+			
+			Element OctetCount = new Element("OctetCount");
+			OctetCount.addContent(Long.toString(octetCount));
+			SRPkt.addContent(OctetCount);
+			
+
 			this.packetCount++;
 		}
 		
@@ -137,7 +167,10 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			Payload.addContent(buf.toString());
 			RTPPkt.addContent(Payload);
 			
-			this.packetCount++;	
+			this.packetCount++;
+			//if(packetCount == 100) {
+			//	System.out.println("Time!!!!!!!!! " + Long.toString(System.currentTimeMillis()));
+			//}
 		}
 		
 		

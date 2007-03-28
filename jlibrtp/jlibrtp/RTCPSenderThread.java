@@ -144,23 +144,27 @@ public class RTCPSenderThread extends Thread {
 			}
 			this.byesSent = false;
 			
-			// Get user stats
-			if(! iter.hasNext()) {
-				iter = rtpSession.partDb.getParticipants();
-			}
+
 			
 			//Grab the next person
-			Participant part = (Participant) iter.next();
-			
-			//Find someone we actually want to communicate with
-			while((part.rtcpAddress == null || part.unexpected) && iter.hasNext()) {
+			Participant part = null;
+			try {
+				// Get user stats
+				if(! iter.hasNext()) {
+					iter = rtpSession.partDb.getParticipants();
+				}
 				part = (Participant) iter.next();
-			}
-			
-			if(part == null) {
-				//Out of luck
-				continue;
-			}
+				
+				//Find someone we actually want to communicate with
+				while((part.rtcpAddress == null || part.unexpected) && iter.hasNext()) {
+					part = (Participant) iter.next();
+				}
+				
+				if(part == null) {
+					//Out of luck
+					continue;
+				}
+			} catch (Exception e) { }
 			
 			/*********** Figure out what we are going to send ***********/
 			// Check whether this person has sent RTP packets since the last RR.

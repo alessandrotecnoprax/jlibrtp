@@ -101,13 +101,13 @@ public class RTCPReceiverThread extends Thread {
 						if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
 							//Calculate gradient NTP vs RTP
 							long newTime = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
-
 							p.ntpGradient = ((double) (newTime - p.ntpOffset))/((double) srPkt.rtpTs - p.lastSRRtpTs);
-						} else if(p.ntpOffset < 0) {
+							if(RTPSession.rtcpDebugLevel > 4) {
+								System.out.println("RTCPReceiverThread calcualted NTP vs RTP gradient: " + Double.toString(p.ntpGradient));
+							}
+						} else {
 							// Calculate sum of ntpTs1 and ntpTs2 in milliseconds
 							p.ntpOffset = StaticProcs.undoNtpMess(srPkt.ntpTs1, srPkt.ntpTs2);
-
-							// For calculating the gradient of NTP time vs RTP time
 							p.lastNtpTs1 = srPkt.ntpTs1;
 							p.lastNtpTs2 = srPkt.ntpTs2;
 							p.lastSRRtpTs = srPkt.rtpTs;

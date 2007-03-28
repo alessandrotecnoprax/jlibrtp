@@ -89,18 +89,14 @@ public class StaticProcs {
 		return accum;
 	}
 	
-	public static long undoNtpMess(long ntpTs1, long ntpTs2) {
-		long timeVal = (ntpTs1 - (70*365 + 17)*24*3600)*1000;
+	public static long undoNtpMess(long ntpTs1, long ntpTs2) {		
+		long timeVal = (ntpTs1 - 2208988800L)*1000;
+			
+		double tmp = (1000.0*(double)ntpTs2)/((double)4294967295L);
+		long ms = (long) tmp;
+		//System.out.println(" timeVal: " +Long.toString(timeVal)+ " ms " + Long.toString(ms));
+		timeVal += ms;
 		
-		double tmp = (double) Integer.MAX_VALUE*2;
-
-		tmp = tmp  / (ntpTs2);
-	
-		if(tmp > 1050) {
-			System.out.println("StaticProcs.undoNtpMess("+ntpTs1+","+ntpTs2+") created a mess.");
-		} else {
-		//	timeVal += (long) 1000.0 * tmp;
-		}
 		return timeVal;
 	}
 	
