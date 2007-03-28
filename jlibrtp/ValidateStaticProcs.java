@@ -57,6 +57,24 @@ public class ValidateStaticProcs {
 		for(int i = 0; i< 4; i++) {
 			StaticProcs.printBits(twob[i]);
 		}
+		
+		byte[] bytes = new byte[2];
+		int check = 0;
+		for(int i=0; i< 65536; i++) {
+			bytes = StaticProcs.uIntIntToByteWord(i);
+			check = StaticProcs.bytesToUIntInt(bytes, 0);
+			if(check != i) {
+				System.out.println(" oops:" + check +" != "+ i);
+				StaticProcs.printBits(bytes[0]);
+				StaticProcs.printBits(bytes[1]);
+			}
+		}
+		int a = 65534;
+		bytes = StaticProcs.uIntIntToByteWord(a);
+		StaticProcs.printBits(bytes[0]);
+		StaticProcs.printBits(bytes[1]);
+		check = StaticProcs.bytesToUIntInt(bytes, 0);
+		System.out.println(check);
 	}
 
 }
