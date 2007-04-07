@@ -96,6 +96,10 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		// We don't expect any data.
 	}
 	
+	public void userEvent(int type, Participant[] participant) {
+		//Do nothing
+	}
+	
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("-> Run()");

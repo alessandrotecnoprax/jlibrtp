@@ -1,6 +1,6 @@
 package jlibrtp;
 
-import java.util.Iterator;
+import java.util.Enumeration;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -58,20 +58,20 @@ public class RTCPSession {
 		
 
 		
-		if(rtpSession.bandwidth != 0 && ! this.initial && rtpSession.partDb.all.size() > 4) {
+		if(rtpSession.bandwidth != 0 && ! this.initial && rtpSession.partDb.ssrcTable.size() > 4) {
 			// RTPs mechanisms for RTCP scalability
 			int rand = rtpSession.random.nextInt(10000) - 5000; //between -500 and +500
 			double randDouble = ((double) rand)/1000.0;
 			
 			int senderCount = 0;
-			Iterator iter = rtpSession.partDb.getParticipants();
-			while(iter.hasNext()) {
-				Participant part = (Participant) iter.next();
+			Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
+			while(enu.hasMoreElements()) {
+				Participant part = enu.nextElement();
 				if(part.lastRtpPkt > this.prevTime)
 					senderCount++;
 			}
 			
-			if(senderCount*2 > rtpSession.partDb.all.size()) {
+			if(senderCount*2 > rtpSession.partDb.ssrcTable.size()) {
 				if(rtpSession.lastTimestamp > this.prevTime) {
 					//We're a sender
 					double numerator = ((double) this.avgPktSize)*((double) senderCount);
@@ -79,12 +79,12 @@ public class RTCPSession {
 					this.nextDelay = (int) Math.round((numerator/denominator)*randDouble);
 				} else {
 					//We're a receiver
-					double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.all.size());
+					double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.ssrcTable.size());
 					double denominator = 0.05*0.75* rtpSession.bandwidth;
 					this.nextDelay = (int) Math.round((numerator/denominator)*randDouble);
 				}
 			} else {
-				double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.all.size());;
+				double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.ssrcTable.size());;
 				double denominator = 0.05 * rtpSession.bandwidth;
 				this.nextDelay = (int) Math.round(1000.0*(numerator/denominator)) + rand;
 			}

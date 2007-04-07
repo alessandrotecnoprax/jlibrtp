@@ -39,4 +39,20 @@ public interface RTPAppIntf {
 	 * @param timeMs the time when this packet was created, as set by the sender, converted to System.currentTimeMillis()
 	 */
 	public void receiveData(DataFrame frame, Participant participant);
+	
+	
+	/**
+	 * The callback method through which the application will receive
+	 * notifications about user updates, additions and byes.
+	 *  Types:
+	 *  	1 - Bye
+	 *  	2 - New through RTP, check .getRtpSendSock()
+	 *  	3 - New through RTCP, check .getRtcpSendSock()
+	 * 		4 - SDES packet received, check the getCname() etc methods
+	 *      5 - Matched SSRC to ip-address provided by application
+	 * 
+	 * @param type the type of event
+	 * @param participant(s) in question
+	 */
+	public void userEvent(int type, Participant[] participant);
 }

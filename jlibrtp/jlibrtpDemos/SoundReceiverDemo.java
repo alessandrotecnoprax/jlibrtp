@@ -56,6 +56,10 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		pktCount++;
 	}
 	
+	public void userEvent(int type, Participant[] participant) {
+		//Do nothing
+	}
+	
 	public SoundReceiverDemo()  {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;

@@ -259,6 +259,9 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			//}
 		}
 		
+		public void userEvent(int type, Participant[] participant) {
+			//Do nothing
+		}
 		
 		/**
 		 * 

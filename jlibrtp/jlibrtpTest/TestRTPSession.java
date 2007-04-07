@@ -35,6 +35,10 @@ public class TestRTPSession implements RTPAppIntf {
 				+p.getCNAME()+"("+p.getSSRC()+")");
 	}
 	
+	public void userEvent(int type, Participant[] participant) {
+		//Do nothing
+	}
+	
 	public static void main(String[] args) {
 		TestRTPSession test = new TestRTPSession();
 		try { Thread.currentThread().sleep(10000); } catch (Exception e) {  };

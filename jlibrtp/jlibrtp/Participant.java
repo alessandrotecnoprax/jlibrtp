@@ -26,10 +26,7 @@ import java.net.InetAddress;
  * these objects, packets are processed and statistics generated for RTCP.
  */
 public class Participant {
-	//protected boolean isSender = false;
-	protected boolean isReceiver = false;
 	protected boolean unexpected = false;
-	protected boolean persistent = false;
 	protected InetSocketAddress rtpAddress = null; 	
 	protected InetSocketAddress rtcpAddress = null;
 	//These are used for matchin SSRC packets without owners
@@ -137,41 +134,6 @@ public class Participant {
 	// Dummy constructor to ease testing
 	protected Participant() {
 		System.out.println("Don't use the Participan(void) Constructor!");
-	}
-	/**
-	 * Toggle whether this participant is expected to send packets to us or not.
-	 * 
-	 * @param doesSend true if we expect packets from this participant.
-	 */
-	//public void isSender(boolean doesSend) {
-	//	isSender = doesSend;
-	//}
-
-	/**
-	 * Check whether we expect packets from this participant or not.
-	 * 
-	 * @return true if we expect packets from this source.
-	 */
-	//public boolean isSender() {
-	//	return isSender;
-	//}
-	
-	/**
-	 * Toggle whether this participant should receive packets from us or not.
-	 * 
-	 * @param doesReceive true if we should send packets to this participant.
-	 */
-	public void isReceiver(boolean doesReceive) {
-		isReceiver = doesReceive;
-	}
-
-	/**
-	 * Check whether this participant expects packets from us or not.
-	 * 
-	 * @return true if the receiver expects packets from us.
-	 */
-	public boolean isReceiver() {
-		return isReceiver;
 	}
 	
 	/**

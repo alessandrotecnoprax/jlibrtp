@@ -19,7 +19,7 @@
 package jlibrtp;
 
 import java.util.*;
-import java.net.*;
+import java.util.concurrent.*;
 
 /**
  * The participant database maintains three hashtables with participants.
@@ -38,155 +38,132 @@ import java.net.*;
  */
 public class ParticipantDatabase {
 	RTPSession rtpSession = null;
-	Hashtable ssrcTable = new Hashtable();
-	Hashtable ipTable = new Hashtable();
-	HashMap<InetSocketAddress, Integer> rtpReceivers = new HashMap<InetSocketAddress, Integer>();
-	//HashMap<InetSocketAddress, Integer> rtcpReceivers = new HashMap<InetSocketAddress, Integer>();
-	//HashSet<Participant> all = ;
-	Set<Participant> all = Collections.synchronizedSet(new HashSet<Participant>());
-	//Map m = Collections.synchronizedMap(new HashMap(...));
-	int senderCount = 0;
+
+	LinkedList<Participant> receivers = new LinkedList<Participant>();	
+	ConcurrentHashMap<Long,Participant> ssrcTable = new ConcurrentHashMap<Long,Participant>();
 	
 	public ParticipantDatabase(RTPSession parent) {
 		rtpSession = parent;
 	}
 	
-	synchronized protected int addParticipant(Participant p) {
-		if( p.rtpAddress != null && p.rtpAddress.getAddress().isMulticastAddress() != this.rtpSession.mcSession) {
-			System.out.println("ParticipantDatabase.addParticipant() rejected (non)multicast participant.");
+	/**
+	 * 
+	 * @param cameFrom 0: Application, 1: RTP packet, 2: RTCP
+	 * @param p
+	 * @return 0 if okay, -1 if 
+	 */
+	protected int addParticipant(int cameFrom, Participant p) {
+		//Multicast or not?
+		if(this.rtpSession.mcSession) {
+			return this.addParticipantMulticast(cameFrom, p);
+		} else {
+			return this.addParticipantUnicast(cameFrom, p);
+		}
+		
+	}
+	
+	private int addParticipantMulticast(int cameFrom, Participant p) {
+		if( cameFrom == 0) {
+			System.out.println("ParticipantDatabase.addParticipant() doesnt expect" 
+					+ " application to add participants to multicast session.");
 			return -1;
+		} else {
+			// Check this one is not redundant
+			if(this.ssrcTable.contains(p.ssrc)) {
+				System.out.println("ParticipantDatabase.addParticipant() SSRC "
+						+"already known " + Long.toString(p.ssrc));
+				return -2;
+			} else {
+				this.ssrcTable.put(p.ssrc, p);
+				return 0;
+			}
 		}
-		
-		//All
-		all.add(p);
+	}
+	
+	private int addParticipantUnicast(int cameFrom, Participant p) {
+		if(cameFrom == 0) {
+			//Check whether there is a match in the ssrcTable
+			boolean notDone = true;
+			
+			Enumeration<Participant> enu = this.ssrcTable.elements();
+			while(notDone && enu.hasMoreElements()) {
+				Participant part = enu.nextElement();
+				if(part.unexpected && 
+						(part.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress()) 
+						|| part.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))) {
+					
+					part.rtpAddress = p.rtpAddress;
+					part.rtcpAddress = p.rtcpAddress;
+					part.unexpected = false;
 
-		// Do we identify this one by socket address or SSRC? The latter is prefered.
-		if(p.ssrc > 0) {
-			ssrcTable.put(p.ssrc, p);
-		} else if( ! rtpSession.mcSession) {
-			ipTable.put(p.rtpAddress, p);
-		}
-
-		if(! rtpSession.mcSession) {
-			// Add to RTP receivers?
-			if(p.rtpAddress != null) {
-				Integer anInt = rtpReceivers.get(p.rtpAddress);
-				if(anInt != null) {
-					anInt = new Integer(anInt.intValue() + 1) ;
-					rtpReceivers.put(p.rtpAddress, anInt);
-				} else {
-					anInt = new Integer(1);
-					rtpReceivers.put(p.rtpAddress, anInt);
+					//Report the match back to the application
+					Participant[] partArray = {part};
+					this.rtpSession.appIntf.userEvent(5, partArray);
+					
+					notDone = false;
+					p = part;
 				}
 			}
 
-			// Add to RTCP receivers?
-			//if(p.rtcpAddress != null) {
-			//	Integer anInt = rtcpReceivers.get(p.rtcpAddress);
-			//	if(anInt != null) {
-			//		anInt = new Integer(anInt.intValue() + 1);
-			//		rtcpReceivers.put(p.rtcpAddress, anInt);
-			//	} else {
-			//		anInt = new Integer(1);
-			//		rtcpReceivers.put(p.rtcpAddress, anInt);
-			//	}
-			//}
-		}
-		return 0;
-	}
-	
-	synchronized protected void removeParticipant(Participant p) {
-		//All
-		all.remove(p);
-		
-		Participant tmp;
-		if(p.ssrc > 0) {
-			ssrcTable.remove(p.ssrc);
-		}
-		if(!rtpSession.mcSession && p.rtpAddress != null) {
-			ipTable.remove(p.rtpAddress);
-		}
+			//Add to the table of people that we send packets to
+			this.receivers.add(p);
+			return 0;
+			
+		} else {
+			//Check whether there's a match in the receivers table
+			boolean notDone = true;
+			
+			Iterator<Participant> iter = this.receivers.iterator();
+			while(notDone && iter.hasNext()) {
+				Participant part = iter.next();
+				if((cameFrom == 1 && p.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))
+					|| (cameFrom == 2 && p.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress()))) {
+				
+					p.rtpAddress = part.rtpAddress;
+					p.rtcpAddress = part.rtcpAddress;
+					p.unexpected = false;
 
-		if(! rtpSession.mcSession ) {
-			// Remove from RTP receivers?
-			if(p.rtpAddress != null) {
-				Integer anInt = rtpReceivers.get(p.rtpAddress);
-				if(anInt != null) {
-					if(anInt.intValue() > 1) {
-						anInt = new Integer(anInt.intValue() - 1);
-						rtpReceivers.put(p.rtpAddress, anInt);
-					} else {
-						rtpReceivers.remove(p.rtpAddress);
-					}
+					//Report the match back to the application
+					Participant[] partArray = {part};
+					this.rtpSession.appIntf.userEvent(5, partArray);
+					
+					//Remove the old one, add this one
+					this.receivers.remove(part);
+					this.receivers.add(p);
+					notDone = false;
 				}
 			}
-
-			// Remove from RCTP receivers?
-			//if(p.rtcpAddress != null) {
-			//	Integer anInt = rtcpReceivers.get(p.rtcpAddress);
-			//	if(anInt != null) {
-			//		if(anInt.intValue() > 1) {
-			//			anInt = new Integer(anInt.intValue() - 1);
-			//			rtcpReceivers.put(p.rtcpAddress, anInt);
-			//		} else {
-			//			rtcpReceivers.remove(p.rtcpAddress);
-			//		}
-			//	}
-			//}
+			
+			this.ssrcTable.put(p.ssrc, p);				
+			return 0;
 		}
-
 	}
 	
-	synchronized protected void updateParticipant(Participant p) {
-		this.removeParticipant(p);
-		this.addParticipant(p);
+	protected void removeParticipant(Participant p) {
+		if(! this.rtpSession.mcSession)
+			this.receivers.remove(p);
+		
+		this.ssrcTable.remove(p.ssrc, p);
 	}
+		
 	
 	protected Participant getParticipant(long ssrc) {
 		Participant p = null;
-		p = (Participant) ssrcTable.get(ssrc);
+		p = ssrcTable.get(ssrc);
 		return p; 
 	}
 	
-/**
- * This method looks for participants the application has added,
- * which we have yet to associate with an SSRC
- * 
- * @param anAddress
- * @return best guess for which Participant
- */
-	protected Participant getParticipant(InetAddress anAddress) {
-		Participant p = null;
-		Enumeration enu = ipTable.elements();
-		
-		// We'll look for the first available match
-		while(enu.hasMoreElements()) {
-			Participant tmp = (Participant) enu.nextElement();
-			if(tmp.rtpAddress.getAddress().equals(anAddress))
-				p = tmp;
+	protected Iterator<Participant> getUnicastReceivers() {
+		if(this.rtpSession.mcSession) {
+			return this.receivers.iterator();
+		} else {
+			System.out.println("Request for ParticipantDatabase.getUnicastReceivers in multicast session");
+			return null;
 		}
-
-		return p; 
 	}
 	
-	protected Iterator getParticipants() {
-		return all.iterator();
-	}
-	
-	protected Iterator getRtpReceivers() {
-		return rtpReceivers.keySet().iterator();
-	}
-	
-	//protected Iterator getRtcpReceivers() {
-	//	return rtpReceivers.keySet().iterator();
-	//}
-	
-	protected int receiverCount() {
-		return rtpReceivers.size();
-	}
-	
-	protected int senderCount() {
-		return senderCount;
+	protected Enumeration<Participant> getParticipants() {
+		return this.ssrcTable.elements();
 	}
 	
 	protected void debugPrint() {
@@ -198,25 +175,11 @@ public class ParticipantDatabase {
 			System.out.println("           ssrcTable ssrc:"+p.ssrc+" cname:"+p.cname
 					+" loc:"+p.loc+" rtpAddress:"+p.rtpAddress+" rtcpAddress:"+p.rtcpAddress);
 		}
-		enu = ipTable.elements();
-		while(enu.hasMoreElements()) {
-			p = (Participant) enu.nextElement();
-			System.out.println("           ipTable rtpAddress:"+p.rtpAddress+" rtcpAddress:"+p.rtcpAddress);
-		}
 		
-		Set aSet = rtpReceivers.keySet();
-		Iterator iter = aSet.iterator();
+		Iterator<Participant> iter = receivers.iterator();
 		while(iter.hasNext()) {
-			InetSocketAddress inetAdr = (InetSocketAddress) iter.next();
-			Integer anInt = rtpReceivers.get(inetAdr);
-			System.out.println("           rtpReceivers: "+inetAdr.toString() + "  count:" + anInt.intValue());
+			p = iter.next();
+			System.out.println("           receivers: "+p.rtpAddress.toString());
 		}
-		//aSet = rtcpReceivers.keySet();
-		//iter = aSet.iterator();
-		//while(iter.hasNext()) {
-		//	InetSocketAddress inetAdr = (InetSocketAddress) iter.next();
-		//	Integer anInt = rtcpReceivers.get(inetAdr);
-		//	System.out.println("           rtcpReceivers: "+inetAdr.toString() + "  count:" + anInt.intValue());
-		//}
 	}
 }

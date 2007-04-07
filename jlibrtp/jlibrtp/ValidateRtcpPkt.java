@@ -43,8 +43,8 @@ public class ValidateRtcpPkt {
 		part1.phone = "+452 1231231";
 		part2.phone = "aasdasda.asdasdas";
 		
-		partDb.addParticipant(part1);
-		partDb.addParticipant(part2);
+		partDb.addParticipant(0,part1);
+		partDb.addParticipant(0,part2);
 		
 		Participant[] partArray = new Participant[2];
 		partArray[0] = part1;
