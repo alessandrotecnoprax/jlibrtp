@@ -3,6 +3,7 @@ package jlibrtp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
+import java.util.Enumeration;
 import java.util.Iterator;
 
 public class RTCPReceiverThread extends Thread {
@@ -22,9 +23,9 @@ public class RTCPReceiverThread extends Thread {
 	private Participant findParticipant(long ssrc, DatagramPacket packet) {
 		Participant p = rtpSession.partDb.getParticipant(ssrc);
 		if(p == null) {
-			Iterator iter = rtpSession.partDb.getParticipants();
-			while(iter.hasNext()) {
-				Participant tmp = (Participant) iter.next();
+			Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
+			while(enu.hasMoreElements()) {
+				Participant tmp = (Participant) enu.nextElement();
 				if(tmp.ssrc < 0 && 
 						(tmp.rtcpAddress.getAddress().equals(packet.getAddress())
 						|| tmp.rtpAddress.getAddress().equals(packet.getAddress()))) {
@@ -41,7 +42,7 @@ public class RTCPReceiverThread extends Thread {
 			System.out.println("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
 					+ ssrc  + " @" + packet.getAddress().toString() + ", was NOT able to match it." );
 			p = new Participant((InetSocketAddress) null, (InetSocketAddress) packet.getSocketAddress(), ssrc);
-			rtpSession.partDb.addParticipant(p);
+			rtpSession.partDb.addParticipant(2,p);
 		}
 		return p;
 	}

@@ -25,9 +25,9 @@ public class ValidateParticipantDatabase {
 		Participant part1 = new Participant("127.0.0.1", 4546, 4556);
 		Participant part2 = new Participant("127.0.0.1", 4547, 4556);
 		
-		partDb.addParticipant(part0);
-		partDb.addParticipant(part1);
-		partDb.addParticipant(part2);
+		partDb.addParticipant(0,part0);
+		partDb.addParticipant(0,part1);
+		partDb.addParticipant(0,part2);
 		
 		partDb.debugPrint();
 		
@@ -39,10 +39,10 @@ public class ValidateParticipantDatabase {
 		InetAddress inetAdr = null;
 		try { inetAdr = InetAddress.getByName("127.0.0.1"); } catch (Exception e) { };
 		
-		Participant part3 = partDb.getParticipant(inetAdr);
-		part3.ssrc = 12345678;
+		//Participant part3 = partDb.getParticipant(inetAdr);
+		//part3.ssrc = 12345678;
 		System.out.println("********************* Updating Participant 3 (4546) ***********************");
-		partDb.updateParticipant(part3);
+		//partDb.updateParticipant(part3);
 		
 		partDb.debugPrint();
 	}

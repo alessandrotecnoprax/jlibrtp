@@ -42,8 +42,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 0;
-	 final static public int rtcpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 2;
+	 final static public int rtcpDebugLevel = 2;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -83,7 +83,6 @@ public class RTPSession {
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
-	 protected MaintenanceThread maintThrd = null;
 	 
 	 // Locks
 	 final protected Lock pktBufLock = new ReentrantLock();
@@ -172,8 +171,6 @@ public class RTPSession {
 			this.rtcAppIntf = rtcpApp;
 			recvThrd = new RTPReceiverThread(this);
 			appCallerThrd = new AppCallerThread(this, rtpApp);
-			//if(this.maintenanceInterval > 0)
-			//	maintThrd = new MaintenanceThread(this);
 			recvThrd.start();
 		 	appCallerThrd.start();
 		 	rtcpSession.start();
@@ -221,45 +218,57 @@ public class RTPSession {
 		
 		//System.out.println(Integer.toString(StaticProcs.bytesToUIntInt(pktBytes, 2)));
 		
-		// Loop over recipients
-		Iterator iter = partDb.getRtpReceivers();
-		
 		// Pre-flight check, are resolving an SSRC conflict?
 		if(this.conflict) {
-			System.out.println("RTPSession.sendData() called while trying to ");
+			System.out.println("RTPSession.sendData() called while trying to resolve conflict.");
 			return -1;
 		}
-
-		while(iter.hasNext()) {			
-			InetSocketAddress receiver = (InetSocketAddress) iter.next();
+		
+		
+		if(this.mcSession) {
 			DatagramPacket packet = null;
 			
-			if(RTPSession.rtpDebugLevel > 15) {
-				System.out.println("   Sending to " + receiver.toString());
-			}
 			
 			try {
-				packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
+				packet = new DatagramPacket(pktBytes,pktBytes.length,this.mcGroup,this.rtpMCSock.getPort());
 			} catch (Exception e) {
 				System.out.println("RTPSession.sendData() packet creation failed.");
 				e.printStackTrace();
 				return -1;
 			}
 			
-			//Actually send the packet
-			if(!this.mcSession) {
+			try {
+				rtpMCSock.send(packet);
+			} catch (Exception e) {
+				System.out.println("RTPSession.sendData() multicast failed.");
+				e.printStackTrace();
+				return -1;
+			}		
+			
+		} else {
+			// Loop over recipients
+			Iterator<Participant> iter = partDb.getUnicastReceivers();
+			while(iter.hasNext()) {			
+				InetSocketAddress receiver = iter.next().rtpAddress;
+				DatagramPacket packet = null;
+				
+				if(RTPSession.rtpDebugLevel > 15) {
+					System.out.println("   Sending to " + receiver.toString());
+				}
+				
+				try {
+					packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
+				} catch (Exception e) {
+					System.out.println("RTPSession.sendData() packet creation failed.");
+					e.printStackTrace();
+					return -1;
+				}
+				
+				//Actually send the packet
 				try {
 					rtpSock.send(packet);
 				} catch (Exception e) {
 					System.out.println("RTPSession.sendData() unicast failed.");
-					e.printStackTrace();
-					return -1;
-				}
-			} else {
-				try {
-					rtpMCSock.send(packet);
-				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() multicast failed.");
 					e.printStackTrace();
 					return -1;
 				}
@@ -286,43 +295,7 @@ public class RTPSession {
 	  */
 	public int addParticipant(Participant p) {
 		//For now we make all participants added this way persistent
-		p.persistent = true;
-		p.isReceiver = true;
-		
-		if(partDb.all.contains(p)) {
-			System.out.println("RTPSession.addParticipant() Can't add existing participant.");
-			return -1;
-		}
-		
-		if(p.rtcpAddress == null) {
-			System.out.println("RTPSession.addParticipant() Participant missing InetSocketAdddress");
-			return -1;
-		} else {
-			if(RTPSession.rtpDebugLevel > 1) {
-				System.out.println("<-> RTPSession.addParticipant("+p.rtpAddress.toString()+")");
-			}		
-		}
-		
-		//Check whether there is a match for this participant in the database
-		Participant tmp = this.partDb.getParticipant(p.rtpAddress.getAddress());
-		if(tmp == null)
-			tmp = this.partDb.getParticipant(p.rtcpAddress.getAddress());
-		
-		if(tmp == null) {
-			// New participant
-			p.addedByApp = System.currentTimeMillis();
-			partDb.addParticipant(p);
-			return 0;
-		} else {
-			// We already got an RTP or RTCP packet from this one
-			tmp.rtpAddress = p.rtpAddress;
-			tmp.rtcpAddress = p.rtcpAddress;
-			tmp.unexpected = false;
-			tmp.addedByApp = System.currentTimeMillis();
-			partDb.updateParticipant(tmp);
-				
-			return 1;
-		}
+		return this.partDb.addParticipant(0, p);
 	}
 	
 	 /**
@@ -360,8 +333,6 @@ public class RTPSession {
 		// Give things a chance to cool down.
 		try { Thread.sleep(50); } catch (Exception e){ };
 		
-
-		//this.maintThrd.interrupt();
 		this.appCallerThrd.interrupt();
 
 		// Give things a chance to cool down.
@@ -543,29 +514,6 @@ public class RTPSession {
 	public int getMaxReorderBuffer() {
 		return this.maxReorderBuffer;
 	}
-	
-	public long getMaintenanceInterval() {
-		return this.maintenanceInterval;
-	}
-	
-	public long setMaintenanceInterval(long time) {
-		if(time > 0) {
-			if(this.maintenanceInterval > 0) {
-				//Just update existing thread
-				this.maintenanceInterval = time;
-			} else {
-				//Spawn a new thread
-				this.maintenanceInterval = time;
-				maintThrd = new MaintenanceThread(this);
-			}
-			return 0;
-		} else {
-			//No need to go that far below zero
-			this.maintenanceInterval = -1;
-			return -1;
-		}
-	}
-	
 	
 	private int getNextSeqNum() {
 		seqNum++;

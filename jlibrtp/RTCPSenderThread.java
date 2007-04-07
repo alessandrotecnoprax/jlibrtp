@@ -41,10 +41,10 @@ public class RTCPSenderThread extends Thread {
 		if(rtpSession.mcSession) {
 			mcSendCompRtcpPkt(compPkt);
 		} else {
-			Iterator iter = rtpSession.partDb.getParticipants();
+			Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
 		
-			while(iter.hasNext()) {
-				Participant part = (Participant) iter.next();
+			while(enu.hasMoreElements()) {
+				Participant part = (Participant) enu.nextElement();
 				if(!part.unexpected)
 					sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
@@ -116,7 +116,7 @@ public class RTCPSenderThread extends Thread {
 		
 		// Set up an iterator for the member list
 		// TODO Change to rtcpReceivers
-		Iterator iter = rtpSession.partDb.getParticipants();
+		Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
 		
 		while(! rtpSession.endSession) {
 			if(RTPSession.rtcpDebugLevel > 6) {
@@ -148,18 +148,18 @@ public class RTCPSenderThread extends Thread {
 			
 			//Grab the next person
 			Participant part = null;
-			try {
+			//try {
 				// Get user stats
-				if(! iter.hasNext()) {
-					iter = rtpSession.partDb.getParticipants();
+				if(! enu.hasMoreElements()) {
+					enu = rtpSession.partDb.getParticipants();
 				}
-				part = (Participant) iter.next();
+				part = enu.nextElement();
 				
 				//Find someone we actually want to communicate with
-				while((part.rtcpAddress == null || part.unexpected) && iter.hasNext()) {
-					part = (Participant) iter.next();
+				while((part.rtcpAddress == null || part.unexpected) && enu.hasMoreElements()) {
+					part = enu.nextElement();
 				}
-			} catch (Exception e) { }
+			//} catch (Exception e) { }
 			
 			if(part == null) {
 				//Out of luck

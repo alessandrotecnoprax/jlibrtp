@@ -46,7 +46,7 @@ public class RtcpPktSDES extends RtcpPkt {
 					//InetSocketAddress nullSocket = null;
 					//This needs to be sorted out anyway
 					part = new Participant(socket, socket , ssrc);
-					partDb.addParticipant(part);
+					partDb.addParticipant(2,part);
 				}
 				curPos += 4;
 				

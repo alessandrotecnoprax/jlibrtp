@@ -18,8 +18,8 @@
  */
 package jlibrtp;
 
-import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
+import java.util.Enumeration;
+
 /**
  * The purpose of this thread is to check whether there are packets ready from 
  * any participants.
@@ -60,15 +60,16 @@ public class AppCallerThread extends Thread {
 					catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
 					
 		    	// Next loop over all participants and check whether they have anything for us.
-				Iterator iter = rtpSession.partDb.getParticipants();
+				Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
 				
-				while(iter.hasNext()) {
-					Participant p = (Participant) iter.next();
+				while(enu.hasMoreElements()) {
+					Participant p = enu.nextElement(); 
 					
 					boolean done = false;
 					//System.out.println(p.ssrc + " " + !done +" " + p.rtpAddress 
 					//		+ " " + rtpSession.naiveReception + " " + p.pktBuffer);
-					while(!done && (p.rtpAddress != null || rtpSession.naiveReception) 
+					
+					while(!done && (!p.unexpected || rtpSession.naiveReception) 
 							&& p.pktBuffer != null && p.pktBuffer.length > 0) {
 						
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
