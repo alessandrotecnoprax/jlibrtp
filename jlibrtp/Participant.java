@@ -126,7 +126,7 @@ public class Participant {
 	// We got a packet, but we don't know this person yet.
 	protected Participant(InetSocketAddress rtpAdr, InetSocketAddress rtcpAdr, long SSRC) {
 		rtpReceivedFromAddress = rtpAdr;
-		rtpReceivedFromAddress = rtcpAdr;
+		rtcpReceivedFromAddress = rtcpAdr;
 		ssrc = SSRC;
 		unexpected = true;
 	}
