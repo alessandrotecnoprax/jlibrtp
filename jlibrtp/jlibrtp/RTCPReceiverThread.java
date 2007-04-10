@@ -122,9 +122,19 @@ public class RTCPReceiverThread extends Thread {
 
 
 					if(rtpSession.rtcAppIntf != null) {
-						// Should also return attached RRs
-						rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
-								srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount );
+						if(srPkt.rReports != null) {
+							rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+									srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
+									srPkt.rReports.reporteeSsrc, srPkt.rReports.lossFraction, srPkt.rReports.lostPktCount,
+									srPkt.rReports.extHighSeqRecv, srPkt.rReports.interArvJitter, srPkt.rReports.timeStampLSR,
+									srPkt.rReports.delaySR);
+						} else {
+							rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+									srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
+									null, null, null,
+									null, null, null,
+									null);
+						}
 					}
 
 					/**        Source Descriptions       **/
