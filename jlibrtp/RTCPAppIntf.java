@@ -36,7 +36,10 @@ package jlibrtp;
 public interface RTCPAppIntf {
 	
 	public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
-			long rtpTimestamp, long packetCount, long octetCount );
+			long rtpTimestamp, long packetCount, long octetCount,
+			// Get the receiver reports, if any
+			long[] reporteeSsrc, int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 
+			long[] interArrivalJitter, long[] lastSRTimeStamp, long[] delayLastSR);
 	
 	public void RRPktReceived(long reporterSsrc, long[] reporteeSsrc, 
 			int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 

@@ -62,9 +62,14 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 		/**
 		 * RTCP
 		 */
-		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
-				long rtpTimestamp, long packetCount, long octetCount ) {
+		//public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
+		//		long rtpTimestamp, long packetCount, long octetCount ) {
 			
+		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
+				long rtpTimestamp, long packetCount, long octetCount,
+				// Get the receiver reports, if any
+				long[] reporteeSsrc, int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 
+				long[] interArrivalJitter, long[] lastSRTimeStamp, long[] delayLastSR) {
 			Element SRPkt = new Element("SRPkt");
 			this.sessionElement.addContent(SRPkt);
 			
