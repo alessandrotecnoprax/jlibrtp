@@ -56,7 +56,7 @@ public class RTCPSenderThread extends Thread {
 		
 		// Create datagram
 		try {
-			packet = new DatagramPacket(pktBytes,pktBytes.length);
+			packet = new DatagramPacket(pktBytes,pktBytes.length,rtpSession.mcGroup,rtcpSession.rtcpMCSock.getPort());
 		} catch (Exception e) {
 			System.out.println("RCTPSenderThread.MCSendCompRtcpPkt() packet creation failed.");
 			e.printStackTrace();
@@ -148,22 +148,28 @@ public class RTCPSenderThread extends Thread {
 			
 			//Grab the next person
 			Participant part = null;
-			//try {
-				// Get user stats
-				if(! enu.hasMoreElements()) {
-					enu = rtpSession.partDb.getParticipants();
-				}
-				part = enu.nextElement();
-				
-				//Find someone we actually want to communicate with
-				while((part.rtcpAddress == null || part.unexpected) && enu.hasMoreElements()) {
-					part = enu.nextElement();
-				}
-			//} catch (Exception e) { }
 			
-			if(part == null) {
-				//Out of luck
-				continue;
+			if(! enu.hasMoreElements())
+				enu = rtpSession.partDb.getParticipants();
+			
+			//Multicast
+			if(this.rtpSession.mcSession) {
+				if( enu.hasMoreElements() ) {
+					part = enu.nextElement();
+				} else {
+					continue;
+				}
+				
+			//Unicast
+			} else {
+				if( enu.hasMoreElements() ) {
+					while( enu.hasMoreElements()&& (part == null || part.rtcpAddress == null)) {
+						part = enu.nextElement();
+					}
+				}
+				
+				if(part == null || part.rtcpAddress == null)
+					continue;
 			}
 			
 			/*********** Figure out what we are going to send ***********/

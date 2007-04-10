@@ -114,8 +114,10 @@ public class ParticipantDatabase {
 			boolean notDone = true;
 			
 			Iterator<Participant> iter = this.receivers.iterator();
+			
 			while(notDone && iter.hasNext()) {
 				Participant part = iter.next();
+
 				if((cameFrom == 1 && p.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))
 					|| (cameFrom == 2 && p.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress()))) {
 				
@@ -154,7 +156,7 @@ public class ParticipantDatabase {
 	}
 	
 	protected Iterator<Participant> getUnicastReceivers() {
-		if(this.rtpSession.mcSession) {
+		if(! this.rtpSession.mcSession) {
 			return this.receivers.iterator();
 		} else {
 			System.out.println("Request for ParticipantDatabase.getUnicastReceivers in multicast session");
