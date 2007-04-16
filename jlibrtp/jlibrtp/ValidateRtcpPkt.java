@@ -1,12 +1,10 @@
 package jlibrtp;
 
-
-//import java.net.DatagramSocket;
-//import java.net.InetAddress;
 import java.util.*;
 import java.net.*;
 
 public class ValidateRtcpPkt {
+	
 	public static void main(String[] args) {
 		DatagramSocket rtpSock = null;
 		DatagramSocket rtcpSock = null;
@@ -49,9 +47,11 @@ public class ValidateRtcpPkt {
 		Participant[] partArray = new Participant[2];
 		partArray[0] = part1;
 		partArray[1] = part2;
-		
-		RtcpPktSR srpkt = new RtcpPktSR(rtpSession.ssrc,12,21);
+
 		RtcpPktRR rrpkt = new RtcpPktRR(partArray,123456789);
+		RtcpPktSR srpkt = new RtcpPktSR(rtpSession.ssrc,12,21,rrpkt);
+		RtcpPktSR srpkt2 = new RtcpPktSR(rtpSession.ssrc,12,21,null);
+		rrpkt = new RtcpPktRR(partArray,1234512311);
 		
 		srpkt.debugPrint();
 		rrpkt.debugPrint();
@@ -65,9 +65,15 @@ public class ValidateRtcpPkt {
 		System.out.println("****************************** DONE ENCODING *******************************");
 		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,partDb);
 		System.out.println("****************************** DONE DECODING *******************************");
+		System.out.println("Problem code:" + decomppkt.problem);
 		
 		ListIterator iter = decomppkt.rtcpPkts.listIterator();
+		int i = 0;
+		
 		while(iter.hasNext()) {
+			System.out.print(" i:" + i + " ");
+			i++;
+			
 			Object aPkt = iter.next();
 			if(	aPkt.getClass() == RtcpPktRR.class) {
 				RtcpPktRR pkt = (RtcpPktRR) aPkt;

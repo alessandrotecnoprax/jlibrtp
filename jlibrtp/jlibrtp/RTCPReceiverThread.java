@@ -30,7 +30,7 @@ public class RTCPReceiverThread extends Thread {
 						(tmp.rtcpAddress.getAddress().equals(packet.getAddress())
 						|| tmp.rtpAddress.getAddress().equals(packet.getAddress()))) {
 					
-					// Buest guess
+					// Best guess
 					System.out.println("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
 							+ ssrc  + " @" + packet.getAddress().toString() + ", WAS able to match it." );
 					
@@ -60,6 +60,22 @@ public class RTCPReceiverThread extends Thread {
 			// Parse the received compound RTCP (?) packet
 			CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), 
 					(InetSocketAddress) packet.getSocketAddress(), rtpSession.partDb);
+			
+			if(this.rtpSession.debugAppIntf != null) {
+				if( compPkt.problem != 0) {
+					this.rtpSession.debugAppIntf.debugPacketReceived(1, (InetSocketAddress) packet.getSocketAddress(), 
+						new String("Received compound RTCP packet of size " + packet.getLength() + 
+								" from " + packet.getSocketAddress().toString() + " via " 
+								+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()
+								+ " containing " + compPkt.rtcpPkts.size() + " packets" ));
+				} else {
+					this.rtpSession.debugAppIntf.debugPacketReceived(-2, (InetSocketAddress) packet.getSocketAddress(), 
+							new String("Received invalid RTCP packet of size " + packet.getLength() + 
+									" from " + packet.getSocketAddress().toString() + " via " 
+									+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()
+									+ ": " + this.debugErrorString(compPkt.problem) ));
+				}
+			}
 
 			//Loop over the information
 			Iterator iter = compPkt.rtcpPkts.iterator();
@@ -169,6 +185,23 @@ public class RTCPReceiverThread extends Thread {
 		return 0;
 
 	}
+	
+	private String debugErrorString(int errorCode) {
+		String aStr = "";
+		switch(errorCode) {
+			case -1: aStr = "The first packet was not of type SR or RR."; break;
+			case -2: aStr = "The padding bit was set for the first packet."; break;
+			case -200: aStr = " Error parsing Sender Report packet."; break;
+			case -201: aStr = " Error parsing Receiver Report packet."; break;
+			case -202: aStr = " Error parsing SDES packet"; break;
+			case -203: aStr = " Error parsing BYE packet."; break;
+			case -204: aStr = " Error parsing Application specific packet."; break;
+		default:
+			aStr = "Unknown error code " + errorCode + ".";
+		}
+		
+		return aStr;
+	}
 
 	public void run() {
 		if(RTPSession.rtcpDebugLevel > 1) {
@@ -226,6 +259,7 @@ public class RTCPReceiverThread extends Thread {
 				//rtpSession.partDb.debugPrint();
 			}			
 		}
+		
 		if(RTPSession.rtcpDebugLevel > 1) {
 			System.out.println("<-> RTCPReceiverThread terminating");
 		}

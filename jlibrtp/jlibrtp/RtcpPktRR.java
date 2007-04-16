@@ -26,7 +26,7 @@ public class RtcpPktRR extends RtcpPkt {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders(start))+" "+packetType+" "+super.length);
 			}
-			this.problem = 1;
+			super.problem = -201;
 		}
 		
 		int base;

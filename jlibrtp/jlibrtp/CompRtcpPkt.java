@@ -4,6 +4,7 @@ import java.util.*;
 import java.net.InetSocketAddress;
 
 public class CompRtcpPkt {
+	protected int problem = 0;
 	protected LinkedList rtcpPkts = new LinkedList();
 	
 	protected CompRtcpPkt() {
@@ -17,7 +18,12 @@ public class CompRtcpPkt {
 		if(RTPSession.rtpDebugLevel > 11) {
 			System.out.println("  <-> CompRtcpPkt.addPacket( "+ aPkt.getClass() + " )");
 		}
-		rtcpPkts.add(aPkt);
+		
+		if(aPkt.problem == 0) {
+			rtcpPkts.add(aPkt);
+		} else {
+			this.problem = aPkt.problem;
+		}
 	}
 	
 	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, ParticipantDatabase partDb) {
@@ -39,7 +45,7 @@ public class CompRtcpPkt {
 			}
 
 			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );
-
+			
 			if(pktType == 200) {
 				addPacket(new RtcpPktSR(rawPkt,start,length));
 			} else if(pktType == 201 ) {
@@ -53,7 +59,26 @@ public class CompRtcpPkt {
 			} else {
 				System.out.println("CompRtcpPkt Ooops:" + pktType);
 			}
-			start += (4 + 4*length);
+			
+			// Compound packets need to start with SR or RR
+			if(start == 0 && pktType != 200 && pktType != 201 ) {
+				if(RTPSession.rtpDebugLevel > 3) {
+					System.out.println("!!!! CompRtcpPkt(rawPkt...) packet did not start with SR or RR");
+				}
+				this.problem = -1;
+			}
+			System.out.println(" start:" + start + "  pktType:" + pktType + " length:" + length);
+			
+			// Padding bit should be zero for the first packet
+			if(start == 0 && ((RtcpPkt) this.rtcpPkts.getLast()).padding != 0) {
+				if(RTPSession.rtpDebugLevel > 3) {
+					System.out.println("!!!! CompRtcpPkt(rawPkt...) first packet was padded");
+				}
+				this.problem = -2;
+			}
+				
+			
+			start += length;
 			
 			if(RTPSession.rtpDebugLevel > 12) {
 				System.out.println("  parsing " + " pktType " + pktType + " length: " + length + " ");
@@ -79,7 +104,7 @@ public class CompRtcpPkt {
 			
 			if(aPkt.packetType == 200) {
 				RtcpPktSR pkt = (RtcpPktSR) aPkt;
-				pkt.encode(null);
+				pkt.encode();
 				System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
 				index += pkt.rawPkt.length;
 			} else if(aPkt.packetType == 201 ) {

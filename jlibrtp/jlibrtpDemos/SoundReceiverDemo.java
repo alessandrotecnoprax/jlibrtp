@@ -74,7 +74,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		
 		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 		rtpSession.setNaivePktReception(true);
-		rtpSession.RTPSessionRegister(this,null);
+		rtpSession.RTPSessionRegister(this,null, null);
 		
 		Participant p = new Participant("127.0.0.1", 6001, 6002);		
 		rtpSession.addParticipant(p);
