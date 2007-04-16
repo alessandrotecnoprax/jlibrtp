@@ -79,6 +79,8 @@ public class RTPSession {
 	 // Handles to application
 	 protected RTPAppIntf appIntf = null;
 	 protected RTCPAppIntf rtcAppIntf = null;
+	 protected DebugAppIntf debugAppIntf = null;
+	 
 	 // Threads etc.
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
@@ -157,7 +159,7 @@ public class RTPSession {
 	  * @param	rtcpApp an object that implements the RTCPAppIntf-interface (optional)
 	  * @return	-1 if this RTPSession-instance already has an application registered.
 	  */
-	 public int RTPSessionRegister(RTPAppIntf rtpApp, RTCPAppIntf rtcpApp) {
+	 public int RTPSessionRegister(RTPAppIntf rtpApp, RTCPAppIntf rtcpApp, DebugAppIntf debugApp) {
 		if(registered) {
 			System.out.println("RTPSessionRegister(): Can\'t register another application!");
 			return -1;
@@ -169,6 +171,8 @@ public class RTPSession {
 			}  
 			this.appIntf = rtpApp;
 			this.rtcAppIntf = rtcpApp;
+			this.debugAppIntf = debugApp;
+			
 			recvThrd = new RTPReceiverThread(this);
 			appCallerThrd = new AppCallerThread(this, rtpApp);
 			recvThrd.start();
@@ -239,6 +243,13 @@ public class RTPSession {
 			
 			try {
 				rtpMCSock.send(packet);
+				//Debug
+				if(this.debugAppIntf != null) {
+					this.debugAppIntf.debugPacketSent(1, (InetSocketAddress) packet.getSocketAddress(), 
+							new String("Sent multicast RTP packet of size " + packet.getLength() + 
+									" to " + packet.getSocketAddress().toString() + " via " 
+									+ rtpMCSock.getLocalSocketAddress().toString()));
+				}
 			} catch (Exception e) {
 				System.out.println("RTPSession.sendData() multicast failed.");
 				e.printStackTrace();
@@ -267,6 +278,13 @@ public class RTPSession {
 				//Actually send the packet
 				try {
 					rtpSock.send(packet);
+					//Debug
+					if(this.debugAppIntf != null) {
+						this.debugAppIntf.debugPacketSent(0, (InetSocketAddress) packet.getSocketAddress(), 
+								new String("Sent unicast RTP packet of size " + packet.getLength() + 
+										" to " + packet.getSocketAddress().toString() + " via " 
+										+ rtpSock.getLocalSocketAddress().toString()));
+					}
 				} catch (Exception e) {
 					System.out.println("RTPSession.sendData() unicast failed.");
 					e.printStackTrace();

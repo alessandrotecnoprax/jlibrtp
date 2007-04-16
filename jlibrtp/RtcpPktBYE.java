@@ -20,7 +20,7 @@ public class RtcpPktBYE extends RtcpPkt {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktBYE.parseHeaders() etc. problem");
 			}
-			this.problem = 1;
+			super.problem = -203;
 		} else {
 			ssrcArray = new long[super.itemCount];
 			

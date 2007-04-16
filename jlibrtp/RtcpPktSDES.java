@@ -25,7 +25,7 @@ public class RtcpPktSDES extends RtcpPkt {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktSDES.parseHeaders() etc. problem");
 			}
-			this.problem = 1;
+			super.problem = -202;
 		} else {
 			int curPos = 4 + start;
 			int curLength;

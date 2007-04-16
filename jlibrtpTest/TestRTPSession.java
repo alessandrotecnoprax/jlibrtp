@@ -20,7 +20,7 @@ public class TestRTPSession implements RTPAppIntf {
 		
 		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 		
-		rtpSession.RTPSessionRegister(this,null);
+		rtpSession.RTPSessionRegister(this,null,null);
 		
 		
 		Participant p = new Participant("127.0.0.1", 6004, 6005);

@@ -62,7 +62,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		
 		
 		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
-		rtpSession.RTPSessionRegister(this,null);
+		rtpSession.RTPSessionRegister(this,null, null);
 		
 		this.local = isLocal;
 	}

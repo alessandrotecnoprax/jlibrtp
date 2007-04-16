@@ -7,6 +7,7 @@ import jlibrtp.*;
 //import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 
 //import javax.xml.transform.Transformer;
 //import javax.xml.transform.TransformerConfigurationException;
@@ -23,7 +24,7 @@ import org.jdom.Element;
 //import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 
-public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
+public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf {
 		// For the session
 		RTPSession rtpSession = null;
 		// The number of packets we have received
@@ -51,13 +52,20 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf {
 			
 			
 			this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
-			this.rtpSession.RTPSessionRegister(this,this);
+			this.rtpSession.RTPSessionRegister(this,this, this);
 			
 			Participant p = new Participant("127.0.0.1", 16386, 16387);
 			this.rtpSession.addParticipant(p);
 			this.rtpSession.setNaivePktReception(true);
 		}
 		
+		public void debugPacketReceived(int type, InetSocketAddress socket, String description) {
+			System.out.println("***** " + description);
+		}
+		
+		public void debugPacketSent(int type, InetSocketAddress socket, String description) {
+			System.out.println("***** " + description);
+		}
 		
 		/**
 		 * RTCP

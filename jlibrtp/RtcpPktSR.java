@@ -8,12 +8,13 @@ public class RtcpPktSR extends RtcpPkt {
 	protected long sendersOctCount = -1; //32 bits
 	protected RtcpPktRR rReports = null;
 	
-	protected RtcpPktSR(long ssrc, long pktCount, long octCount) {
+	protected RtcpPktSR(long ssrc, long pktCount, long octCount, RtcpPktRR rReports) {
 		// Fetch all the right stuff from the database
 		super.ssrc = ssrc;
 		super.packetType = 200;
 		sendersPktCount = pktCount;
 		sendersOctCount = octCount;
+		this.rReports = rReports;
 	}
 	
 	protected RtcpPktSR(byte[] aRawPkt, int start, int length) {
@@ -27,7 +28,7 @@ public class RtcpPktSR extends RtcpPkt {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktSR.parseHeaders() etc. problem: "+ (!super.parseHeaders(start) ) + " " + packetType + " " + super.length);
 			}
-			this.problem = 1;
+			super.problem = -200;
 		} else {
 			super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
 			if(length > 11)
@@ -52,24 +53,23 @@ public class RtcpPktSR extends RtcpPkt {
 		}
 	}
 	
-	protected void encode(RtcpPktRR[] receptionReports) {		
+	protected void encode() {		
 		if(RTPSession.rtpDebugLevel > 9) {
-			if(receptionReports != null) {
-				System.out.println("  -> RtcpPktSR.encode() receptionReports.length: " + receptionReports.length );
+			if(this.rReports != null) {
+				System.out.println("  -> RtcpPktSR.encode() receptionReports.length: " + this.rReports.length );
 			} else {
 				System.out.println("  -> RtcpPktSR.encode() receptionReports: null");
 			}
 		}
-		if(receptionReports != null) {
-			super.itemCount = receptionReports.length;
-			super.length = 6 + 6*receptionReports.length;
-			// Loop over reception reports, figure out their combined size
-			super.rawPkt = new byte[28 + 24*receptionReports.length];
+		
+		if(this.rReports != null) {
+			super.itemCount = this.rReports.reportees.length;
+						
+			byte[] tmp = this.rReports.encodeRR();
+			super.rawPkt = new byte[tmp.length+28];
+			super.length = (super.rawPkt.length / 4) - 1;
 			
-			for(int i=0; i<receptionReports.length; i++) {
-				byte[] recRep = receptionReports[i].encodeRR();
-				System.arraycopy(recRep, 0, super.rawPkt, 28 + 24*i, recRep.length);				
-			}
+			System.arraycopy(tmp, 0, super.rawPkt, 28, tmp.length);
 			
 		} else {
 			super.itemCount = 0;
@@ -111,7 +111,14 @@ public class RtcpPktSR extends RtcpPkt {
 
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
-			System.out.println("  SSRC:"+super.ssrc +" ntpTs1:"+ntpTs1+" ntpTS2:"+ntpTs2+" rtpTS:"+rtpTs
+		System.out.println("  SSRC:"+super.ssrc +" ntpTs1:"+ntpTs1+" ntpTS2:"+ntpTs2+" rtpTS:"+rtpTs
 					+" senderPktCount:"+sendersPktCount+" sendersOctetCount:"+sendersOctCount);
+		if(this.rReports != null) {
+			System.out.println(" Part of Sender Report: ");	
+			this.rReports.debugPrint();
+			System.out.println(" End Sender Report");
+		} else {
+			System.out.println("No Receiver Reports associated with this Sender Report.");
+		}
 	}
 }

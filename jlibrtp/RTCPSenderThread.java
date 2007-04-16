@@ -27,7 +27,7 @@ public class RTCPSenderThread extends Thread {
 		
 		//Need a SR for validation
 		RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
-				this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount);
+				this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
 		compPkt.addPacket(srPkt);
 		
 		//Add the actualy BYE Pkt
@@ -69,6 +69,13 @@ public class RTCPSenderThread extends Thread {
 		}
 		try {
 			rtcpSession.rtcpMCSock.send(packet);
+			//Debug
+			if(this.rtpSession.debugAppIntf != null) {
+				this.rtpSession.debugAppIntf.debugPacketSent(3, (InetSocketAddress) packet.getSocketAddress(), 
+						new String("Sent multicast RTCP packet of size " + packet.getLength() + 
+								" to " + packet.getSocketAddress().toString() + " via " 
+								+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()));
+			}
 		} catch (Exception e) {
 			System.out.println("RCTPSenderThread.MCSendCompRtcpPkt() multicast failed.");
 			e.printStackTrace();
@@ -97,6 +104,13 @@ public class RTCPSenderThread extends Thread {
 		}
 		try {
 			rtcpSession.rtcpSock.send(packet);
+			//Debug
+			if(this.rtpSession.debugAppIntf != null) {
+				this.rtpSession.debugAppIntf.debugPacketSent(2, (InetSocketAddress) packet.getSocketAddress(), 
+						new String("Sent unicast RTCP packet of size " + packet.getLength() + 
+								" to " + packet.getSocketAddress().toString() + " via " 
+								+ this.rtcpSession.rtcpSock.getLocalSocketAddress().toString()));
+			}
 		} catch (Exception e) {
 			System.out.println("RTCPSenderThread.SendCompRtcpPkt() unicast failed.");
 			e.printStackTrace();
@@ -195,7 +209,7 @@ public class RTCPSenderThread extends Thread {
 			//If we're sending packets we'll use a SR for header
 			if(incSR) {
 				RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
-						this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount);
+						this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
 				compPkt.addPacket(srPkt);
 			}
 			

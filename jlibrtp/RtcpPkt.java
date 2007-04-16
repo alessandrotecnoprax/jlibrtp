@@ -55,6 +55,8 @@ public class RtcpPkt {
 		if(version == 2 && packetType < 205 && packetType > 199 && length < 65536) {
 			return true;
 		} else {
+			//System.out.println("RtcpPkt.parseHeaders problem discovered.");
+			this.problem = -1;
 			return false;
 		}
 	}
