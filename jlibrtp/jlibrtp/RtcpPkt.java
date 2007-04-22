@@ -69,7 +69,9 @@ public class RtcpPkt {
 		aByte = 0;
 		aByte |= packetType;
 		rawPkt[1] = aByte;
-		byte[] someBytes = StaticProcs.uIntIntToByteWord(rawPkt.length);
+		if(rawPkt.length % 4 != 0)
+			System.out.println("!!!! RtcpPkt.writeHeaders() rawPkt was not a multiple of 32 bits / 4 octets!");
+		byte[] someBytes = StaticProcs.uIntIntToByteWord((rawPkt.length / 4) - 1);
 		rawPkt[2] = someBytes[0];
 		rawPkt[3] = someBytes[1];
 	}

@@ -67,14 +67,14 @@ public class RtcpPktSR extends RtcpPkt {
 						
 			byte[] tmp = this.rReports.encodeRR();
 			super.rawPkt = new byte[tmp.length+28];
-			super.length = (super.rawPkt.length / 4) - 1;
+			//super.length = (super.rawPkt.length / 4) - 1;
 			
 			System.arraycopy(tmp, 0, super.rawPkt, 28, tmp.length);
 			
 		} else {
 			super.itemCount = 0;
 			super.rawPkt = new byte[28];
-			super.length = 6;
+			//super.length = 6;
 		}
 		//Write the common header
 		super.writeHeaders();
@@ -111,12 +111,14 @@ public class RtcpPktSR extends RtcpPkt {
 
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
-		System.out.println("  SSRC:"+super.ssrc +" ntpTs1:"+ntpTs1+" ntpTS2:"+ntpTs2+" rtpTS:"+rtpTs
-					+" senderPktCount:"+sendersPktCount+" sendersOctetCount:"+sendersOctCount);
+		System.out.println("  SSRC:"+Long.toString(super.ssrc) +" ntpTs1:"+Long.toString(ntpTs1)
+				+" ntpTS2:"+Long.toString(ntpTs2)+" rtpTS:"+Long.toString(rtpTs)
+				+" senderPktCount:"+Long.toString(sendersPktCount)+" sendersOctetCount:"
+				+Long.toString(sendersOctCount));
 		if(this.rReports != null) {
-			System.out.println(" Part of Sender Report: ");	
+			System.out.print("  Part of Sender Report: ");	
 			this.rReports.debugPrint();
-			System.out.println(" End Sender Report");
+			System.out.println("  End Sender Report");
 		} else {
 			System.out.println("No Receiver Reports associated with this Sender Report.");
 		}

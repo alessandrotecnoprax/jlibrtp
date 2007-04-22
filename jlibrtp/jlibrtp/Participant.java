@@ -45,33 +45,33 @@ public class Participant {
 	protected String priv = null;
 	
 	// Receiver Report Items
-	protected int firstSeqNumber = -1;
-	protected int lastSeqNumber = -1;
+	protected int firstSeqNumber = 0;
+	protected int lastSeqNumber = 0;
 	protected int recvPktCount = 0;
 	protected int receivedSinceLastSR = 0;
-	protected int lastSRRseqNumber = -1;
+	protected int lastSRRseqNumber = 0;
 	protected long seqRollOverCount = 0;
 	
 	protected double interArrivalJitter = -1.0;
-	protected long lastRtpTimestamp = -1;
+	protected long lastRtpTimestamp = 0;
 	
-	protected long timeStampLSR = -1;		//Middle 32 bits of the NTP timestamp in the last SR
-	protected long timeReceivedLSR = -1; 	//The time when we actually got it
+	protected long timeStampLSR = 0;		//Middle 32 bits of the NTP timestamp in the last SR
+	protected long timeReceivedLSR = 0; 	//The time when we actually got it
 	
 	// Sender Report Items
 	//protected long reportedPkts = -1;
 	//protected long reportedOctets = -1;
 	//protected long reportedPktsOffset = -1;
 	//protected long reportedOctetsOffset = -1;
-	protected long receivedPkts = -1;
-	protected long receivedOctets = -1;
+	protected long receivedPkts = 0;
+	protected long receivedOctets = 0;
 	
 	protected double ntpGradient = -1; // How many ms for each RTP time unit
 	protected long ntpOffset = -1;	// NTP offset in ms, compared to our system time
 	
-	protected long lastNtpTs1 = -1; //32 bits
-	protected long lastNtpTs2 = -1; //32 bits
-	protected long lastSRRtpTs = -1; //32 bits
+	protected long lastNtpTs1 = 0; //32 bits
+	protected long lastNtpTs2 = 0; //32 bits
+	protected long lastSRRtpTs = 0; //32 bits
 	
 	// BYE Items
 	protected long timestampBYE = -1;	// The user said BYE at this time

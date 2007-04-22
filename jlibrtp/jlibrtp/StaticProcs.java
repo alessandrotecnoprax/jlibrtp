@@ -103,6 +103,8 @@ public class StaticProcs {
 		return timeVal;
 	}
 	
+
+	
 	/** 
 	 * Get the bits of a byte
 	 * 
@@ -173,5 +175,17 @@ public class StaticProcs {
 			System.out.print(""+temp);
 		}
 		System.out.println();
+	}
+	
+	public static String bitsOfBytes(byte[] bytes) {
+		String str = "";
+		//Expensive, but who cares
+		for(int i=0; i<bytes.length; i++ ) {
+			str += bitsOfByte(bytes[i]) + " ";
+			if((i + 1) % 4 == 0)
+				str += "\n";
+		}
+		
+		return str;
 	}
 }
