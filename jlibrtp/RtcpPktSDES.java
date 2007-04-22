@@ -52,7 +52,8 @@ public class RtcpPktSDES extends RtcpPkt {
 				
 				this.participants[i] = part;
 				
-				while(!endReached && (curPos/4) <= this.length) {
+				while(!endReached && (curPos/4) < this.length) {
+					//System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
 					curType = (int) aRawPkt[curPos];
 					
 					if(curType == 0) {	
@@ -146,7 +147,7 @@ public class RtcpPktSDES extends RtcpPkt {
 		}
 		
 		
-		// Here we ought to loop over participants
+		// Here we ought to loop over participants, if we're doing SDES for other participants.
 		
 		super.rawPkt = new byte[pos];
 		itemCount = 1;

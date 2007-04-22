@@ -44,65 +44,68 @@ public class ValidateRtcpPkt {
 		partDb.addParticipant(0,part1);
 		partDb.addParticipant(0,part2);
 		
-		Participant[] partArray = new Participant[2];
+		Participant[] partArray = new Participant[1];
 		partArray[0] = part1;
-		partArray[1] = part2;
+		//partArray[1] = part2;
 
 		RtcpPktRR rrpkt = new RtcpPktRR(partArray,123456789);
 		RtcpPktSR srpkt = new RtcpPktSR(rtpSession.ssrc,12,21,rrpkt);
-		RtcpPktSR srpkt2 = new RtcpPktSR(rtpSession.ssrc,12,21,null);
-		rrpkt = new RtcpPktRR(partArray,1234512311);
+		//RtcpPktSR srpkt2 = new RtcpPktSR(rtpSession.ssrc,12,21,null);
+		//rrpkt = new RtcpPktRR(partArray,1234512311);
 		
-		srpkt.debugPrint();
-		rrpkt.debugPrint();
+		//srpkt.debugPrint();
+		//rrpkt.debugPrint();
 		
 		CompRtcpPkt compkt = new CompRtcpPkt();
 		compkt.addPacket(srpkt);
-		compkt.addPacket(rrpkt);
-		compkt.addPacket(rrpkt);
+		//compkt.addPacket(rrpkt);
+		//compkt.addPacket(rrpkt);
 		
 		byte[] test = compkt.encode();
+		//System.out.print(StaticProcs.bitsOfBytes(test));
 		System.out.println("****************************** DONE ENCODING *******************************");
 		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,partDb);
 		System.out.println("****************************** DONE DECODING *******************************");
-		System.out.println("Problem code:" + decomppkt.problem);
+		//System.out.println("Problem code:" + decomppkt.problem);
 		
 		ListIterator iter = decomppkt.rtcpPkts.listIterator();
 		int i = 0;
 		
 		while(iter.hasNext()) {
-			System.out.print(" i:" + i + " ");
+			System.out.println(" i:" + i + " ");
 			i++;
 			
 			Object aPkt = iter.next();
 			if(	aPkt.getClass() == RtcpPktRR.class) {
 				RtcpPktRR pkt = (RtcpPktRR) aPkt;
-				pkt.debugPrint();
+				//pkt.debugPrint();
 			} else if(aPkt.getClass() == RtcpPktSR.class) {
 				RtcpPktSR pkt = (RtcpPktSR) aPkt;
-				pkt.debugPrint();
+				//pkt.debugPrint();
 			}
 		} 
-		System.out.println("****************************** SDES *******************************");
-		RtcpPktSDES sdespkt = new RtcpPktSDES(true,rtpSession,null);
-		rtpSession.cname = "cname123@123";
-		rtpSession.loc = "right here";
-		sdespkt.encode();
-		byte[] rawpkt = sdespkt.rawPkt;
-		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpkt, 0, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
-		decsdespkt.debugPrint();
-		partDb.debugPrint();
-		
+
 		System.out.println("****************************** BYE *******************************");
 		long[] tempArray = {rtpSession.ssrc};
 		byte[] tempReason = "tas".getBytes();
 		RtcpPktBYE byepkt = new RtcpPktBYE(tempArray,tempReason);
-		byepkt.debugPrint();
+		//byepkt.debugPrint();
 		byepkt.encode();
-		rawpkt = byepkt.rawPkt;
+		byte[] rawpktbye = byepkt.rawPkt;
 		
-		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpkt,0);
+		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpktbye,0);
 		byepkt2 .debugPrint();
+		
+		System.out.println("****************************** SDES *******************************");
+		RtcpPktSDES sdespkt = new RtcpPktSDES(true,rtpSession,null);
+		rtpSession.cname = "cname123@localhost";
+		rtpSession.loc = "right here";
+		sdespkt.encode();
+		byte[] rawpktsdes = sdespkt.rawPkt;
+		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpktsdes, 0, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
+		//decsdespkt.debugPrint();
+		//partDb.debugPrint();
+		
 
 	}
 }

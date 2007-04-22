@@ -36,8 +36,14 @@ public class CompRtcpPkt {
 		int start = 0;
 
 		while(start < packetSize) {
-
-			int length = (StaticProcs.bytesToUIntInt(rawPkt, start + 2));
+			int length = (StaticProcs.bytesToUIntInt(rawPkt, start + 2)) + 1;
+			
+			if(length*4 + start > rawPkt.length) {
+				System.out.println("!!!! CompRtcpPkt.(rawPkt,..,..) length ("+ (length*4+start)
+						+ ") exceeds size of raw packet ("+rawPkt.length+") !");
+				this.problem = -3;
+			}
+			
 			int pktType = (int) rawPkt[start + 1];
 			
 			if(pktType < 0) {
@@ -47,7 +53,7 @@ public class CompRtcpPkt {
 			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );
 			
 			if(pktType == 200) {
-				addPacket(new RtcpPktSR(rawPkt,start,length));
+				addPacket(new RtcpPktSR(rawPkt,start,length*4));
 			} else if(pktType == 201 ) {
 				addPacket(new RtcpPktRR(rawPkt,start, -1));
 			} else if(pktType == 202) {
@@ -78,7 +84,7 @@ public class CompRtcpPkt {
 			}
 				
 			
-			start += length;
+			start += length*4;
 			
 			if(RTPSession.rtpDebugLevel > 12) {
 				System.out.println("  parsing " + " pktType " + pktType + " length: " + length + " ");

@@ -42,8 +42,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 2;
-	 final static public int rtcpDebugLevel = 2;
+	 final static public int rtpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 0;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -70,9 +70,6 @@ public class RTPSession {
 	 
 	 //Maximum number of packets used for reordering
 	 protected int maxReorderBuffer = 5;
-	 
-	 //Milliseconds between Participant database cleanups, 100s
-	 protected long maintenanceInterval = 100000;
 	 
 	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 

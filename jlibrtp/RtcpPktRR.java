@@ -20,9 +20,10 @@ public class RtcpPktRR extends RtcpPkt {
 	// If rcount < 0 we assume we have to parse the entire packet
 	// otherwise we'll just parse the body. 
 	protected RtcpPktRR(byte[] aRawPkt, int start, int rrCount) {
+		//System.out.println("RtcpPktRR: " + rrCount + "  start: " + start);
 		super.rawPkt = aRawPkt;
 		
-		if(!super.parseHeaders(start) || packetType != 201 || super.length < 1) {
+		if(rrCount < 0 && (!super.parseHeaders(start) || packetType != 201 || super.length < 1)) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders(start))+" "+packetType+" "+super.length);
 			}
@@ -30,7 +31,7 @@ public class RtcpPktRR extends RtcpPkt {
 		}
 		
 		int base;
-		if(rrCount > 1) {
+		if(rrCount > 0) {
 			base = 28;
 		} else {
 			base = 8;
@@ -119,7 +120,11 @@ public class RtcpPktRR extends RtcpPkt {
 			System.arraycopy(someBytes, 0, ret, 8 + offset, 4);
 		
 			// Interarrival jitter
-			someBytes = StaticProcs.uIntLongToByteWord((long)reportees[i].interArrivalJitter);
+			if(reportees[i].interArrivalJitter >= 0) {
+				someBytes = StaticProcs.uIntLongToByteWord((long)reportees[i].interArrivalJitter);
+			} else { 
+				someBytes = StaticProcs.uIntLongToByteWord((long) 0); 
+			}
 			System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 		
 			// Timestamp last sender report received
