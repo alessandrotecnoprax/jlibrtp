@@ -19,7 +19,6 @@
 package jlibrtp;
 
 import java.net.InetSocketAddress;
-import java.net.InetAddress;
 
 /**
  * A participant represents a peer in an RTPSession. Based on the information stored on 

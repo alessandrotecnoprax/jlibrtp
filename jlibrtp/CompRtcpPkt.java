@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 
 public class CompRtcpPkt {
 	protected int problem = 0;
-	protected LinkedList rtcpPkts = new LinkedList();
+	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
 	
 	/**
 	 * Instantiates an empty Compound RTCP packet to which you can add RTCP packets
@@ -139,7 +139,7 @@ public class CompRtcpPkt {
 			System.out.println(" <- CompRtcpPkt.encode()");
 		}
 		
-		ListIterator  iter = rtcpPkts.listIterator();
+		ListIterator<RtcpPkt>  iter = rtcpPkts.listIterator();
 
 		byte[] rawPkt = new byte[1500];
 		int index = 0;
@@ -169,6 +169,16 @@ public class CompRtcpPkt {
 				index += pkt.rawPkt.length;
 			} else if(aPkt.packetType == 204) {
 				RtcpPktAPP pkt = (RtcpPktAPP) aPkt;
+				pkt.encode();
+				System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
+				index += pkt.rawPkt.length;
+			} else if(aPkt.packetType == 205) {
+				RtcpPktRTPFB pkt = (RtcpPktRTPFB) aPkt;
+				pkt.encode();
+				System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
+				index += pkt.rawPkt.length;
+			} else if(aPkt.packetType == 206) {
+				RtcpPktPSFB pkt = (RtcpPktPSFB) aPkt;
 				pkt.encode();
 				System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
 				index += pkt.rawPkt.length;
