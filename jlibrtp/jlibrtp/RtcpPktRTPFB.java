@@ -20,8 +20,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		
 		rawPkt = aRawPkt;
 
-		if(! super.parseHeaders(start) || packetType != 205 || super.length < 2 
-				|| super.length*4 + start < aRawPkt.length) {
+		if(! super.parseHeaders(start) || packetType != 205 || super.length < 2) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRTPFB.parseHeaders() etc. problem");
 			}

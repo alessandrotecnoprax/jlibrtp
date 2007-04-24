@@ -35,7 +35,7 @@ public class CompRtcpPkt {
 		// Chop it up
 		int start = 0;
 
-		while(start < packetSize) {
+		while(start < packetSize && problem == 0) {
 			int length = (StaticProcs.bytesToUIntInt(rawPkt, start + 2)) + 1;
 			
 			if(length*4 + start > rawPkt.length) {
@@ -49,9 +49,27 @@ public class CompRtcpPkt {
 			if(pktType < 0) {
 				pktType += 256;
 			}
-
-			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );
 			
+			
+			if(start == 0) {
+				// Compound packets need to start with SR or RR
+				if(pktType != 200 && pktType != 201 ) {
+					if(RTPSession.rtpDebugLevel > 3) {
+						System.out.println("!!!! CompRtcpPkt(rawPkt...) packet did not start with SR or RR");
+					}
+					this.problem = -1;
+				}
+				
+				// Padding bit should be zero for the first packet
+				if(((rawPkt[start] & 0x20) >>> 5) == 1) {
+					if(RTPSession.rtpDebugLevel > 3) {
+						System.out.println("!!!! CompRtcpPkt(rawPkt...) first packet was padded");
+					}
+					this.problem = -2;
+				}
+			}
+			
+			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
 			if(pktType == 200) {
 				addPacket(new RtcpPktSR(rawPkt,start,length*4));
 			} else if(pktType == 201 ) {
@@ -62,32 +80,21 @@ public class CompRtcpPkt {
 				addPacket(new RtcpPktBYE(rawPkt,start));
 			} else if(pktType == 204) {
 				addPacket(new RtcpPktAPP(rawPkt,start));
+			} else if(pktType == 205) {
+				addPacket(new RtcpPktRTPFB(rawPkt,start));
+			} else if(pktType == 206) {
+				addPacket(new RtcpPktPSFB(rawPkt,start));
 			} else {
-				System.out.println("CompRtcpPkt Ooops:" + pktType);
+				System.out.println("!!!! CompRtcpPkt(byte[] rawPkt, int packetSize...) "
+						+"UNKNOWN RTCP PACKET TYPE:" + pktType);
 			}
 			
-			// Compound packets need to start with SR or RR
-			if(start == 0 && pktType != 200 && pktType != 201 ) {
-				if(RTPSession.rtpDebugLevel > 3) {
-					System.out.println("!!!! CompRtcpPkt(rawPkt...) packet did not start with SR or RR");
-				}
-				this.problem = -1;
-			}
-			System.out.println(" start:" + start + "  pktType:" + pktType + " length:" + length);
-			
-			// Padding bit should be zero for the first packet
-			if(start == 0 && ((RtcpPkt) this.rtcpPkts.getLast()).padding != 0) {
-				if(RTPSession.rtpDebugLevel > 3) {
-					System.out.println("!!!! CompRtcpPkt(rawPkt...) first packet was padded");
-				}
-				this.problem = -2;
-			}
-				
+			//System.out.println(" start:" + start + "  pktType:" + pktType + " length:" + length);
 			
 			start += length*4;
 			
 			if(RTPSession.rtpDebugLevel > 12) {
-				System.out.println("  parsing " + " pktType " + pktType + " length: " + length + " ");
+				System.out.println(" start:"+start+"  parsing pktType "+pktType+" length: "+length);
 			}
 		}
 		if(RTPSession.rtpDebugLevel > 7) {

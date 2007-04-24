@@ -21,8 +21,7 @@ public class RtcpPktSDES extends RtcpPkt {
 		}
 		rawPkt = aRawPkt;
 
-		if(! super.parseHeaders(start) || packetType != 202
-				|| super.length*4 + start < aRawPkt.length) {
+		if(! super.parseHeaders(start) || packetType != 202 ) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktSDES.parseHeaders() etc. problem");
 			}
