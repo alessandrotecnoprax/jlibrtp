@@ -7,6 +7,9 @@ public class CompRtcpPkt {
 	protected int problem = 0;
 	protected LinkedList rtcpPkts = new LinkedList();
 	
+	/**
+	 * Instantiates an empty Compound RTCP packet to which you can add RTCP packets
+	 */
 	protected CompRtcpPkt() {
 		// Will have to add packets directly to rtcpPkts.
 		if(RTPSession.rtpDebugLevel > 7) {
@@ -14,6 +17,13 @@ public class CompRtcpPkt {
 		}
 	}
 	
+	/**
+	 * Add a RTCP packet to the compound packet. Pakcets are added in order,
+	 * so you have to ensure that a Sender Report or Receiver Report is 
+	 * added first.
+	 * 
+	 * @param aPkt the packet to be added
+	 */
 	protected void addPacket(RtcpPkt aPkt) {
 		if(RTPSession.rtpDebugLevel > 11) {
 			System.out.println("  <-> CompRtcpPkt.addPacket( "+ aPkt.getClass() + " )");
@@ -26,6 +36,20 @@ public class CompRtcpPkt {
 		}
 	}
 	
+	/**
+	 * Picks a received Compound RTCP packet apart.
+	 * 
+	 * Only SDES packets are processed directly, other packets are
+	 * parsed and put into aComptRtcpPkt.rtcpPkts, but not 
+	 * 
+	 * Check the aComptRtcpPkt.problem , if the value is non-zero
+	 * the packets should probably be discarded.
+	 * 
+	 * @param rawPkt the byte array received from the socket
+	 * @param packetSize the actual number of used bytes
+	 * @param adr the socket address from which the packet was received
+	 * @param partDb the participant database of the session, used for SDES packets
+	 */
 	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, ParticipantDatabase partDb) {
 		if(RTPSession.rtpDebugLevel > 7) {
 			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + partDb.getClass() + ")");
@@ -102,6 +126,14 @@ public class CompRtcpPkt {
 		}
 	}
 	
+	/**
+	 * Encode combines the RTCP packets in this.rtcpPkts into a byte[]
+	 * by calling the encode() function on each of them individually.
+	 * 
+	 * The order of rtcpPkts is preserved, so a RR or SR packet must be first.
+	 * 
+	 * @return the trimmed byte[] representation of the packet, ready to go into a UDP packet.
+	 */
 	protected byte[] encode() {
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println(" <- CompRtcpPkt.encode()");

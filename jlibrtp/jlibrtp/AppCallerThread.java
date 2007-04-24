@@ -35,6 +35,12 @@ public class AppCallerThread extends Thread {
 	RTPSession rtpSession;
 	RTPAppIntf appl;
 	
+	/**
+	 * Instatiates the AppCallerThread
+	 * 
+	 * @param session the RTPSession with participants etc
+	 * @param rtpApp the interface to which data is given
+	 */
 	public AppCallerThread(RTPSession session, RTPAppIntf rtpApp) {
 		rtpSession = session;
 		appl = rtpApp;
@@ -43,6 +49,14 @@ public class AppCallerThread extends Thread {
 		}  
 	}
 	
+	/**
+	 * The AppCallerThread will run in this loop until the RTPSession
+	 * is terminated.
+	 * 
+	 * Whenever an RTP packet is received it will loop over the
+	 * participants to check for packet buffers that have available
+	 * frame.
+	 */
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 3) {
 			System.out.println("-> AppCallerThread.run()");
