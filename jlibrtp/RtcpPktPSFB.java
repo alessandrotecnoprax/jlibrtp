@@ -26,8 +26,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 		
 		rawPkt = aRawPkt;
 
-		if(! super.parseHeaders(start) || packetType != 206 || super.length < 2 
-				|| super.length*4 + start < aRawPkt.length) {
+		if(! super.parseHeaders(start) || packetType != 206 || super.length < 2 ) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRTPFB.parseHeaders() etc. problem");
 			}

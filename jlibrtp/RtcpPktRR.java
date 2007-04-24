@@ -23,8 +23,7 @@ public class RtcpPktRR extends RtcpPkt {
 		//System.out.println("RtcpPktRR: " + rrCount + "  start: " + start);
 		super.rawPkt = aRawPkt;
 		
-		if(rrCount < 0 && (!super.parseHeaders(start) || packetType != 201 || super.length < 1
-				|| super.length*4 + start < aRawPkt.length)) {
+		if(rrCount < 0 && (!super.parseHeaders(start) || packetType != 201 || super.length < 1)) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRR.parseHeaders() etc. problem: "+(!super.parseHeaders(start))+" "+packetType+" "+super.length);
 			}

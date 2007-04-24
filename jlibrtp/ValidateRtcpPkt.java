@@ -40,13 +40,16 @@ public class ValidateRtcpPkt {
 		part2.loc = "Asker";
 		part1.phone = "+452 1231231";
 		part2.phone = "aasdasda.asdasdas";
-		
+		part1.lastSeqNumber = 111;
+		part2.lastSeqNumber = 222;
+		part1.timeStampLSR = 111111;
+		part2.timeStampLSR = 222222;
 		partDb.addParticipant(0,part1);
 		partDb.addParticipant(0,part2);
 		
-		Participant[] partArray = new Participant[1];
+		Participant[] partArray = new Participant[2];
 		partArray[0] = part1;
-		//partArray[1] = part2;
+		partArray[1] = part2;
 
 		RtcpPktRR rrpkt = new RtcpPktRR(partArray,123456789);
 		RtcpPktSR srpkt = new RtcpPktSR(rtpSession.ssrc,12,21,rrpkt);
@@ -58,15 +61,15 @@ public class ValidateRtcpPkt {
 		
 		CompRtcpPkt compkt = new CompRtcpPkt();
 		compkt.addPacket(srpkt);
-		//compkt.addPacket(rrpkt);
-		//compkt.addPacket(rrpkt);
+		compkt.addPacket(rrpkt);
+		compkt.addPacket(rrpkt);
 		
 		byte[] test = compkt.encode();
 		//System.out.print(StaticProcs.bitsOfBytes(test));
 		System.out.println("****************************** DONE ENCODING *******************************");
 		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,partDb);
 		System.out.println("****************************** DONE DECODING *******************************");
-		//System.out.println("Problem code:" + decomppkt.problem);
+		System.out.println("Problem code:" + decomppkt.problem);
 		
 		ListIterator iter = decomppkt.rtcpPkts.listIterator();
 		int i = 0;
@@ -78,10 +81,10 @@ public class ValidateRtcpPkt {
 			Object aPkt = iter.next();
 			if(	aPkt.getClass() == RtcpPktRR.class) {
 				RtcpPktRR pkt = (RtcpPktRR) aPkt;
-				//pkt.debugPrint();
+				pkt.debugPrint();
 			} else if(aPkt.getClass() == RtcpPktSR.class) {
 				RtcpPktSR pkt = (RtcpPktSR) aPkt;
-				//pkt.debugPrint();
+				pkt.debugPrint();
 			}
 		} 
 
