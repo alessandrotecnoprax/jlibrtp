@@ -1,12 +1,10 @@
 package jlibrtp;
 
-import java.net.InetSocketAddress;
-
 public class RtcpPktRTPFB extends RtcpPkt {
-	long ssrcPacketSender = -1;
-	long ssrcMediaSource = -1;
-	int PID[];
-	int BLP[];
+	protected long ssrcPacketSender = -1;
+	protected long ssrcMediaSource = -1;
+	protected int PID[];
+	protected int BLP[];
 	
 	protected RtcpPktRTPFB(long ssrcPacketSender, long ssrcMediaSource, int FMT, int[] PID, int[] BLP) {
 		super.packetType = 205; //RTPFB
@@ -23,7 +21,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		rawPkt = aRawPkt;
 
 		if(! super.parseHeaders(start) || packetType != 205 || super.length < 2 
-				|| super.length*4 > aRawPkt.length - start) {
+				|| super.length*4 + start < aRawPkt.length) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktRTPFB.parseHeaders() etc. problem");
 			}
@@ -69,6 +67,10 @@ public class RtcpPktRTPFB extends RtcpPkt {
 			super.rawPkt[curStart++] = someBytes[1];
 		}
 		writeHeaders();
+	}
+	
+	protected int getFMT() {
+		return this.itemCount;
 	}
 	
 	public void debugPrint() {

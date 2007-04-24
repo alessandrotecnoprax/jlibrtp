@@ -28,7 +28,9 @@ import java.util.concurrent.locks.*;
 import java.util.Random;
 
 /**
- * The RTPSession object is the core of jlibrtp. One should be instanciated for every communication channel, i.e. if you send voice and video, you should create one for each.
+ * The RTPSession object is the core of jlibrtp. 
+ * 
+ * One should be instantiated for every communication channel, i.e. if you send voice and video, you should create one for each.
  * 
  * The instance holds a participant database, as well as other information about the session. When the application registers with the session, the necessary threads for receiving and processing RTP packets are spawned.
  * 
@@ -82,6 +84,9 @@ public class RTPSession {
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
+	 
+	 // RFC4585 mode?
+	 protected boolean modeRFC4585 = false; 
 	 
 	 // Locks
 	 final protected Lock pktBufLock = new ReentrantLock();
@@ -512,6 +517,22 @@ public class RTPSession {
 		return naiveReception;
 	}
 	
+	/**
+	 * Set the number of RTP packets that should be buffered when a packet is
+	 * missing or received out of order. Setting this number high increases
+	 * the chance of correctly reordering packets, but increases latency when
+	 * a packet is dropped by the network.
+	 * 
+	 * Packets that arrive in order are not affected, they are passed straight
+	 * to the application.
+	 * 
+	 * The maximum delay is numberofPackets * packet rate , where the packet rate
+	 * depends on the codec and profile used by the sender.
+	 * 
+	 * A negative value disables the buffering, out of order packets will simply be dropped.
+	 * 
+	 * @param numberOfPackets number of packets that can accumulate before the first is returned
+	 */
 	public void setMaxReorderBuffer(int numberOfPackets) {
 		if(numberOfPackets >= 0) {
 			this.maxReorderBuffer = numberOfPackets;
@@ -521,13 +542,40 @@ public class RTPSession {
 	}
 	
 	/**
-	 * The maximum number of milliseconds that should pass before the callback
-	 * interface is called with receiveData().
+	 * The number of RTP packets that should be buffered when a packet is
+	 * missing or received out of order. A high number  increases the chance 
+	 * of correctly reordering packets, but increases latency when a packet is 
+	 * dropped by the network.
 	 * 
-	 * @return the number of milliseconds that can pass, a negative number means infinite.
+	 * A negative value disables the buffering, out of order packets will simply be dropped.
+	 * 
+	 * @return the maximum number of packets that can accumulate before the first is returned
 	 */
 	public int getMaxReorderBuffer() {
 		return this.maxReorderBuffer;
+	}
+	
+	/**
+	 * Set whether the stack should operate in RFC 4585 mode.
+	 * 
+	 * NOT FULLY IMPLEMENTED!! 
+	 * 
+	 * @param set Whether to operate in this mode or not
+	 */
+	public void setRFC4585Mode(boolean set) {
+		this.modeRFC4585 = set;
+	}
+	
+	/**
+	 * 
+	 * Whether the stack should operate in RFC 4585 mode.
+	 * 
+	 * NOT FULLY IMPLEMENTED!! 
+	 * 	
+	 * @return whether the stack operates accordint to RFC 4585, otherwise RFC 3550
+	 */
+	public boolean getRFC4585Mode() {
+		return this.modeRFC4585;
 	}
 	
 	private int getNextSeqNum() {
