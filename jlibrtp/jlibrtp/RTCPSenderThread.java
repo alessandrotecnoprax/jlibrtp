@@ -2,7 +2,6 @@ package jlibrtp;
 
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
 import java.util.*;
 
 public class RTCPSenderThread extends Thread {
