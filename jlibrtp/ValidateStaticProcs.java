@@ -75,6 +75,26 @@ public class ValidateStaticProcs {
 		StaticProcs.printBits(bytes[1]);
 		check = StaticProcs.bytesToUIntInt(bytes, 0);
 		System.out.println(check);
+		
+		byte[] arbytes = new byte[22];
+		arbytes[13] = -127;
+		arbytes[14] = 127;
+		arbytes[15] = -1;
+		arbytes[16] = 127;
+		arbytes[17] = -127;
+		System.out.println("arbitrary length:");
+		StaticProcs.printBits(arbytes[14]);
+		StaticProcs.printBits(arbytes[15]);
+		StaticProcs.printBits(arbytes[16]);
+		//long arbTest = StaticProcs.bytesToUintLong(arbytes, 14, 16);
+		//byte[] reArBytes = StaticProcs.uIntLongToByteWord(arbTest);
+		//System.out.println("arbitrary length recode: " + Long.toString(arbTest));
+		//StaticProcs.printBits(reArBytes[0]);
+		//StaticProcs.printBits(reArBytes[1]);
+		//StaticProcs.printBits(reArBytes[2]);
+		//StaticProcs.printBits(reArBytes[3]);
+		
+		
 	}
 
 }

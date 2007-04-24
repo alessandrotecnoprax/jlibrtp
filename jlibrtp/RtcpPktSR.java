@@ -24,7 +24,8 @@ public class RtcpPktSR extends RtcpPkt {
 		
 		super.rawPkt = aRawPkt;
 
-		if(!super.parseHeaders(start) || packetType != 200) {
+		if(!super.parseHeaders(start) || packetType != 200
+				|| super.length*4 + start < aRawPkt.length) {
 			if(RTPSession.rtpDebugLevel > 2) {
 				System.out.println(" <-> RtcpPktSR.parseHeaders() etc. problem: "+ (!super.parseHeaders(start) ) + " " + packetType + " " + super.length);
 			}

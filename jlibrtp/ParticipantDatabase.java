@@ -49,8 +49,8 @@ public class ParticipantDatabase {
 	/**
 	 * 
 	 * @param cameFrom 0: Application, 1: RTP packet, 2: RTCP
-	 * @param p
-	 * @return 0 if okay, -1 if 
+	 * @param p the participant
+	 * @return 0 if okay, -1 if not 
 	 */
 	protected int addParticipant(int cameFrom, Participant p) {
 		//Multicast or not?

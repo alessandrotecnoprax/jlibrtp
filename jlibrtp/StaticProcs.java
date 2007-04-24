@@ -92,6 +92,54 @@ public class StaticProcs {
 		return accum;
 	}
 	
+	/**
+	 * Converts an arbitrary number of bytes, assumed to represent an unsigned integer,
+	 * to a Java long
+	 */
+	/*public static long bytesToUintLong(byte[] bytes, int firstByte, int lastByte) {
+		long accum = 0;
+		int i = lastByte - firstByte;
+		if(i > 7) {
+			System.out.println("!!!! StaticProcs.bytesToUintLong() Can't convert more than 63 bits!");
+			return -1;
+		}
+		int stop = (i+1)*8;
+		
+		for (int shiftBy = 0; shiftBy < stop; shiftBy += 8 ) {
+			accum |= ( (long)( bytes[firstByte + i] & 0xff ) ) << shiftBy;
+			i--;
+		}
+		return accum;
+	}*/
+	
+	/**
+	 * Converts an arbitrary number of bytes, assumed to represent an unsigned integer,
+	 * to a Java int
+	 */
+	/*	public static int bytesToUintInt(byte[] bytes, int firstByte, int lastByte) {
+		int accum = 0;
+		int i = lastByte - firstByte;
+		if(i > 3) {
+			System.out.println("!!!! StaticProcs.bytesToUintLong() Can't convert more than 31 bits!");
+			return -1;
+		}
+		int stop = (i+1)*8;
+		
+		for (int shiftBy = 0; shiftBy < stop; shiftBy += 8 ) {
+			accum |= ( (long)( bytes[firstByte + i] & 0xff ) ) << shiftBy;
+			i--;
+		}
+		return accum;
+	}*/
+	
+	/**
+	 * Recreates a UNIX timestamp based on the NTP representation used
+	 * in RTCP SR packets
+	 * 
+	 * @param ntpTs1 from RTCP SR packet
+	 * @param ntpTs2 from RTCP SR packet
+	 * @return the UNIX timestamp
+	 */
 	public static long undoNtpMess(long ntpTs1, long ntpTs2) {		
 		long timeVal = (ntpTs1 - 2208988800L)*1000;
 			
