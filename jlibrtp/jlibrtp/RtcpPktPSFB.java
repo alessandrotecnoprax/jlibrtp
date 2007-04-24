@@ -3,16 +3,23 @@ package jlibrtp;
 //import java.util.Vector;
 
 public class RtcpPktPSFB extends RtcpPkt {
-	long ssrcPacketSender = -1;
-	long ssrcMediaSource = -1;
+	private long ssrcPacketSender = -1;
+	private long ssrcMediaSource = -1;
 	
-	int[] sliFirst;
-	int[] sliNumber;
-	int[] sliPictureId;
+	// Slice Loss Indication (SLI)
+	protected int[] sliFirst;
+	protected int[] sliNumber;
+	protected int[] sliPictureId;
 	
-	//int[] rpsiPadding = new int[count];
-	//Vector<Integer> rpsiPayloadType;
-	//Vector<Vector<Byte>> rpsiBitString;
+	// Picture loss indication
+	
+	// Reference Picture Selection Indication (RPSI)
+	protected int rpsiPadding = -1;
+	protected int rpsiPayloadType = -1;
+	protected byte[] rpsiBitString;
+	
+	// Application Layer Feedback Messages
+	protected byte[] alfBitString;
 	
 	protected RtcpPktPSFB(long ssrcPacketSender, long ssrcMediaSource, int FMT) {
 		super.packetType = 206; //PSFB
@@ -75,7 +82,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 		sliNumber = new int[count];
 		sliPictureId = new int[count];
 		
-		// Loop over the FCIs
+		// Loop over the FCI lines
 		for(int i=0; i < count; i++) {
 			sliFirst[i] = StaticProcs.bytesToUIntInt(aRawPkt, start) >> 3;
 			sliNumber[i] = (int) (StaticProcs.bytesToUIntInt(aRawPkt, start) & 0x0007FFC0) >> 6;
@@ -93,34 +100,46 @@ public class RtcpPktPSFB extends RtcpPkt {
 		// |   defined per codec          ...                | Padding (0) |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		
-		//rpsiPayloadType = new Vector<Integer>;
-		//rpsiBitstring = new Vector<Vector<Byte>>;
+		//Minimize the padding
+		int paddingBits = aRawPkt[start];
+		int paddingBytes = paddingBits/8;
+		rpsiPadding = paddingBits - 8*paddingBytes;
+		
+		if(paddingBits > 32) {
+			System.out.println("!!!! RtcpPktPSFB.decRefPictureSelcIndic paddingBits: " 
+					+ paddingBits);
+		}
+		
+		rpsiPayloadType = (int) rawPkt[start];
+		if(rpsiPayloadType < 0) {
+			System.out.println("!!!! RtcpPktPSFB.decRefPictureSelcIndic 8th bit not zero: " 
+					+ rpsiPayloadType);
+		}
+		
+		//
+		int stringLength = (super.length - 2)*4 - 2 - paddingBytes;
+		rpsiBitString = new byte[stringLength];
+		System.arraycopy(aRawPkt, start + 2, rpsiBitString, 0, stringLength);
+		
 	}
 	
 	private void decAppLayerFB(byte[] aRawPkt, int start) {	
 		//Application Message (FCI): variable length
+		int stringLength = (super.length - 2)*4;
 		
+		alfBitString = new byte[stringLength];
+		
+		System.arraycopy(aRawPkt, start, alfBitString, 0, stringLength);
 		//Accumulate and send to application
 	}
 	
 	protected void encode() {
 		//super.rawPkt = new byte[12 + this.PID.length*4];
-		
 		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.ssrcPacketSender);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		someBytes = StaticProcs.uIntLongToByteWord(this.ssrcMediaSource);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
 		
-		// Loop over Feedback Control Information (FCI) fields
-		//int curStart = 12;
-		//for(int i=0; i < this.PID.length; i++ ) {
-		//	someBytes = StaticProcs.uIntIntToByteWord(PID[i]);
-		//	super.rawPkt[curStart++] = someBytes[0];
-		//	super.rawPkt[curStart++] = someBytes[1];
-		//	someBytes = StaticProcs.uIntIntToByteWord(BLP[i]);
-		//	super.rawPkt[curStart++] = someBytes[0];
-		//	super.rawPkt[curStart++] = someBytes[1];
-		//}
 		writeHeaders();
 	}
 	
