@@ -189,121 +189,144 @@ public class RTPSession {
 	  * payload type.
 	  * 
 	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
-	  * @return	-1 if there was a problem sending the data, 0 otherwise.
+	  * @return	null if there was a problem, {RTP Timestamp, Sequence number} otherwise
 	  */
-	 public int sendData(byte[] buf) {
-		 return this.sendData(buf, null, false);
+	 public long[] sendData(byte[] buf) {
+		 byte[][] tmp = {buf}; 
+		 long[][] ret = this.sendData(tmp, null, null);
+		 
+		 if(ret != null)
+			 return ret[0];
+		 
+		 return null;
 	 }
 	 /**
 	  * Send data to all participants registered as receivers, using the current timeStamp and
-	  * payload type.
+	  * payload type. The RTP timestamp will be the same for all the packets.
 	  * 
 	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
 	  * @param csrcArray an array with the SSRCs of contributing sources
-	  * @return	-1 if there was a problem sending the data, 0 otherwise.
+	  * @return	null if there was a problem sending the packets, 2-dim array with {RTP Timestamp, Sequence number}
 	  */
-	 public int sendData(byte[] buf, long[] csrcArray, boolean marker) {
-		if(RTPSession.rtpDebugLevel > 5) {
-				System.out.println("-> RTPSession.sendData(byte[])");
-		}
-		
-		if(buf.length > 1500) {
-			System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes ("+buf.length+")");
-		}
-		
-		// Create a new RTP Packet
-		RtpPkt pkt = new RtpPkt(System.currentTimeMillis(),this.ssrc,getNextSeqNum(),this.payloadType,buf);
-		
-		if(csrcArray != null)
-			pkt.setCsrcs(csrcArray);
-		
-		pkt.setMarked(marker);
-		
-		// Creates a raw packet
-		byte[] pktBytes = pkt.encode();
-		
-		//System.out.println(Integer.toString(StaticProcs.bytesToUIntInt(pktBytes, 2)));
-		
-		// Pre-flight check, are resolving an SSRC conflict?
-		if(this.conflict) {
-			System.out.println("RTPSession.sendData() called while trying to resolve conflict.");
-			return -1;
-		}
-		
-		
-		if(this.mcSession) {
-			DatagramPacket packet = null;
-			
-			
-			try {
-				packet = new DatagramPacket(pktBytes,pktBytes.length,this.mcGroup,this.rtpMCSock.getPort());
-			} catch (Exception e) {
-				System.out.println("RTPSession.sendData() packet creation failed.");
-				e.printStackTrace();
-				return -1;
-			}
-			
-			try {
-				rtpMCSock.send(packet);
-				//Debug
-				if(this.debugAppIntf != null) {
-					this.debugAppIntf.debugPacketSent(1, (InetSocketAddress) packet.getSocketAddress(), 
-							new String("Sent multicast RTP packet of size " + packet.getLength() + 
-									" to " + packet.getSocketAddress().toString() + " via " 
-									+ rtpMCSock.getLocalSocketAddress().toString()));
-				}
-			} catch (Exception e) {
-				System.out.println("RTPSession.sendData() multicast failed.");
-				e.printStackTrace();
-				return -1;
-			}		
-			
-		} else {
-			// Loop over recipients
-			Iterator<Participant> iter = partDb.getUnicastReceivers();
-			while(iter.hasNext()) {			
-				InetSocketAddress receiver = iter.next().rtpAddress;
-				DatagramPacket packet = null;
-				
-				if(RTPSession.rtpDebugLevel > 15) {
-					System.out.println("   Sending to " + receiver.toString());
-				}
-				
-				try {
-					packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
-				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() packet creation failed.");
-					e.printStackTrace();
-					return -1;
-				}
-				
-				//Actually send the packet
-				try {
-					rtpSock.send(packet);
-					//Debug
-					if(this.debugAppIntf != null) {
-						this.debugAppIntf.debugPacketSent(0, (InetSocketAddress) packet.getSocketAddress(), 
-								new String("Sent unicast RTP packet of size " + packet.getLength() + 
-										" to " + packet.getSocketAddress().toString() + " via " 
-										+ rtpSock.getLocalSocketAddress().toString()));
-					}
-				} catch (Exception e) {
-					System.out.println("RTPSession.sendData() unicast failed.");
-					e.printStackTrace();
-					return -1;
-				}
-			}
-		}
-		
-		//Update our stats
-		this.sentPktCount++;
-		this.sentOctetCount++;
-		
-		if(RTPSession.rtpDebugLevel > 5) {
-				System.out.println("<- RTPSession.sendData(byte[]) " + pkt.getSeqNumber());
-		}  
-		
-		 return 0;
+	 public long[][] sendData(byte[][] buffers, long[] csrcArray, boolean[] markers) {
+		 if(RTPSession.rtpDebugLevel > 5) {
+			 System.out.println("-> RTPSession.sendData(byte[])");
+		 }
+
+		 // Same RTP timestamp for all
+		 long rtpTimestamp = System.currentTimeMillis();
+		 
+		 long[][] ret = new long[buffers.length][2];
+
+		 for(int i=0; i<buffers.length; i++) {
+			 byte[] buf = buffers[i];
+			 
+			 boolean marker = false;
+			 if(markers != null)
+				  marker = markers[i];
+
+			 if(buf.length > 1500) {
+				 System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes ("+buf.length+")");
+			 }
+
+			 // Get the return values
+			 ret[i][0] = rtpTimestamp;
+			 ret[i][1] = getNextSeqNum();
+			 
+			 // Create a new RTP Packet
+			 RtpPkt pkt = new RtpPkt(rtpTimestamp,this.ssrc,(int) ret[i][1],this.payloadType,buf);
+
+			 if(csrcArray != null)
+				 pkt.setCsrcs(csrcArray);
+
+			 pkt.setMarked(marker);
+
+			 // Creates a raw packet
+			 byte[] pktBytes = pkt.encode();
+			 
+			 //System.out.println(Integer.toString(StaticProcs.bytesToUIntInt(pktBytes, 2)));
+
+			 // Pre-flight check, are resolving an SSRC conflict?
+			 if(this.conflict) {
+				 System.out.println("RTPSession.sendData() called while trying to resolve conflict.");
+				 return null;
+			 }
+
+
+			 if(this.mcSession) {
+				 DatagramPacket packet = null;
+
+
+				 try {
+					 packet = new DatagramPacket(pktBytes,pktBytes.length,this.mcGroup,this.rtpMCSock.getPort());
+				 } catch (Exception e) {
+					 System.out.println("RTPSession.sendData() packet creation failed.");
+					 e.printStackTrace();
+					 return null;
+				 }
+
+				 try {
+					 rtpMCSock.send(packet);
+					 //Debug
+					 if(this.debugAppIntf != null) {
+						 this.debugAppIntf.debugPacketSent(1, (InetSocketAddress) packet.getSocketAddress(), 
+								 new String("Sent multicast RTP packet of size " + packet.getLength() + 
+										 " to " + packet.getSocketAddress().toString() + " via " 
+										 + rtpMCSock.getLocalSocketAddress().toString()));
+					 }
+				 } catch (Exception e) {
+					 System.out.println("RTPSession.sendData() multicast failed.");
+					 e.printStackTrace();
+					 return null;
+				 }		
+
+			 } else {
+				 // Loop over recipients
+				 Iterator<Participant> iter = partDb.getUnicastReceivers();
+				 while(iter.hasNext()) {			
+					 InetSocketAddress receiver = iter.next().rtpAddress;
+					 DatagramPacket packet = null;
+
+					 if(RTPSession.rtpDebugLevel > 15) {
+						 System.out.println("   Sending to " + receiver.toString());
+					 }
+
+					 try {
+						 packet = new DatagramPacket(pktBytes,pktBytes.length,receiver);
+					 } catch (Exception e) {
+						 System.out.println("RTPSession.sendData() packet creation failed.");
+						 e.printStackTrace();
+						 return null;
+					 }
+
+					 //Actually send the packet
+					 try {
+						 rtpSock.send(packet);
+						 //Debug
+						 if(this.debugAppIntf != null) {
+							 this.debugAppIntf.debugPacketSent(0, (InetSocketAddress) packet.getSocketAddress(), 
+									 new String("Sent unicast RTP packet of size " + packet.getLength() + 
+											 " to " + packet.getSocketAddress().toString() + " via " 
+											 + rtpSock.getLocalSocketAddress().toString()));
+						 }
+					 } catch (Exception e) {
+						 System.out.println("RTPSession.sendData() unicast failed.");
+						 e.printStackTrace();
+						 return null;
+					 }
+				 }
+			 }
+
+			 //Update our stats
+			 this.sentPktCount++;
+			 this.sentOctetCount++;
+
+			 if(RTPSession.rtpDebugLevel > 5) {
+				 System.out.println("<- RTPSession.sendData(byte[]) " + pkt.getSeqNumber());
+			 }  
+		 }
+
+		 return ret;
 	 }
 	
 	 /**
