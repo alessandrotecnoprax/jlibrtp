@@ -1,6 +1,7 @@
 package jlibrtp;
 
 public class RtcpPktRTPFB extends RtcpPkt {
+	public boolean notRelevant = false;
 	protected long ssrcPacketSender = -1;
 	protected long ssrcMediaSource = -1;
 	protected int PID[];
@@ -13,7 +14,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		this.BLP = BLP;
 	}
 	
-	protected RtcpPktRTPFB(byte[] aRawPkt, int start) {		
+	protected RtcpPktRTPFB(byte[] aRawPkt, int start, RTPSession rtpSession) {		
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktRTPFB(byte[], int start)");
 		}
@@ -27,21 +28,30 @@ public class RtcpPktRTPFB extends RtcpPkt {
 			super.problem = -205;
 		} else {
 			//FMT = super.itemCount;
-			ssrcPacketSender = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
+			
 			ssrcMediaSource = StaticProcs.bytesToUIntLong(aRawPkt,8+start);
 			
-			int loopStop = super.length - 2;
-			PID = new int[loopStop];
-			BLP = new int[loopStop];
-			int curStart = 12;
-			
-			// Loop over Feedback Control Information (FCI) fields
-			for(int i=0; i< loopStop; i++) {
-				PID[i] = StaticProcs.bytesToUIntInt(aRawPkt, curStart);
-				BLP[i] = StaticProcs.bytesToUIntInt(aRawPkt, curStart + 2);
-				curStart += 4;
+			if(ssrcMediaSource == rtpSession.ssrc) {
+				ssrcPacketSender = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
+				int loopStop = super.length - 2;
+				PID = new int[loopStop];
+				BLP = new int[loopStop];
+				int curStart = 12;
+
+				// Loop over Feedback Control Information (FCI) fields
+				for(int i=0; i< loopStop; i++) {
+					PID[i] = StaticProcs.bytesToUIntInt(aRawPkt, curStart);
+					BLP[i] = StaticProcs.bytesToUIntInt(aRawPkt, curStart + 2);
+					curStart += 4;
+				}
+
+				rtpSession.rtcpAVPFIntf.RTPFBPktReceived(
+						ssrcPacketSender, super.itemCount, PID, BLP);
 			}
 		}
+		
+
+		
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  <- RtcpPktRTPFB()");
 		}

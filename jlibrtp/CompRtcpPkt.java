@@ -50,9 +50,9 @@ public class CompRtcpPkt {
 	 * @param adr the socket address from which the packet was received
 	 * @param partDb the participant database of the session, used for SDES packets
 	 */
-	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, ParticipantDatabase partDb) {
+	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, RTPSession rtpSession) {
 		if(RTPSession.rtpDebugLevel > 7) {
-			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + partDb.getClass() + ")");
+			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + rtpSession.getClass() + ")");
 		}
 		//System.out.println("rawPkt.length:" + rawPkt.length + " packetSize:" + packetSize);
 		
@@ -99,15 +99,15 @@ public class CompRtcpPkt {
 			} else if(pktType == 201 ) {
 				addPacket(new RtcpPktRR(rawPkt,start, -1));
 			} else if(pktType == 202) {
-				addPacket(new RtcpPktSDES(rawPkt,start, adr, partDb));
+				addPacket(new RtcpPktSDES(rawPkt,start, adr, rtpSession.partDb));
 			} else if(pktType == 203 ) {
 				addPacket(new RtcpPktBYE(rawPkt,start));
 			} else if(pktType == 204) {
 				addPacket(new RtcpPktAPP(rawPkt,start));
 			} else if(pktType == 205) {
-				addPacket(new RtcpPktRTPFB(rawPkt,start));
+				addPacket(new RtcpPktRTPFB(rawPkt,start, rtpSession));
 			} else if(pktType == 206) {
-				addPacket(new RtcpPktPSFB(rawPkt,start));
+				addPacket(new RtcpPktPSFB(rawPkt,start,rtpSession));
 			} else {
 				System.out.println("!!!! CompRtcpPkt(byte[] rawPkt, int packetSize...) "
 						+"UNKNOWN RTCP PACKET TYPE:" + pktType);

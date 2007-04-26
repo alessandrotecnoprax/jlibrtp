@@ -67,7 +67,7 @@ public class ValidateRtcpPkt {
 		byte[] test = compkt.encode();
 		//System.out.print(StaticProcs.bitsOfBytes(test));
 		System.out.println("****************************** DONE ENCODING *******************************");
-		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,partDb);
+		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,rtpSession);
 		System.out.println("****************************** DONE DECODING *******************************");
 		System.out.println("Problem code:" + decomppkt.problem);
 		

@@ -77,16 +77,14 @@ public class RTPSession {
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
 	 // Handles to application
 	 protected RTPAppIntf appIntf = null;
-	 protected RTCPAppIntf rtcAppIntf = null;
+	 protected RTCPAppIntf rtcpAppIntf = null;
+	 protected RTCPAVPFIntf rtcpAVPFIntf = null;
 	 protected DebugAppIntf debugAppIntf = null;
 	 
 	 // Threads etc.
 	 protected RTCPSession rtcpSession = null;
 	 protected RTPReceiverThread recvThrd = null;
 	 protected AppCallerThread appCallerThrd = null;
-	 
-	 // RFC4585 mode?
-	 protected boolean modeRFC4585 = false; 
 	 
 	 // Locks
 	 final protected Lock pktBufLock = new ReentrantLock();
@@ -172,7 +170,7 @@ public class RTPSession {
 				System.out.println("-> RTPSessionRegister");
 			}  
 			this.appIntf = rtpApp;
-			this.rtcAppIntf = rtcpApp;
+			this.rtcpAppIntf = rtcpApp;
 			this.debugAppIntf = debugApp;
 			
 			recvThrd = new RTPReceiverThread(this);
@@ -185,37 +183,62 @@ public class RTPSession {
 	}
 	
 	 /**
-	  * Send data to all participants registered as receivers, using the current timeStamp and
-	  * payload type.
+	  * Send data to all participants registered as receivers, using the current timeStamp,
+	  * dynamic sequence number and the current payload type specified for the session.
 	  * 
-	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
+	  * @param buf A buffer of bytes, less than 1496 bytes
 	  * @return	null if there was a problem, {RTP Timestamp, Sequence number} otherwise
 	  */
 	 public long[] sendData(byte[] buf) {
 		 byte[][] tmp = {buf}; 
-		 long[][] ret = this.sendData(tmp, null, null);
+		 long[][] ret = this.sendData(tmp, null, null, -1, null);
 		 
 		 if(ret != null)
 			 return ret[0];
 		 
 		 return null;
 	 }
+	 
+	 /**
+	  * Send data to all participants registered as receivers, using the specified timeStamp,
+	  * sequence number and the current payload type specified for the session.
+	  * 
+	  * @param buf A buffer of bytes, less than 1496 bytes
+	  * @param rtpTimestamp the RTP timestamp to be used in the packet
+	  * @param seqNum the sequence number to be used in the packet
+	  * @return null if there was a problem, {RTP Timestamp, Sequence number} otherwise
+	  */
+	 public long[] sendData(byte[] buf, long rtpTimestamp, long seqNum) {
+		 byte[][] tmp = {buf};
+		 long[][] ret = this.sendData(tmp, null, null, -1, null);
+		 
+		 if(ret != null)
+			 return ret[0];
+		 
+		 return null;
+	 }
+	 
 	 /**
 	  * Send data to all participants registered as receivers, using the current timeStamp and
 	  * payload type. The RTP timestamp will be the same for all the packets.
 	  * 
 	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
 	  * @param csrcArray an array with the SSRCs of contributing sources
+	  * @param markers An array indicating what packets should be marked. Rarely anything but the first one
+	  * @param rtpTimestamp The RTP timestamp to be applied to all packets
+	  * @param seqNumbers An array with the sequence number associated with each byte[]
 	  * @return	null if there was a problem sending the packets, 2-dim array with {RTP Timestamp, Sequence number}
 	  */
-	 public long[][] sendData(byte[][] buffers, long[] csrcArray, boolean[] markers) {
+	 public long[][] sendData(byte[][] buffers, long[] csrcArray, boolean[] markers, long rtpTimestamp, long[] seqNumbers) {
 		 if(RTPSession.rtpDebugLevel > 5) {
 			 System.out.println("-> RTPSession.sendData(byte[])");
 		 }
 
 		 // Same RTP timestamp for all
-		 long rtpTimestamp = System.currentTimeMillis();
+		 if(rtpTimestamp < 0)
+			 rtpTimestamp = System.currentTimeMillis();
 		 
+		 // Return values
 		 long[][] ret = new long[buffers.length][2];
 
 		 for(int i=0; i<buffers.length; i++) {
@@ -224,15 +247,18 @@ public class RTPSession {
 			 boolean marker = false;
 			 if(markers != null)
 				  marker = markers[i];
-
+			 
 			 if(buf.length > 1500) {
 				 System.out.println("RTPSession.sendData() called with buffer exceeding 1500 bytes ("+buf.length+")");
 			 }
 
 			 // Get the return values
 			 ret[i][0] = rtpTimestamp;
-			 ret[i][1] = getNextSeqNum();
-			 
+			 if(seqNumbers == null) {
+				 ret[i][1] = getNextSeqNum();
+			 } else {
+				 ret[i][1] = seqNumbers[i];
+			 }
 			 // Create a new RTP Packet
 			 RtpPkt pkt = new RtpPkt(rtpTimestamp,this.ssrc,(int) ret[i][1],this.payloadType,buf);
 
@@ -583,22 +609,21 @@ public class RTPSession {
 	 * 
 	 * NOT FULLY IMPLEMENTED!! 
 	 * 
-	 * @param set Whether to operate in this mode or not
+	 * @param rtcpAVPFIntf the in
 	 */
-	public void setRFC4585Mode(boolean set) {
-		this.modeRFC4585 = set;
+	public void registerAVPFIntf(RTCPAVPFIntf rtcpAVPFIntf) {
+		this.rtcpAVPFIntf = rtcpAVPFIntf;
 	}
 	
 	/**
-	 * 
-	 * Whether the stack should operate in RFC 4585 mode.
+	 * Unregisters the RTCP AVPF interface, thereby going from
+	 * RFC 4585 mode to RFC 3550
 	 * 
 	 * NOT FULLY IMPLEMENTED!! 
 	 * 	
-	 * @return whether the stack operates accordint to RFC 4585, otherwise RFC 3550
 	 */
-	public boolean getRFC4585Mode() {
-		return this.modeRFC4585;
+	public void unregisterAVPFIntf() {
+		this.rtcpAVPFIntf = null;
 	}
 	
 	private int getNextSeqNum() {
