@@ -71,7 +71,7 @@ public class RTPSession {
 	 protected boolean naiveReception = false;
 	 
 	 //Maximum number of packets used for reordering
-	 protected int maxReorderBuffer = 5;
+	 protected int pktBufBehavior = 3;
 	 
 	 // List of participants
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
@@ -578,15 +578,19 @@ public class RTPSession {
 	 * The maximum delay is numberofPackets * packet rate , where the packet rate
 	 * depends on the codec and profile used by the sender.
 	 * 
-	 * A negative value disables the buffering, out of order packets will simply be dropped.
+	 * Valid values:
+	 *  >0 - The maximum number of packets (based on RTP Timestamp) that may accumulate
+	 *  0 - All valid packets received in order will be given to the application
+	 * -1 - All valid packets will be given to the application
 	 * 
-	 * @param numberOfPackets number of packets that can accumulate before the first is returned
+	 * @param behavior the be
+	 * @return the behavior set, unchanged in the case of a erroneous value
 	 */
-	public void setMaxReorderBuffer(int numberOfPackets) {
-		if(numberOfPackets >= 0) {
-			this.maxReorderBuffer = numberOfPackets;
+	public int adjustPacketBufferBehavior(int behavior) {
+		if(behavior > -2) {
+			return this.pktBufBehavior = behavior; 
 		} else {
-			this.maxReorderBuffer = -1;
+			return this.pktBufBehavior;
 		}
 	}
 	
@@ -600,18 +604,22 @@ public class RTPSession {
 	 * 
 	 * @return the maximum number of packets that can accumulate before the first is returned
 	 */
-	public int getMaxReorderBuffer() {
-		return this.maxReorderBuffer;
+	public int getPacketBufferBehavior() {
+		return this.pktBufBehavior;
 	}
 	
 	/**
 	 * Set whether the stack should operate in RFC 4585 mode.
+	 * 
+	 * This will automatically call adjustPacketBufferBehavior(-1),
+	 * i.e. disable all RTP packet buffering in jlibrtp
 	 * 
 	 * NOT FULLY IMPLEMENTED!! 
 	 * 
 	 * @param rtcpAVPFIntf the in
 	 */
 	public void registerAVPFIntf(RTCPAVPFIntf rtcpAVPFIntf) {
+		this.adjustPacketBufferBehavior(-1);
 		this.rtcpAVPFIntf = rtcpAVPFIntf;
 	}
 	

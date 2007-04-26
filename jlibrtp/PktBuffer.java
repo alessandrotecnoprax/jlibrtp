@@ -76,16 +76,47 @@ public class PktBuffer {
 			return -5;
 		}
 
+		long timeStamp = aPkt.getTimeStamp();
 		if(RTPSession.rtpDebugLevel > 7) {
-			System.out.println("-> PktBuffer.addPkt() , length:" + length + " , timeStamp of Pkt: " + aPkt.getTimeStamp());
+			System.out.println("-> PktBuffer.addPkt() , length:" + length + " , timeStamp of Pkt: " + Long.toString(timeStamp));
 		}
 
-		long timeStamp = aPkt.getTimeStamp();
+		
 		PktBufNode newNode = new PktBufNode(aPkt);
 		if(aPkt.getSsrc() != SSRC) {
 			System.out.println("PktBuffer.addPkt() SSRCs don't match!");
 		}
+		
+		int retVal = 0;
+		if(this.rtpSession.pktBufBehavior > 0) {
+			retVal = bufferedAddPkt(newNode);
+		} else if(this.rtpSession.pktBufBehavior == 0) {
+			retVal = filteredAddPkt(newNode);
+		} else if(this.rtpSession.pktBufBehavior == -1) {
+			retVal = unfilteredAddPkt(newNode);
+		}
+		
 
+		if(RTPSession.rtpDebugLevel > 7) {
+			if(RTPSession.rtpDebugLevel > 10) {
+				this.debugPrint();
+			}
+			System.out.println("<- PktBuffer.addPkt() , length:" + length + " returning " + retVal);
+		}
+		return retVal;
+	}
+		
+	private int unfilteredAddPkt(PktBufNode newNode) {
+		//TODO
+		return 0;
+	}
+	
+	private int filteredAddPkt(PktBufNode newNode) {
+		//TODO
+		return 0;
+	}
+	
+	private int bufferedAddPkt(PktBufNode newNode) {
 		if(length == 0) {
 			// The buffer was empty, this packet is the one and only.
 			newest = newNode;
@@ -102,25 +133,25 @@ public class PktBuffer {
 			} else {
 				//There are packets, we need to order this one right.
 				
-				if(! pktOnTime(aPkt) ) {
+				if(! pktOnTime(newNode.timeStamp, newNode.seqNum) ) {
 					// We got this too late, can't put it in order anymore.
 					if(RTPSession.rtpDebugLevel > 2) {
-						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " +  timeStamp + " " 
-								+ aPkt.getSeqNumber() + " vs "+ oldest.timeStamp + " " + oldest.seqNum);
+						System.out.println("PktBuffer.addPkt Dropped a packet due to lag! " +  newNode.timeStamp + " " 
+								+ newNode.seqNum + " vs "+ oldest.timeStamp + " " + oldest.seqNum);
 					}
 					return -1;
 				}
 
 				//Need to do some real work, find out where it belongs (linear search from the back).
 				PktBufNode tmpNode = newest;
-				while(tmpNode.timeStamp > timeStamp) {
+				while(tmpNode.timeStamp > newNode.timeStamp) {
 					tmpNode = tmpNode.nextFrameQueueNode;
 				}
 				
 				// Check that it's not a duplicate
-				if(tmpNode.timeStamp == timeStamp && aPkt.getSeqNumber() == tmpNode.seqNum) {
+				if(tmpNode.timeStamp == newNode.timeStamp && newNode.seqNum == tmpNode.seqNum) {
 					if(RTPSession.rtpDebugLevel > 2) {
-						System.out.println("PktBuffer.addPkt Dropped a duplicate packet! " +  timeStamp + " " + aPkt.getSeqNumber() );
+						System.out.println("PktBuffer.addPkt Dropped a duplicate packet! " +  newNode.timeStamp + " " + newNode.seqNum );
 					}
 					return -1;
 				}
@@ -138,17 +169,10 @@ public class PktBuffer {
 				}
 				tmpNode.prevFrameQueueNode = newNode;
 
-				if(timeStamp > newest.timeStamp) {
+				if(newNode.timeStamp > newest.timeStamp) {
 					newest = newNode; 
 				}
 			}
-		}
-
-		if(RTPSession.rtpDebugLevel > 7) {
-			if(RTPSession.rtpDebugLevel > 10) {
-				this.debugPrint();
-			}
-			System.out.println("<- PktBuffer.addPkt() , length:" + length);
 		}
 		return 0;
 	}
@@ -164,8 +188,24 @@ public class PktBuffer {
 		if(RTPSession.rtpDebugLevel > 10) {
 			this.debugPrint();
 		}
-		PktBufNode retNode = oldest;
 		
+		if(this.rtpSession.pktBufBehavior > 0) {
+			return this.bufferedPopFrame();
+		} else {
+			return this.unbufferedPopFrame();
+		}
+	}
+	
+	private DataFrame unbufferedPopFrame() {
+		if(oldest != null) {
+			return new DataFrame(oldest, this.p,1);
+		} else {
+			return null;
+		}
+	}
+	
+	private DataFrame bufferedPopFrame() {
+		PktBufNode retNode = oldest;
 		/**
 		 * Three scenarios:
 		 * 1) There are no packets available
@@ -174,14 +214,13 @@ public class PktBuffer {
 		 * 		a) We have exceeded the wait buffer
 		 * 		b) We wait
 		 */
-		
 		//System.out.println(" Debug:" +(retNode != null) + " " + (retNode.seqNum == this.lastSeqNumber + 1)
 		//		+ " " + ( retNode.seqNum == 0 ) + " " +  (this.length > this.rtpSession.maxReorderBuffer)
 		//		+ " " + (this.lastSeqNumber < 0));
 
 		// Pop it off, null all references.
 		if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0 
-					|| this.length > this.rtpSession.maxReorderBuffer || this.lastSeqNumber < 0)) {
+					|| this.length > this.rtpSession.pktBufBehavior || this.lastSeqNumber < 0)) {
 			if(1 == length) {
 				//There's only one frame
 				newest = null;
@@ -212,7 +251,7 @@ public class PktBuffer {
 			return null;
 		}
 	}
-
+	
 	/** 
 	 * Returns the length of the packetbuffer.
 	 * @return number of frames (complete or not) in packetbuffer.
@@ -226,15 +265,11 @@ public class PktBuffer {
 	 * @param aPkt
 	 * @return
 	 */
-	protected boolean pktOnTime(RtpPkt aPkt) {
+	protected boolean pktOnTime(long timeStamp, int seqNum) {
 		if(this.lastSeqNumber == -1) {
 			// First packet
 			return true;
-		} else {
-			// Check whether we can sort it in
-			int seqNum = aPkt.getSeqNumber();
-			long timeStamp = aPkt.getTimeStamp();
-			
+		} else {			
 			if(seqNum >= this.lastSeqNumber) {
 				if(this.lastSeqNumber < 3 && timeStamp < this.lastTimestamp ) {
 					return false;
