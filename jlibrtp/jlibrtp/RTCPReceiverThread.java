@@ -59,7 +59,7 @@ public class RTCPReceiverThread extends Thread {
 			
 			// Parse the received compound RTCP (?) packet
 			CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), 
-					(InetSocketAddress) packet.getSocketAddress(), rtpSession.partDb);
+					(InetSocketAddress) packet.getSocketAddress(), rtpSession);
 			
 			if(this.rtpSession.debugAppIntf != null) {
 				if( compPkt.problem != 0) {
@@ -100,8 +100,8 @@ public class RTCPReceiverThread extends Thread {
 					Participant p = findParticipant(rrPkt.ssrc, packet);
 					p.lastRtcpPkt = curTime;
 
-					if(rtpSession.rtcAppIntf != null) {
-						rtpSession.rtcAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
+					if(rtpSession.rtcpAppIntf != null) {
+						rtpSession.rtcpAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
 								rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
 								rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
 					}
@@ -137,15 +137,15 @@ public class RTCPReceiverThread extends Thread {
 					}
 
 
-					if(rtpSession.rtcAppIntf != null) {
+					if(rtpSession.rtcpAppIntf != null) {
 						if(srPkt.rReports != null) {
-							rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+							rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
 									srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
 									srPkt.rReports.reporteeSsrc, srPkt.rReports.lossFraction, srPkt.rReports.lostPktCount,
 									srPkt.rReports.extHighSeqRecv, srPkt.rReports.interArvJitter, srPkt.rReports.timeStampLSR,
 									srPkt.rReports.delaySR);
 						} else {
-							rtpSession.rtcAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+							rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
 									srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
 									null, null, null,
 									null, null, null,
@@ -159,8 +159,8 @@ public class RTCPReceiverThread extends Thread {
 
 					// The the participant database is updated
 					// when the SDES packet is reconstructed by CompRtcpPkt	
-					if(rtpSession.rtcAppIntf != null) {
-						rtpSession.rtcAppIntf.SDESPktReceived(sdesPkt.participants);
+					if(rtpSession.rtcpAppIntf != null) {
+						rtpSession.rtcpAppIntf.SDESPktReceived(sdesPkt.participants);
 					}
 
 					/**        Bye Packets       **/
@@ -176,8 +176,8 @@ public class RTCPReceiverThread extends Thread {
 							partArray[i].timestampBYE = time;
 					}
 
-					if(rtpSession.rtcAppIntf != null) {
-						rtpSession.rtcAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
+					if(rtpSession.rtcpAppIntf != null) {
+						rtpSession.rtcpAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
 					}
 				}
 			}
