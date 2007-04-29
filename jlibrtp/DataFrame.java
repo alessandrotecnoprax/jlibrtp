@@ -20,11 +20,11 @@ package jlibrtp;
 
 
 /**
- * Data structure to hold a complete frame. It also contains most
- * of the data from the individual packets that make it up.
+ * Data structure to hold a complete frame if frame reconstruction
+ * is enabled, or the data from an individual packet if it is not
  * 
- * Everything is public, to make it easy to pick the structure apart
- * further down the line.
+ * It also contains most of the data from the individual packets 
+ * that it is based on.
  * 
  * @author Arne Kepp
  */
@@ -36,7 +36,7 @@ public class DataFrame {
 	private int payloadType;
 	private boolean[] marks;
 	private boolean anyMarked = false;
-	private boolean isComplete = false;
+	private int isComplete = 0;
 	//private int dataLength;
 	private byte[][] data;
 	private int[] seqNum;
@@ -44,6 +44,7 @@ public class DataFrame {
 	protected int lastSeqNum;
 	protected int firstSeqNum;
 	protected int noPkts;
+	
 	/**
 	 * The usual way to construct a frame is by giving it a PktBufNode,
 	 * which contains links to all the other pkts that make it up.
@@ -100,8 +101,14 @@ public class DataFrame {
 		
 		lastSeqNum = seqNum[i - 1];
 		
-		if(firstSeqNum - lastSeqNum == pktCount && pktCount == noPkts) {
-			isComplete = true;
+		if(noPkts > 0) {
+			int seqDiff = firstSeqNum - lastSeqNum;
+			if(seqDiff < 0)
+				seqDiff = (Integer.MAX_VALUE - firstSeqNum)  + lastSeqNum;
+			if(seqDiff == pktCount && pktCount == noPkts)
+				isComplete = 1;
+		} else {
+			isComplete = -1;
 		}
 		
 		if(RTPSession.rtpDebugLevel > 6) {
@@ -109,10 +116,25 @@ public class DataFrame {
 		}
 	}
 	
+	/**
+	 * Returns a two dimensial array where the first dimension represents individual
+	 * packets, from which the frame is made up, in order of increasing sequence number. 
+	 * These indeces can be matched to the sequence numbers returned by sequenceNumbers().
+	 * 
+	 * @return 2-dim array with raw data from packets
+	 */
 	public byte[][] getData() {
 		return this.data;
 	}
 	
+	/**
+	 * Returns a concatenated version of the data from getData()
+	 * It ignores missing sequence numbers, but then isComplete()
+	 * will return false provided that RTPAppIntf.frameSize()
+	 * provides a non-negative number for this payload type.
+	 * 
+	 * @return byte[] with all the data concatenated
+	 */
 	public byte[] getConcatenatedData() {
 		if(this.noPkts < 2) {
 			byte[] ret = new byte[this.totalLength];
@@ -134,39 +156,104 @@ public class DataFrame {
 		}
 	}
 	
+	/**
+	 * If two SR packet have been received jlibrtp will attempt to calculate 
+	 * the local UNIX timestamp (in milliseconds) of all packets received.
+	 * 
+	 * This value should ideally correspond to the local time when the 
+	 * SSRC sent the packet. Note that the source may not be reliable.
+	 * 
+	 * Returns -1 if less than two SRs have been received
+	 * 
+	 * @return the UNIX timestamp, similar to System.currentTimeMillis() or -1;
+	 */
 	public long timestamp() {
 		return this.timestamp;
+		
 	}
 	
+	/**
+	 * Returns the RTP timestamp of all the packets in the frame.
+	 * 
+	 * @return unmodified RTP timestamp
+	 */
 	public long rtpTimestamp() {
 		return this.rtpTimestamp;
 	}
 	
+	/**
+	 * Returns the payload type of the packets
+	 * 
+	 * @return the payload type of the packets
+	 */
 	public int payloadType() {
 		return this.payloadType;
 	}
 
+	/**
+	 * Returns an array whose values, for the same index, correpond to the 
+	 * sequence number of the packet from which the data came.
+	 * 
+	 * This information can be valuable in conjunction with getData(), 
+	 * to identify what parts of a frame are missing.
+	 * 
+	 * @return array with sequence numbers
+	 */
 	public int[] sequenceNumbers() {
 		return seqNum;
 	}
 	
+	/**
+	 * Returns an array whose values, for the same index, correpond to 
+	 * whether the data was marked or not. 
+	 * 
+	 * This information can be valuable in conjunction with getData().
+	 * 
+	 * @return array of booleans
+	 */
 	public boolean[] marks() {
 		return this.marks;
 	}
 	
+	/**
+	 * Returns true if any packet in the frame was marked.
+	 * 
+	 * This function should be used if all your frames fit
+	 * into single packets.
+	 * 
+	 * @return true if any packet was marked, false otherwise
+	 */
 	public boolean marked() {
 		return this.anyMarked;
 	}
 	
+	/**
+	 * The SSRC associated with this frame.
+	 * 
+	 * @return the ssrc that created this frame
+	 */
 	public long ssrc() {
 		return this.SSRC;
 	}
 	
+	/**
+	 * The SSRCs that contributed to this frame
+	 * 
+	 * @return an array of contributing SSRCs, or null
+	 */
 	public long[] csrcs() {
 		return this.CSRCs;
 	}
 	
-	public boolean complete() {
+	/**
+	 * Checks whether the difference in sequence numbers corresponds
+	 * to the number of packets received for the current timestamp,
+	 * and whether this value corresponds to the expected number of
+	 * packets.
+	 * 
+	 * @return true if the right number of packets make up the frame
+	 */
+	public int complete() {
 		return this.isComplete;
 	}
 }
