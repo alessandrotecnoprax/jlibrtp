@@ -70,6 +70,9 @@ public class RTPSession {
 	 //By default we do not return packets from strangers.
 	 protected boolean naiveReception = false;
 	 
+	 //Should the library attempt frame reconstruction?
+	 protected boolean frameReconstruction = true;
+	 
 	 //Maximum number of packets used for reordering
 	 protected int pktBufBehavior = 3;
 	 
@@ -530,7 +533,7 @@ public class RTPSession {
 	 * 
 	 * @param payloadT an integer representing the payload type of any subsequent packets that are sent.
 	 */
-	public int setPayloadType(int payloadT) {
+	public int payloadType(int payloadT) {
 		if(payloadT > 128 || payloadT < 0) {
 			return -1;
 		} else {
@@ -544,7 +547,7 @@ public class RTPSession {
 	 * 
 	 * @return payload type as integer
 	 */
-	public int getPayloadType() {
+	public int payloadType() {
 		return this.payloadType;
 	}
 	
@@ -553,7 +556,7 @@ public class RTPSession {
 	 * 
 	 * @param doAccept packets from participants not added by the application.
 	 */
-	public void setNaivePktReception(boolean doAccept) {
+	public void naivePktReception(boolean doAccept) {
 		naiveReception = doAccept;
 	}
 	
@@ -586,7 +589,7 @@ public class RTPSession {
 	 * @param behavior the be
 	 * @return the behavior set, unchanged in the case of a erroneous value
 	 */
-	public int adjustPacketBufferBehavior(int behavior) {
+	public int packetBufferBehavior(int behavior) {
 		if(behavior > -2) {
 			return this.pktBufBehavior = behavior; 
 		} else {
@@ -604,7 +607,7 @@ public class RTPSession {
 	 * 
 	 * @return the maximum number of packets that can accumulate before the first is returned
 	 */
-	public int getPacketBufferBehavior() {
+	public int packetBufferBehavior() {
 		return this.pktBufBehavior;
 	}
 	
@@ -612,14 +615,16 @@ public class RTPSession {
 	 * Set whether the stack should operate in RFC 4585 mode.
 	 * 
 	 * This will automatically call adjustPacketBufferBehavior(-1),
-	 * i.e. disable all RTP packet buffering in jlibrtp
+	 * i.e. disable all RTP packet buffering in jlibrtp,
+	 * and disable frame reconstruction
 	 * 
 	 * NOT FULLY IMPLEMENTED!! 
 	 * 
 	 * @param rtcpAVPFIntf the in
 	 */
 	public void registerAVPFIntf(RTCPAVPFIntf rtcpAVPFIntf) {
-		this.adjustPacketBufferBehavior(-1);
+		this.packetBufferBehavior(-1);
+		this.frameReconstruction = false;
 		this.rtcpAVPFIntf = rtcpAVPFIntf;
 	}
 	
@@ -632,6 +637,26 @@ public class RTPSession {
 	 */
 	public void unregisterAVPFIntf() {
 		this.rtcpAVPFIntf = null;
+	}
+	
+	/**
+	 * Enable / disable frame reconstruction in the packet buffers.
+	 * This is only relevant if getPacketBufferBehavior > 0;
+	 * 
+	 * Default is true.
+	 */
+	public void frameReconstruction(boolean toggle) {
+		this.frameReconstruction = toggle;
+	}
+	
+	/**
+	 * Whether the packet buffer will attempt to reconstruct
+	 * packet automatically.  
+	 * 
+	 * @return the status
+	 */
+	public boolean frameReconstruction() {
+		return this.frameReconstruction;
 	}
 	
 	private int getNextSeqNum() {

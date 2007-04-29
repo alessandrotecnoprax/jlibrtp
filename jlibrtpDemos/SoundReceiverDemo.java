@@ -48,7 +48,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 
 	public void receiveData(DataFrame frame, Participant p) {
 		if(auline != null) {
-			auline.write(frame.getData(), 0, frame.getData().length);
+			auline.write(frame.getConcatenatedData(), 0, frame.getData().length);
 			if(pktCount % 100 == 0) {
 				System.out.println("pktCount:" + pktCount);
 			}
@@ -58,6 +58,9 @@ public class SoundReceiverDemo implements RTPAppIntf {
 	
 	public void userEvent(int type, Participant[] participant) {
 		//Do nothing
+	}
+	public int frameSize(int payloadType) {
+		return 1;
 	}
 	
 	public SoundReceiverDemo()  {
@@ -73,7 +76,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		
 		
 		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
-		rtpSession.setNaivePktReception(true);
+		rtpSession.naivePktReception(true);
 		rtpSession.RTPSessionRegister(this,null, null);
 		
 		Participant p = new Participant("127.0.0.1", 6001, 6002);		

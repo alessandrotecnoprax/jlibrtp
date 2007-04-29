@@ -56,7 +56,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			
 			Participant p = new Participant("127.0.0.1", 16386, 16387);
 			this.rtpSession.addParticipant(p);
-			this.rtpSession.setNaivePktReception(true);
+			this.rtpSession.naivePktReception(true);
 		}
 		
 		public void debugPacketReceived(int type, InetSocketAddress socket, String description) {
@@ -229,28 +229,28 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			RTPPkt.addContent(ArrivalTimestamp);
 			
 			Element RTPTimestamp = new Element("RTPTimestamp");
-			RTPTimestamp.addContent(Long.toString(frame.getRTPTimestamp()));
+			RTPTimestamp.addContent(Long.toString(frame.rtpTimestamp()));
 			RTPPkt.addContent(RTPTimestamp);
 			
-			if(frame.getTimestamp() > 0) {
+			if(frame.timestamp() > 0) {
 				Element Timestamp = new Element("Timestamp");
-				Timestamp.addContent(Long.toString(frame.getTimestamp()));
+				Timestamp.addContent(Long.toString(frame.timestamp()));
 				RTPPkt.addContent(Timestamp);
 			}
 			
 			Element PayloadType = new Element("PayloadType");
-			PayloadType.addContent(Integer.toString(frame.getPayloadType()));
+			PayloadType.addContent(Integer.toString(frame.payloadType()));
 			RTPPkt.addContent(PayloadType);
 			
 			Element Marked = new Element("Marked");
-			Marked.addContent(Boolean.toString(frame.firstPacketMarked()));
+			Marked.addContent(Boolean.toString(frame.marked()));
 			RTPPkt.addContent(Marked);
 			
 			Element SSRC = new Element("SSRC");
-			SSRC.addContent(Long.toString(frame.getSSRC()));
+			SSRC.addContent(Long.toString(frame.ssrc()));
 			RTPPkt.addContent(SSRC);
 			
-			long[] csrcArray = frame.getCSRCs();
+			long[] csrcArray = frame.csrcs();
 			for(int i=0; i< csrcArray.length; i++) {
 				Element CSRC = new Element("CSRC");
 				CSRC.addContent(Long.toString(csrcArray[i]));
@@ -258,7 +258,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			}
 			
 			Element Payload = new Element("Payload");
-			byte[] payload = frame.getData();
+			byte[] payload = frame.getConcatenatedData();
 			StringBuffer buf = new StringBuffer();
 			for(int i=0; i<payload.length && i<64; i++ ) {
 				buf.append(StaticProcs.hexOfByte(payload[i]));
@@ -274,6 +274,10 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		
 		public void userEvent(int type, Participant[] participant) {
 			//Do nothing
+		}
+		
+		public int frameSize(int payloadType) {
+			return 1;
 		}
 		
 		/**

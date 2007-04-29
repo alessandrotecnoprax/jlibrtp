@@ -55,4 +55,21 @@ public interface RTPAppIntf {
 	 * @param participant(s) in question
 	 */
 	public void userEvent(int type, Participant[] participant);
+	
+	/**
+	 * The callback method through which the application can specify
+	 * the number of packets that make up a frame for a given payload type.
+	 * 
+	 * A negative value denotes frames of variable length, so jlibrtp
+	 * will return whatever it has at the time.
+	 * 
+	 * In most applications, this function can simply return 1.
+	 * 
+	 * This should be implemented as something fast, such as an
+	 * integer array with the indeces being the payload type.
+	 * 
+	 * @param payloadType the payload type specified in the RTP packet
+	 * @return the number of packets that make up a frame
+	 */
+	public int frameSize(int payloadType);
 }

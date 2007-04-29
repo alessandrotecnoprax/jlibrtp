@@ -32,17 +32,19 @@ package jlibrtp;
 public class PktBufNode {
 	// These are used to sort within the list of frames
 	// Looking from the back, next means older!
-	public PktBufNode nextFrameQueueNode = null;
-	public PktBufNode prevFrameQueueNode = null;
+	protected PktBufNode nextFrameQueueNode = null;
+	protected PktBufNode prevFrameQueueNode = null;
 	
 	// These are used to sort packets for a single frame.
-	public PktBufNode nextFrameNode = null;
+	protected PktBufNode nextFrameNode = null;
 	//public PktBufNode prevFrameNode = null;
 	
 	// Bookkeeping stuff
-	int pktCount;
-	public long timeStamp;
-	public int seqNum;
+	protected int pktCount;
+	
+	// Cached information from packet
+	protected long timeStamp;
+	protected int seqNum;
 	
 	// Actual payload
 	public RtpPkt pkt = null;
