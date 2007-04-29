@@ -20,11 +20,15 @@ public class CCRTPReceiver implements RTPAppIntf {
 	}
 	
 	public void receiveData(DataFrame frame, Participant p) {
-		System.out.println("Got data: " + new String(frame.getData()));
+		System.out.println("Got data: " + new String(frame.getConcatenatedData()));
 	}
 	
 	public void userEvent(int type, Participant[] participant) {
 		//Do nothing
+	}
+	
+	public int frameSize(int payloadType) {
+		return 1;
 	}
 	
 	/**
@@ -44,7 +48,7 @@ public class CCRTPReceiver implements RTPAppIntf {
 		}
 		
 		me.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
-		me.rtpSession.setNaivePktReception(true);
+		me.rtpSession.naivePktReception(true);
 		me.rtpSession.RTPSessionRegister(me,null,null);
 		
 		Participant p = new Participant("127.0.0.1",16386,16387);		

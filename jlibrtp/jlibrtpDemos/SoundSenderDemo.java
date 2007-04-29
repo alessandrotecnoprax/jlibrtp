@@ -100,6 +100,10 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		//Do nothing
 	}
 	
+	public int frameSize(int payloadType) {
+		return 1;
+	}
+	
 	public void run() {
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("-> Run()");

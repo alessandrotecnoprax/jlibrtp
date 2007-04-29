@@ -34,10 +34,16 @@ public class DataFrame {
 	private long SSRC;
 	private long[] CSRCs;
 	private int payloadType;
-	private boolean marked; 
+	private boolean[] marks;
+	private boolean anyMarked = false;
+	private boolean isComplete = false;
 	//private int dataLength;
-	private byte[] data;
-	
+	private byte[][] data;
+	private int[] seqNum;
+	private int totalLength = 0;
+	protected int lastSeqNum;
+	protected int firstSeqNum;
+	protected int noPkts;
 	/**
 	 * The usual way to construct a frame is by giving it a PktBufNode,
 	 * which contains links to all the other pkts that make it up.
@@ -46,12 +52,13 @@ public class DataFrame {
 		if(RTPSession.rtpDebugLevel > 6) {
 			System.out.println("-> DataFrame(PktBufNode, noPkts = " + noPkts +")");
 		}
+		this.noPkts = noPkts;
 		RtpPkt aPkt = aBufNode.pkt;
-		
-		this.marked = aPkt.isMarked();
+		int pktCount = aBufNode.pktCount;
+		firstSeqNum = aBufNode.pktCount;
 		
 		// All this data should be shared, so we just get it from the first one
-		this.rtpTimestamp = aPkt.getTimeStamp();
+		this.rtpTimestamp = aBufNode.timeStamp;
 		SSRC = aPkt.getSsrc();
 		CSRCs = aPkt.getCsrcArray();
 		
@@ -63,14 +70,38 @@ public class DataFrame {
 		
 		// Make data the right length
 		int payloadLength = aPkt.getPayloadLength();
-		data = new byte[aPkt.getPayloadLength() * noPkts];
+		System.out.println("aBufNode.pktCount " + aBufNode.pktCount);
+		data = new byte[aBufNode.pktCount][payloadLength];
+		seqNum = new int[aBufNode.pktCount];
+		marks = new boolean[aBufNode.pktCount];
 		
 		// Concatenate the data of the packets
-		for(int i=0; i< noPkts; i++) {
+		int i;
+		for(i=0; i< pktCount; i++) {
 			aPkt = aBufNode.pkt;
-			System.arraycopy(aPkt.getPayload(), 0, data, i*payloadLength, payloadLength);
+			byte[] temp = aPkt.getPayload();
+			totalLength += temp.length;
+			if(temp.length == payloadLength) {
+				data[i] = temp;
+			} else if(temp.length < payloadLength){
+				System.arraycopy(temp, 0, data[i], 0, temp.length);
+			} else {
+				System.out.println("DataFrame() received node structure with increasing packet payload size.");
+			}
+			//System.out.println("i " + i + " seqNum[i] " + seqNum[i] + " aBufNode"  + aBufNode);
+			seqNum[i] = aBufNode.seqNum;
+			marks[i] = aBufNode.pkt.isMarked();
+			if(marks[i])
+				anyMarked = true;
+			
 			// Get next node
 			aBufNode = aBufNode.nextFrameNode;
+		}
+		
+		lastSeqNum = seqNum[i - 1];
+		
+		if(firstSeqNum - lastSeqNum == pktCount && pktCount == noPkts) {
+			isComplete = true;
 		}
 		
 		if(RTPSession.rtpDebugLevel > 6) {
@@ -78,31 +109,64 @@ public class DataFrame {
 		}
 	}
 	
-	public byte[] getData() {
+	public byte[][] getData() {
 		return this.data;
 	}
 	
-	public long getTimestamp() {
+	public byte[] getConcatenatedData() {
+		if(this.noPkts < 2) {
+			byte[] ret = new byte[this.totalLength];
+			int pos = 0;
+		
+			for(int i=0; i<data.length; i++) {
+				int length = data[i].length;
+				
+				// Last packet may be shorter
+				if(pos + length > totalLength) 
+					length = totalLength - pos;
+				
+				System.arraycopy(data[i], 0, ret, pos, length);
+				pos += data[i].length;
+			}
+			return ret;
+		} else {
+			return data[0];
+		}
+	}
+	
+	public long timestamp() {
 		return this.timestamp;
 	}
 	
-	public long getRTPTimestamp() {
+	public long rtpTimestamp() {
 		return this.rtpTimestamp;
 	}
 	
-	public int getPayloadType() {
+	public int payloadType() {
 		return this.payloadType;
 	}
-	
-	public boolean firstPacketMarked() {
-		return this.marked;
+
+	public int[] sequenceNumbers() {
+		return seqNum;
 	}
 	
-	public long getSSRC() {
+	public boolean[] marks() {
+		return this.marks;
+	}
+	
+	public boolean marked() {
+		return this.anyMarked;
+	}
+	
+	public long ssrc() {
 		return this.SSRC;
 	}
 	
-	public long[] getCSRCs() {
+	public long[] csrcs() {
 		return this.CSRCs;
+	}
+	
+	public boolean complete() {
+		return this.isComplete;
 	}
 }

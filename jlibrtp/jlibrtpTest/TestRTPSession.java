@@ -30,13 +30,17 @@ public class TestRTPSession implements RTPAppIntf {
 	
 	
 	public void receiveData(DataFrame frame, Participant p) {
-		String s = new String(frame.getData());
+		String s = new String(frame.getConcatenatedData());
 		System.out.println("The Data has been received: "+s+" , thank you "
 				+p.getCNAME()+"("+p.getSSRC()+")");
 	}
 	
 	public void userEvent(int type, Participant[] participant) {
 		//Do nothing
+	}
+	
+	public int frameSize(int payloadType) {
+		return 1;
 	}
 	
 	public static void main(String[] args) {
