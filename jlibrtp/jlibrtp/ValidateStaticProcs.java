@@ -94,7 +94,11 @@ public class ValidateStaticProcs {
 		//StaticProcs.printBits(reArBytes[2]);
 		//StaticProcs.printBits(reArBytes[3]);
 		
-		
+		Byte tmp = 126;
+		String str = StaticProcs.hexOfByte(tmp);
+		tmp = StaticProcs.byteOfHex(str.getBytes());
+		int test = tmp + 0;
+		System.out.println(Integer.toString(test));
 	}
 
 }
