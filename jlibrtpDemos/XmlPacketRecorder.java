@@ -1,27 +1,11 @@
 package jlibrtpDemos;
 
 import jlibrtp.*;
-
-//import java.io.File;
-//import java.io.FileInputStream;
-//import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
-
-//import javax.xml.transform.Transformer;
-//import javax.xml.transform.TransformerConfigurationException;
-//import javax.xml.transform.TransformerException;
-//import javax.xml.transform.TransformerFactory;
-//import javax.xml.transform.stream.StreamResult;
-//import javax.xml.transform.stream.StreamSource;
-
-//import org.jdom.Attribute;
-//import org.jdom.Comment;
 import org.jdom.Document;
 import org.jdom.Element;
-//import org.jdom.JDOMException;
-//import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 
 public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf {
@@ -29,7 +13,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		RTPSession rtpSession = null;
 		// The number of packets we have received
 		int packetCount = 0;
-		final int maxPacketCount = 500;
+		int maxPacketCount = -1;
 		boolean noBye = true;
 		
 		// For the document
@@ -39,14 +23,16 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		/**
 		 * Constructor
 		 */
-		public XmlPacketRecorder() {
+		public XmlPacketRecorder(int rtpPortNum, int rtcpPortNum, int maxPacketCount) {
 			DatagramSocket rtpSocket = null;
 			DatagramSocket rtcpSocket = null;
+			this.maxPacketCount = maxPacketCount;
 			
 			try {
-				rtpSocket = new DatagramSocket(16384);
-				rtcpSocket = new DatagramSocket(16385);
+				rtpSocket = new DatagramSocket(rtpPortNum);
+				rtcpSocket = new DatagramSocket(rtcpPortNum);
 			} catch (Exception e) {
+				System.out.println(e.getMessage());
 				System.out.println("RTPSession failed to obtain port");
 			}
 			
@@ -54,8 +40,8 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 			this.rtpSession.RTPSessionRegister(this,this, this);
 			
-			Participant p = new Participant("127.0.0.1", 16386, 16387);
-			this.rtpSession.addParticipant(p);
+			//Participant p = new Participant("127.0.0.1", 16386, 16387);
+			//this.rtpSession.addParticipant(p);
 			this.rtpSession.naivePktReception(true);
 		}
 		
@@ -69,10 +55,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		
 		/**
 		 * RTCP
-		 */
-		//public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
-		//		long rtpTimestamp, long packetCount, long octetCount ) {
-			
+		 */			
 		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
 				long rtpTimestamp, long packetCount, long octetCount,
 				// Get the receiver reports, if any
@@ -212,8 +195,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				BYEPkt.addContent(Reason);
 			}
 			
-			this.packetCount++;	
-			this.noBye = false;
+			this.packetCount++;
 		}
 		
 		/**
@@ -267,13 +249,14 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			RTPPkt.addContent(Payload);
 			
 			this.packetCount++;
-			//if(packetCount == 100) {
-			//	System.out.println("Time!!!!!!!!! " + Long.toString(System.currentTimeMillis()));
-			//}
 		}
 		
 		public void userEvent(int type, Participant[] participant) {
-			//Do nothing
+			if(type == 1) {
+				this.noBye = false;
+			} else {
+				//Do nothing
+			}
 		}
 		
 		public int frameSize(int payloadType) {
@@ -309,35 +292,75 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 	    }
 	
 		public static void main(String[] args) {
-			XmlPacketRecorder recorder = new XmlPacketRecorder();
-			recorder.createDocument();
-			
-			System.out.print("Waiting for packets");
-			int prevCount = 0;
-			while(recorder.packetCount < recorder.maxPacketCount && recorder.noBye) {	
-				if(recorder.packetCount > prevCount)
-					System.out.print(".");
-				prevCount = recorder.packetCount;
+			int rtpPortNum = -1;
+			int rtcpPortNum = -1;
+			int maxPacketCount = -1;
+			String filename = "";
+			boolean run = false;
+			if (args.length == 4) {
+			    try {
+			    	rtpPortNum = Integer.parseInt(args[0]);
+			    	rtcpPortNum = Integer.parseInt(args[1]);
+			    	filename = args[2];
+			    	maxPacketCount = Integer.parseInt(args[3]);
+			    } catch (NumberFormatException e) {
+			    	System.out.println(e.getMessage());
+			    }
+			    run = true;
+			} else if(args.length == 0) {
+				System.out.println("Syntax: ");
+				System.out.println("java XmlPacketRecorder <RTP listen port> <RTCP listen port> <file to save> <max number of packets>");
+				System.out.println("If \"max number of packets\" is set to something negative " +
+						"the system will run until it receives a BYE message.");
+				System.out.println("");
+				System.out.println("Using default values for testing, will only work on a UNIX clone:");
+				System.out.println("java XmlPacketRecorder 16384 16385 ~/jlibrtp_packets.xml 500");
+
+		    	rtpPortNum = 16384;
+		    	rtcpPortNum = 16385;
+		    	filename =  "~/jlibrtp_packets.xml";
+		    	maxPacketCount = 500;
 				
-				try { Thread.sleep(500); } catch (Exception e) { System.out.println("oops."); }
+				run = true;
+			} else {
+				System.out.println("Syntax: ");
+				System.out.println("java XmlPacketRecorder <RTP listen port> <RTCP listen port> <file to save> <max number of packets>");
+				System.out.println("If \"max number of packets\" is set to something negative " +
+						"the system will run until it receives a BYE message.");
 			}
-			System.out.println();
 			
-			try { Thread.sleep(200); } catch (Exception e) { System.out.println("oops."); }
-			
-			System.out.println("Writing XML");
-			try {
-				XMLOutputter outputter = new XMLOutputter();
-				FileWriter writer = new FileWriter("/home/ak/XmlPacketRecorder.xml");
-				outputter.output(recorder.sessionDocument, writer);
-				writer.close();
-	        } catch (java.io.IOException e) {
-	            e.printStackTrace();
-	        }
-	        
-	        recorder.rtpSession.endSession();
-			System.out.println("All done.");
-			try { Thread.sleep(250); } catch (Exception e) { System.out.println("oops."); }
-			System.out.println(""+ Thread.activeCount());
+			if(run) {
+				XmlPacketRecorder recorder = new XmlPacketRecorder(rtpPortNum, rtcpPortNum, maxPacketCount);
+				recorder.createDocument();
+
+				System.out.println("Waiting for packets, dots denote received packets in interval of 500ms.");
+				int prevCount = 0;
+				while((recorder.packetCount < 0 || recorder.packetCount < recorder.maxPacketCount) 
+						&& recorder.noBye) {	
+					if(recorder.packetCount > prevCount)
+						System.out.print(".");
+					prevCount = recorder.packetCount;
+
+					try { Thread.sleep(200); } catch (Exception e) { System.out.println("oops."); }
+				}
+				System.out.println();
+
+				try { Thread.sleep(200); } catch (Exception e) { System.out.println("oops."); }
+
+				System.out.println("Writing XML");
+				try {
+					XMLOutputter outputter = new XMLOutputter();
+					FileWriter writer = new FileWriter(filename);
+					outputter.output(recorder.sessionDocument, writer);
+					writer.close();
+				} catch (java.io.IOException e) {
+					e.printStackTrace();
+				}
+
+				recorder.rtpSession.endSession();
+				System.out.println("All done.");
+				try { Thread.sleep(250); } catch (Exception e) { System.out.println("oops."); }
+				System.out.println(""+ Thread.activeCount());
+			}
 		}
 }
