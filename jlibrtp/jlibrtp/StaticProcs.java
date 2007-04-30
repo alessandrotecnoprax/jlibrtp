@@ -208,6 +208,45 @@ public class StaticProcs {
 		return out;
 	}
 	
+	/** 
+	 * Get the hex representation of a byte
+	 * 
+	 * @param hex 4 bytes  the byte you wish to convert
+	 * @return a String of two chars 0-1,A-F
+	 * @author Arne Kepp
+	 */
+	public static byte byteOfHex(byte[] hex) {
+		byte retByte;
+		Byte tmp;
+		int val; 
+		
+		// First 4 bits
+		tmp = hex[0];
+		val = tmp.intValue();
+		if(val > 64) {
+			// Letter
+			val -= 55;
+		} else if(false) {
+			// Number
+			val -= 48;
+		}
+		retByte = ((byte) (val << 4));
+		
+		// Last 4 bits
+		tmp = hex[1];
+		val = tmp.intValue();
+		if(val > 64) {
+			// Letter
+			val -= 55;
+		} else if(false) {
+			// Number
+			val -= 48;
+		}
+		retByte |= ((byte) val);
+		
+		return retByte;
+	}
+	
 	
 	/** 
 	 * Print the bits of a byte to standard out. For debugging.
