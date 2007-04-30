@@ -115,6 +115,9 @@ public class PktBuffer {
 	 * @return 0 if everything is okay, -1 otherwise
 	 */
 	private int unfilteredAddPkt(PktBufNode newNode) {
+		if(RTPSession.rtpDebugLevel > 8) {
+			System.out.println("<->    PktBuffer.unfilteredAddPkt()");
+		}
 		//No magic, just add to the end
 		if(oldest != null) {
 			oldest.nextFrameQueueNode = newNode;
@@ -134,6 +137,10 @@ public class PktBuffer {
 	 * @return 0 if everything is okay, -1 otherwise
 	 */
 	private int filteredAddPkt(PktBufNode newNode) {
+		if(RTPSession.rtpDebugLevel > 8) {
+			System.out.println("<->    PktBuffer.filteredAddPkt()");
+		}
+		
 		if(length == 0) {
 			// The buffer was empty, this packet is the one and only.
 			newest = newNode;
@@ -170,11 +177,13 @@ public class PktBuffer {
 	 * @return 0 if everything is okay, -1 otherwise
 	 */
 	private int bufferedAddPkt(PktBufNode newNode) {
+		if(RTPSession.rtpDebugLevel > 8) {
+			System.out.println("<->    PktBuffer.bufferedAddPkt()");
+		}
 		if(length == 0) {
 			// The buffer was empty, this packet is the one and only.
 			newest = newNode;
 			oldest = newNode;
-			length = 1;
 		} else {
 			// The packetbuffer is not empty.
 			if(newNode.timeStamp > newest.timeStamp || newNode.seqNum > newest.seqNum) {
@@ -182,7 +191,6 @@ public class PktBuffer {
 				newNode.nextFrameQueueNode = newest;
 				newest.prevFrameQueueNode = newNode;
 				newest = newNode;
-				length++;
 			} else {
 				//There are packets, we need to order this one right.
 				if(! pktOnTime(newNode.timeStamp, newNode.seqNum) && rtpSession.pktBufBehavior > -1) {
