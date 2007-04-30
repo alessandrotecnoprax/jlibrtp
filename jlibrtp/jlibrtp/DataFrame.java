@@ -71,7 +71,7 @@ public class DataFrame {
 		
 		// Make data the right length
 		int payloadLength = aPkt.getPayloadLength();
-		System.out.println("aBufNode.pktCount " + aBufNode.pktCount);
+		//System.out.println("aBufNode.pktCount " + aBufNode.pktCount);
 		data = new byte[aBufNode.pktCount][payloadLength];
 		seqNum = new int[aBufNode.pktCount];
 		marks = new boolean[aBufNode.pktCount];

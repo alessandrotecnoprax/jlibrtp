@@ -214,6 +214,11 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			RTPTimestamp.addContent(Long.toString(frame.rtpTimestamp()));
 			RTPPkt.addContent(RTPTimestamp);
 			
+			Element SequenceNumber = new Element("SequenceNumber");
+			int[] seqNums = frame.sequenceNumbers();
+			SequenceNumber.addContent(Long.toString(seqNums[0]));
+			RTPPkt.addContent(SequenceNumber);
+			
 			if(frame.timestamp() > 0) {
 				Element Timestamp = new Element("Timestamp");
 				Timestamp.addContent(Long.toString(frame.timestamp()));
@@ -318,7 +323,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 
 		    	rtpPortNum = 16384;
 		    	rtcpPortNum = 16385;
-		    	filename =  "~/jlibrtp_packets.xml";
+		    	filename =  "/home/ak/jlibrtp_packets.xml";
 		    	maxPacketCount = 500;
 				
 				run = true;

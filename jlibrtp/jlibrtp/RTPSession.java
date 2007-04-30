@@ -44,8 +44,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 0;
-	 final static public int rtcpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 2;
+	 final static public int rtcpDebugLevel = 2;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
