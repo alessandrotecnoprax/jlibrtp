@@ -26,7 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.concurrent.locks.*;
 import java.util.Random;
-
+import java.util.Enumeration;
 /**
  * The RTPSession object is the core of jlibrtp. 
  * 
@@ -44,8 +44,8 @@ public class RTPSession {
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  */
-	 final static public int rtpDebugLevel = 2;
-	 final static public int rtcpDebugLevel = 2;
+	 final static public int rtpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 0;
 	 
 	 // Network stuff
 	 protected DatagramSocket rtpSock = null;
@@ -377,6 +377,14 @@ public class RTPSession {
 	  */
 	 public void removeParticipant(Participant p) {
 		partDb.removeParticipant(p);
+	 }
+	 
+	 public Iterator<Participant> getUnicastReceivers() {
+		 return partDb.getUnicastReceivers();
+	 }
+	 
+	 public Enumeration<Participant> getParticipants() {
+		 return partDb.getParticipants();
 	 }
 	 
 	 /**

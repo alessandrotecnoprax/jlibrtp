@@ -8,6 +8,13 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
 
+/**
+ * Restriction jdom does not support text longer than...
+ * 
+ * @author ak
+ *
+ */
+
 public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf {
 		// For the session
 		RTPSession rtpSession = null;
@@ -15,6 +22,10 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		int packetCount = 0;
 		int maxPacketCount = -1;
 		boolean noBye = true;
+		
+		// Debug
+		int dataCount = 0;
+		int pktCount = 0;
 		
 		// For the document
 		Document sessionDocument = null;
@@ -40,8 +51,8 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 			this.rtpSession.RTPSessionRegister(this,this, this);
 			
-			//Participant p = new Participant("127.0.0.1", 16386, 16387);
-			//this.rtpSession.addParticipant(p);
+			Participant p = new Participant("127.0.0.1", 16386, 16387);
+			this.rtpSession.addParticipant(p);
 			this.rtpSession.naivePktReception(true);
 		}
 		
@@ -169,7 +180,10 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		}
 		
 		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {
-			//System.out.println("BYE!");
+			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
+			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
+			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
+			
 			Element BYEPkt = new Element("BYEPkt");
 			this.sessionElement.addContent(BYEPkt);
 			
@@ -196,6 +210,9 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			}
 			
 			this.packetCount++;
+			
+			// Terminate the session
+			this.maxPacketCount = this.packetCount;
 		}
 		
 		/**
@@ -246,12 +263,28 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			
 			Element Payload = new Element("Payload");
 			byte[] payload = frame.getConcatenatedData();
-			StringBuffer buf = new StringBuffer();
-			for(int i=0; i<payload.length && i<64; i++ ) {
-				buf.append(StaticProcs.hexOfByte(payload[i]));
+			byte[] tmp;
+			byte[] output = new byte[payload.length*2];
+			for(int i=0; i<payload.length; i++) {
+				tmp = StaticProcs.hexOfByte(payload[i]).getBytes();
+				output[i*2] = tmp[0];
+				output[i*2+1] =  tmp[1];
 			}
-			Payload.addContent(buf.toString());
+			Payload.addContent(new String(output));
 			RTPPkt.addContent(Payload);
+			
+			// Stats
+			dataCount += payload.length;
+			if(pktCount % 10 == 0) {
+				System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
+
+				long test = 0;
+				for(int i=0; i<payload.length; i++) {
+					test += payload[i];
+				}
+				System.out.println(Long.toString(test));
+			}
+			pktCount++;
 			
 			this.packetCount++;
 		}

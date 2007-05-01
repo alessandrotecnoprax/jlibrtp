@@ -4,7 +4,7 @@ import jlibrtp.*;
 
 import java.io.File;
 import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
+//import java.net.InetSocketAddress;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.*;
@@ -15,23 +15,28 @@ public class XmlPacketPlayer implements RTPAppIntf {
 	Document document = null;
 	long origStartTime = -1;
 	long startTime = -1;
+	int dataCount = 0;
+	int pktCount = 0;
 	
 	/**
 	 * Constructor
 	 */
-	public XmlPacketPlayer(int rtpPortNum, int rtcpPortNum) {
+	public XmlPacketPlayer(int rtpPortNum, int rtcpPortNum, String address) {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;
 		
 		try {
-			rtpSocket = new DatagramSocket(rtpPortNum);
-			rtcpSocket = new DatagramSocket(rtcpPortNum);
+			rtpSocket = new DatagramSocket(rtpPortNum+2);
+			rtcpSocket = new DatagramSocket(rtcpPortNum+2);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			System.out.println("RTPSession failed to obtain port");
 		}
 				
 		this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
+		Participant p = new Participant(address, rtpPortNum, rtcpPortNum);
+		this.rtpSession.addParticipant(p);
+		
 		System.out.println("Done creating player.");
 	}
 	
@@ -63,7 +68,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 			if(elm.getName().equals("RTPpacket")) {
 				parseRTPpacket(elm);
 			} else {
-				System.out.println("ah...");
+				//System.out.println("ah..." + elm.getName());
 			}
 		}
 		
@@ -91,7 +96,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 	}
 	
 	public void parseRTPpacket(Element elm) {
-		System.out.println("Parsing RTP packet");
+		//System.out.println("Parsing RTP packet");
 		
 		long ssrc = -1;
 		long targetTime = -1;
@@ -135,9 +140,21 @@ public class XmlPacketPlayer implements RTPAppIntf {
 		}
 		rtpSession.payloadType(payloadType);
 		preSendSleep(targetTime);
+		rtpSession.sendData(buf);
 		
-		//rtpSession.sendData(buf, rtpTimestamp, seqNum)
-		System.out.println(" " + Long.toString(ssrc));
+		//dataCount += buf.length;
+		//if(pktCount % 10 == 0) {
+		//	System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
+		//
+		//	long test = 0;
+		//	for(int i=0; i<buf.length; i++) {
+		//		test += buf[i];
+		//	}
+		//	System.out.println(Long.toString(test));
+		//}
+		pktCount++;
+		
+		//System.out.print(".");
 	}
 	
 	/**
@@ -201,6 +218,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 			System.out.println("");
 			System.out.println("Using default values for testing, will only work on a UNIX clone:");
 			System.out.println("java XmlPacketPlayer 127.0.0.1 16384 16385 /home/ak/jlibrtp_packets.xml");
+			hostname = "127.0.0.1";
 			rtpPortNum = 16384;
 	    	rtcpPortNum = 16385;
 	    	filename =  "/home/ak/jlibrtp_packets.xml";	
@@ -211,7 +229,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 		}
 		
 		if(run) { 
-			XmlPacketPlayer player = new XmlPacketPlayer(rtpPortNum, rtcpPortNum);
+			XmlPacketPlayer player = new XmlPacketPlayer(rtpPortNum, rtcpPortNum, hostname);
 			player.parseDocument(filename);
 		}
 	}

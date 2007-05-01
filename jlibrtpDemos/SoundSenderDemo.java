@@ -40,8 +40,9 @@ import jlibrtp.*;
 public class SoundSenderDemo implements RTPAppIntf  {
 	public RTPSession rtpSession = null;
 	static int pktCount = 0;
+	static int dataCount = 0;
 	private String filename;
-	private final int EXTERNAL_BUFFER_SIZE = 160;
+	private final int EXTERNAL_BUFFER_SIZE = 256;
 	SourceDataLine auline;
 	private Position curPosition;
 	boolean local;
@@ -74,22 +75,21 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		for(int i=0;i<args.length;i++) {
 			System.out.println("args["+i+"]" + args[i]);
 		}
-		if(args.length < 3) {
-			System.out.println("Please specify filename, ip-address and ports.");
-		} else {
-
-			System.out.println("Setup");
-			boolean local = true;
-			if(0 != args[1].compareToIgnoreCase("127.0.0.1")) {
-				local = false;
-			}
-			SoundSenderDemo aDemo = new SoundSenderDemo(local);
-			Participant p = new Participant("127.0.0.1",Integer.parseInt(args[2]),Integer.parseInt(args[2]) + 1);
-			aDemo.rtpSession.addParticipant(p);
-			aDemo.filename = args[0];
-			aDemo.run();
-			System.out.println("pktCount: " + pktCount);
+			
+		if(args.length == 0) {
+			args = new String[4];
+			args[1] = "127.0.0.1";
+			args[0] = "/home/ak/wonderwall.wav";
+			args[2] = "16384";
+			args[3] = "16385";
 		}
+		
+		SoundSenderDemo aDemo = new SoundSenderDemo(false);
+		Participant p = new Participant("127.0.0.1",Integer.parseInt(args[2]),Integer.parseInt(args[2]) + 1);
+		aDemo.rtpSession.addParticipant(p);
+		aDemo.filename = args[0];
+		aDemo.run();
+		System.out.println("pktCount: " + pktCount);
 	}
 	
 	public void receiveData(DataFrame dummy1, Participant dummy2) {
@@ -163,20 +163,31 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		byte[] abData = new byte[EXTERNAL_BUFFER_SIZE];
 		long start = System.currentTimeMillis();
 		try {
-			while (nBytesRead != -1 && pktCount < 500) {
+			while (nBytesRead != -1 && pktCount < 200) {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
+				
 				if (nBytesRead >= 0) {
 					rtpSession.sendData(abData);
-					if(!this.local) {	
-						auline.write(abData, 0, abData.length);
-					} else {
-						try { Thread.sleep(28);} catch(Exception e) {}
-						//try { Thread.sleep(14);} catch(Exception e) {}
-					}
+					//if(!this.local) {	
+					auline.write(abData, 0, abData.length);
+					
+					//dataCount += abData.length;
+					
+					//if(pktCount % 10 == 0) {
+					//	System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
+					//
+					//	long test = 0;
+					//	for(int i=0; i<abData.length; i++) {
+					//		test += abData[i];
+					//	}
+					//	System.out.println(Long.toString(test));
+					//}
+					
 					pktCount++;
 					//if(pktCount == 100) {
 					//	System.out.println("Time!!!!!!!!! " + Long.toString(System.currentTimeMillis()));
 					//}
+					//System.out.println("yep");
 				}
 			}
 		} catch (IOException e) {
@@ -184,8 +195,12 @@ public class SoundSenderDemo implements RTPAppIntf  {
 			return;
 		}
 		System.out.println("Time: " + (System.currentTimeMillis() - start)/1000 + " s");
+		
+		try { Thread.sleep(200);} catch(Exception e) {}
+		
 		this.rtpSession.endSession();
-		try { Thread.sleep(150);} catch(Exception e) {}
+		
+		try { Thread.sleep(2000);} catch(Exception e) {}
 		if(RTPSession.rtpDebugLevel > 1) {
 			System.out.println("<- Run()");
 		} 

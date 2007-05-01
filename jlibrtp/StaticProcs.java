@@ -202,7 +202,7 @@ public class StaticProcs {
 				case 15: out += "F"; break;
 				}
 			} else {
-				out += ""+temp;
+				out += Integer.toString(temp);
 			}
 		}
 		return out;
@@ -216,9 +216,9 @@ public class StaticProcs {
 	 * @author Arne Kepp
 	 */
 	public static byte byteOfHex(byte[] hex) {
-		byte retByte;
+		byte retByte = 0;
 		Byte tmp;
-		int val; 
+		int val = 0;
 		
 		// First 4 bits
 		tmp = hex[0];
@@ -226,7 +226,7 @@ public class StaticProcs {
 		if(val > 64) {
 			// Letter
 			val -= 55;
-		} else if(false) {
+		} else {
 			// Number
 			val -= 48;
 		}
@@ -238,7 +238,7 @@ public class StaticProcs {
 		if(val > 64) {
 			// Letter
 			val -= 55;
-		} else if(false) {
+		} else {
 			// Number
 			val -= 48;
 		}
