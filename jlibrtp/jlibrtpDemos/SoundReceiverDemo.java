@@ -39,6 +39,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 	byte[] abData = null;
 	int nBytesRead = 0;
 	int pktCount = 0;
+	int dataCount = 0;
 	int offsetCount = 0;
 	SourceDataLine auline;
 	
@@ -48,10 +49,18 @@ public class SoundReceiverDemo implements RTPAppIntf {
 
 	public void receiveData(DataFrame frame, Participant p) {
 		if(auline != null) {
-			auline.write(frame.getConcatenatedData(), 0, frame.getData().length);
-			if(pktCount % 100 == 0) {
-				System.out.println("pktCount:" + pktCount);
-			}
+			byte[] data = frame.getConcatenatedData();
+			auline.write(data, 0, data.length);
+			
+			//dataCount += data.length;
+			//if(pktCount % 10 == 0) {
+			//	System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
+			//	long test = 0;
+			//	for(int i=0; i<data.length; i++) {
+			//		test += data[i];
+			//	}
+			//	System.out.println(Long.toString(test));
+			//}
 		}
 		pktCount++;
 	}
@@ -63,13 +72,13 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		return 1;
 	}
 	
-	public SoundReceiverDemo()  {
+	public SoundReceiverDemo(int rtpPort, int rtcpPort)  {
 		DatagramSocket rtpSocket = null;
 		DatagramSocket rtcpSocket = null;
 		
 		try {
-			rtpSocket = new DatagramSocket(6003);
-			rtcpSocket = new DatagramSocket(6004);
+			rtpSocket = new DatagramSocket(rtpPort);
+			rtcpSocket = new DatagramSocket(rtcpPort);
 		} catch (Exception e) {
 			System.out.println("RTPSession failed to obtain port");
 		}
@@ -79,8 +88,8 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		rtpSession.naivePktReception(true);
 		rtpSession.RTPSessionRegister(this,null, null);
 		
-		Participant p = new Participant("127.0.0.1", 6001, 6002);		
-		rtpSession.addParticipant(p);
+		//Participant p = new Participant("127.0.0.1", 6001, 6002);		
+		//rtpSession.addParticipant(p);
 	}
 
 	/**
@@ -88,7 +97,23 @@ public class SoundReceiverDemo implements RTPAppIntf {
 	 */
 	public static void main(String[] args) {
 		System.out.println("Setup");
-		SoundReceiverDemo aDemo = new SoundReceiverDemo();
+		
+		if(args.length == 0) {
+			System.out.println("Syntax:");
+			System.out.println("java SoundReceiverDemo <rtpPort> <rtcpPort>");
+			System.out.println("Assuming 16384 and 16385 for testing purposes");
+			
+			args = new String[2];
+			args[0] = new String("16384");
+			args[1] = new String("16385");
+		}
+		
+
+		
+		//SoundReceiverDemo aDemo = new SoundReceiverDemo(
+		//		Integer.getInteger(args[0]), Integer.getInteger(args[1]));
+		SoundReceiverDemo aDemo = new SoundReceiverDemo( 16384, 16385);
+				
 		aDemo.doStuff();
 		System.out.println("Done");
 	}

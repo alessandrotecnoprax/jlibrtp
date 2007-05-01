@@ -29,9 +29,15 @@ public class RTCPSenderThread extends Thread {
 				this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
 		compPkt.addPacket(srPkt);
 		
+		byte[] reasonBytes;
+		
 		//Add the actualy BYE Pkt
 		long[] ssrcArray = {this.rtpSession.ssrc};
-		byte[] reasonBytes = "SSRC collision".getBytes();
+		if(rtpSession.conflict) {
+			reasonBytes = "SSRC collision".getBytes();
+		} else {
+			reasonBytes = "jlibrtp says bye bye!".getBytes();
+		}
 		RtcpPktBYE byePkt = new RtcpPktBYE( ssrcArray, reasonBytes);
 		
 		compPkt.addPacket(byePkt);
@@ -40,13 +46,14 @@ public class RTCPSenderThread extends Thread {
 		if(rtpSession.mcSession) {
 			mcSendCompRtcpPkt(compPkt);
 		} else {
-			Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
+			Iterator<Participant> iter = rtpSession.partDb.getUnicastReceivers();
 		
-			while(enu.hasMoreElements()) {
-				Participant part = (Participant) enu.nextElement();
-				if(!part.unexpected)
+			while(iter.hasNext()) {
+				Participant part = (Participant) iter.next();
+				if(part.rtcpAddress != null)
 					sendCompRtcpPkt(compPkt, part.rtcpAddress);
 			}
+			//System.out.println("SENT BYE PACKETS!!!!!");
 		}
 	}
 	protected int mcSendCompRtcpPkt(CompRtcpPkt pkt) {
@@ -128,18 +135,24 @@ public class RTCPSenderThread extends Thread {
 		catch (Exception e) { System.out.println("RTCPSenderThread didn't get any initial rest."); }
 		
 		// Set up an iterator for the member list
-		// TODO Change to rtcpReceivers
-		Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
+		Enumeration<Participant> enu = null;
+		Iterator<Participant> iter = null;
 		
+		// TODO Change to rtcpReceivers
+		if(rtpSession.mcSession) {
+			enu = rtpSession.partDb.getParticipants();
+		} else {
+			iter = rtpSession.partDb.getUnicastReceivers();
+		}
 		while(! rtpSession.endSession) {
-			if(RTPSession.rtcpDebugLevel > 6) {
+			if(RTPSession.rtcpDebugLevel > 5) {
 				System.out.println("<-> RTCPSenderThread sleeping for " +rtcpSession.nextDelay+" ms");
 			}
 			
 			try { Thread.sleep(rtcpSession.nextDelay); } 
 			catch (Exception e) { System.out.println("RTCPSenderThread Exception message:" + e.getMessage());}
 			
-			if(RTPSession.rtcpDebugLevel > 6) {
+			if(RTPSession.rtcpDebugLevel > 5) {
 				System.out.println("<-> RTCPSenderThread waking up");
 			}
 			
@@ -156,17 +169,15 @@ public class RTCPSenderThread extends Thread {
 				continue;
 			}
 			this.byesSent = false;
-			
-
-			
+						
 			//Grab the next person
 			Participant part = null;
-			
-			if(! enu.hasMoreElements())
-				enu = rtpSession.partDb.getParticipants();
-			
+
 			//Multicast
 			if(this.rtpSession.mcSession) {
+				if(! enu.hasMoreElements())
+					enu = rtpSession.partDb.getParticipants();
+				
 				if( enu.hasMoreElements() ) {
 					part = enu.nextElement();
 				} else {
@@ -175,9 +186,13 @@ public class RTCPSenderThread extends Thread {
 				
 			//Unicast
 			} else {
-				if( enu.hasMoreElements() ) {
-					while( enu.hasMoreElements()&& (part == null || part.rtcpAddress == null)) {
-						part = enu.nextElement();
+				if(! iter.hasNext()) {
+					iter = rtpSession.partDb.getUnicastReceivers();
+				}
+				
+				if(iter.hasNext() ) {
+					while( iter.hasNext() && (part == null || part.rtcpAddress == null)) {
+						part = iter.next();
 					}
 				}
 				
@@ -246,6 +261,7 @@ public class RTCPSenderThread extends Thread {
 
 		// Be polite, say Bye to everone
 		sendByes();
+		try { Thread.sleep(200);} catch(Exception e) {}
 		
 		if(RTPSession.rtcpDebugLevel > 0) {
 			System.out.println("<-> RTCPSenderThread terminating");

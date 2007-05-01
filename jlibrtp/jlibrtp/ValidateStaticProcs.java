@@ -94,11 +94,34 @@ public class ValidateStaticProcs {
 		//StaticProcs.printBits(reArBytes[2]);
 		//StaticProcs.printBits(reArBytes[3]);
 		
-		Byte tmp = 126;
-		String str = StaticProcs.hexOfByte(tmp);
-		tmp = StaticProcs.byteOfHex(str.getBytes());
-		int test = tmp + 0;
-		System.out.println(Integer.toString(test));
+		byte[] tmp = new byte[4];
+		tmp[0] = -127;
+		tmp[1] = 127;
+		tmp[2] = -49;
+		tmp[3] = -1; 
+		
+		String str2 = "";
+		for(int i=0; i<tmp.length; i++) {
+			str2 += StaticProcs.hexOfByte(tmp[i]);
+		}
+		System.out.println(str2);
+		
+		byte temp2[] = str2.getBytes();
+		byte temp4[] = new byte[temp2.length / 2];
+		byte[] temp3 = new byte[2]; 
+		
+		for(int i=0; i<temp4.length; i++) {
+			temp3[0] = temp2[i*2];
+			temp3[1] = temp2[i*2+1];
+			temp4[i] = StaticProcs.byteOfHex(temp3);
+		}
+		
+		for(int i=0; i<tmp.length; i++) {
+			if(tmp[i] == temp4[i]) {
+				System.out.println("ok");
+			} else {
+				System.out.println("nope");
+			}
+		}
 	}
-
 }

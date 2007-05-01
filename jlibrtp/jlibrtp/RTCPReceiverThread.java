@@ -62,18 +62,28 @@ public class RTCPReceiverThread extends Thread {
 					(InetSocketAddress) packet.getSocketAddress(), rtpSession);
 			
 			if(this.rtpSession.debugAppIntf != null) {
-				if( compPkt.problem != 0) {
-					this.rtpSession.debugAppIntf.debugPacketReceived(1, (InetSocketAddress) packet.getSocketAddress(), 
-						new String("Received compound RTCP packet of size " + packet.getLength() + 
-								" from " + packet.getSocketAddress().toString() + " via " 
-								+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()
-								+ " containing " + compPkt.rtcpPkts.size() + " packets" ));
+				String intfStr; 
+			
+				if(rtpSession.mcSession) {
+					intfStr = this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString();
 				} else {
-					this.rtpSession.debugAppIntf.debugPacketReceived(-2, (InetSocketAddress) packet.getSocketAddress(), 
-							new String("Received invalid RTCP packet of size " + packet.getLength() + 
-									" from " + packet.getSocketAddress().toString() + " via " 
-									+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()
-									+ ": " + this.debugErrorString(compPkt.problem) ));
+					intfStr = this.rtpSession.rtpSock.getLocalSocketAddress().toString();
+				}
+				
+				if( compPkt.problem == 0) {
+					String str = new String("Received compound RTCP packet of size " + packet.getLength() + 
+							" from " + packet.getSocketAddress().toString() + " via " + intfStr
+							+ " containing " + compPkt.rtcpPkts.size() + " packets" );
+					
+					this.rtpSession.debugAppIntf.debugPacketReceived(1, 
+							(InetSocketAddress) packet.getSocketAddress(), str);
+				} else {
+					String str = new String("Received invalid RTCP packet of size " + packet.getLength() + 
+							" from " + packet.getSocketAddress().toString() + " via " +  intfStr
+							+ ": " + this.debugErrorString(compPkt.problem) );
+					
+					this.rtpSession.debugAppIntf.debugPacketReceived(-2, 
+							(InetSocketAddress) packet.getSocketAddress(), str);
 				}
 			}
 
