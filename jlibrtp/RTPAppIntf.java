@@ -34,9 +34,8 @@ public interface RTPAppIntf {
 	 * data from jlibrtp. These calls are synchronous, so you will not
 	 * receive any new packets until this call returns.
 	 * 
-	 * @param buff a byte-buffer containing the data received
-	 * @param Participant participant
-	 * @param timeMs the time when this packet was created, as set by the sender, converted to System.currentTimeMillis()
+	 * @param frame the frame containing the data
+	 * @param participant the participant from which the data came
 	 */
 	public void receiveData(DataFrame frame, Participant participant);
 	
@@ -52,7 +51,7 @@ public interface RTPAppIntf {
 	 *      5 - Matched SSRC to ip-address provided by application
 	 * 
 	 * @param type the type of event
-	 * @param participant(s) in question
+	 * @param participant the participants in question
 	 */
 	public void userEvent(int type, Participant[] participant);
 	

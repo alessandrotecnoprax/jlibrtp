@@ -8,7 +8,7 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktRTPFB extends RtcpPkt {
-	public boolean notRelevant = false;
+	protected boolean notRelevant = false;
 	protected long ssrcPacketSender = -1;
 	protected long ssrcMediaSource = -1;
 	protected int PID[];
@@ -117,7 +117,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 	/**
 	 * Debug purposes only
 	 */
-	public void debugPrint() {
+	protected void debugPrint() {
 		System.out.println("->RtcpPktRTPFB.debugPrint() ");
 		System.out.println("  ssrcPacketSender: " + ssrcPacketSender + "  ssrcMediaSource: " + ssrcMediaSource);
 		

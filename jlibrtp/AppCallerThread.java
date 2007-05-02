@@ -41,7 +41,7 @@ public class AppCallerThread extends Thread {
 	 * @param session the RTPSession with participants etc
 	 * @param rtpApp the interface to which data is given
 	 */
-	public AppCallerThread(RTPSession session, RTPAppIntf rtpApp) {
+	protected AppCallerThread(RTPSession session, RTPAppIntf rtpApp) {
 		rtpSession = session;
 		appl = rtpApp;
 		if(RTPSession.rtpDebugLevel > 1) {
