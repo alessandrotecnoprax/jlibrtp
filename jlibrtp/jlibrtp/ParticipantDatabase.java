@@ -42,7 +42,12 @@ public class ParticipantDatabase {
 	LinkedList<Participant> receivers = new LinkedList<Participant>();	
 	ConcurrentHashMap<Long,Participant> ssrcTable = new ConcurrentHashMap<Long,Participant>();
 	
-	public ParticipantDatabase(RTPSession parent) {
+	/**
+	 * Simple constructor
+	 * 
+	 * @param parent parent RTPSession
+	 */
+	protected ParticipantDatabase(RTPSession parent) {
 		rtpSession = parent;
 	}
 	

@@ -62,7 +62,7 @@ public class CompRtcpPkt {
 	 * @param rawPkt the byte array received from the socket
 	 * @param packetSize the actual number of used bytes
 	 * @param adr the socket address from which the packet was received
-	 * @param partDb the participant database of the session, used for SDES packets
+	 * @param rtpSession the RTPSession with the participant database
 	 */
 	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, RTPSession rtpSession) {
 		if(RTPSession.rtpDebugLevel > 7) {

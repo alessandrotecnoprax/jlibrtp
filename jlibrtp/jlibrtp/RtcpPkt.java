@@ -45,7 +45,7 @@ public class RtcpPkt {
 	/**
 	 * Parses the common header of an RTCP packet
 	 * 
-	 * @param where in this.rawPkt the headers start
+	 * @param start where in this.rawPkt the headers start
 	 * @return true if parsing succeeded and header cheks 
 	 */
 	protected boolean parseHeaders(int start) {

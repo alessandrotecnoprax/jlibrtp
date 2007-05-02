@@ -205,7 +205,7 @@ public class RTCPSession {
 	 * Adds an RTCP APP (application) packet to the queue
 	 *
 	 * @param targetSsrc the SSRC of the recipient
-	 * @param aPkt 
+	 * @return array of RTCP Application packets 
 	 */
 	synchronized protected RtcpPktAPP[] getFromAppQueue(long targetSsrc) {		
 		if(this.appQueue == null)

@@ -6,7 +6,7 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktPSFB extends RtcpPkt {
-	public boolean notRelevant = false;
+	protected boolean notRelevant = false;
 	private RTPSession rtpSession;
 	protected long ssrcPacketSender = -1;
 	protected long ssrcMediaSource = -1;

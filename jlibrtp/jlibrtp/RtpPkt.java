@@ -55,13 +55,12 @@ public class RtpPkt {
 	 * Construct a packet-instance. The ByteBuffer required for UDP transmission can afterwards be obtained from getRawPkt(). If you need to set additional parameters, such as the marker bit or contributing sources, you should do so before calling getRawPkt;
 	 *
 	 * @param aTimeStamp RTP timestamp for data
-	 * @param anSsrc Synchronization source
+	 * @param syncSource the SSRC, usually taken from RTPSession
 	 * @param seqNum Sequency number
 	 * @param plt Type of payload
 	 * @param pl Payload, the actual data
-	 * @return A packet-instance.
 	 */
-	public RtpPkt(long aTimeStamp, long syncSource, int seqNum, int plt, byte[] pl){
+	protected RtpPkt(long aTimeStamp, long syncSource, int seqNum, int plt, byte[] pl){
 		int test = 0;
 		test += setTimeStamp(aTimeStamp);
 		test += setSsrc(syncSource);
@@ -81,9 +80,8 @@ public class RtpPkt {
 	 *
 	 * @param aRawPkt The data-part of a UDP-packet believed to be RTP 
 	 * @param packetSize the number of valid octets in the packet, should be aRawPkt.length
-	 * @return A packet-instance.
 	 */
-	public RtpPkt(byte[] aRawPkt, int packetSize){
+	protected RtpPkt(byte[] aRawPkt, int packetSize){
 		if( RTPSession.rtpDebugLevel > 5) {
 			System.out.println("-> RtpPkt(aRawPkt)"); 
 		}

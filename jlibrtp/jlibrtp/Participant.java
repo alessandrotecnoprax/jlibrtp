@@ -318,7 +318,8 @@ public class Participant {
 	/**
 	 * Get the fraction of lost packets, calculated as described
 	 * in RFC 3550 as a fraction of 256.
-	 * @return
+	 * 
+	 * @return the fraction of lost packets since last SR received
 	 */
 	protected int getFractionLost() {
 		int denominator = (lastSeqNumber - lastSRRseqNumber);
@@ -344,7 +345,7 @@ public class Participant {
 	 * 
 	 * Returns zero if loss is negative, i.e. duplicates have been received.
 	 * 
-	 * @return
+	 * @return number of lost packets, or zero.
 	 */
 	protected long getLostPktCount() {
 		long lost = (this.getExtHighSeqRecv() - this.firstSeqNumber) - receivedPkts;

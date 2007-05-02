@@ -31,7 +31,6 @@ public class StaticProcs {
 	 * 
 	 * @param i a 16 bit unsigned integer in an int
 	 * @return byte[2] representing the integer as unsigned, most significant bit first. 
-	 * @author Arne Kepp
 	 */
 	public static byte[] uIntIntToByteWord(int i) {		
 		byte[] byteWord = new byte[2];
@@ -45,7 +44,6 @@ public class StaticProcs {
 	 * 
 	 * @param j a long
 	 * @return byte[4] representing the unsigned integer, most significant bit first. 
-	 * @author Arne Kepp
 	 */
 	public static byte[] uIntLongToByteWord(long j) {
 		int i = (int) j;
@@ -62,7 +60,6 @@ public class StaticProcs {
 	 * 
 	 * @param index of most significant byte
 	 * @return int with the 16 bit unsigned integer
-	 * @author Arne Kepp
 	 */
 	public static int bytesToUIntInt(byte[] bytes, int index) {
 		int accum = 0;
@@ -80,7 +77,6 @@ public class StaticProcs {
 	 * @param bytes
 	 * @param index of most significant byte
 	 * @return long with the 32 bit unsigned integer
-	 * @author Arne Kepp
 	 */
 	public static long bytesToUIntLong(byte[] bytes, int index) {
 		long accum = 0;
@@ -158,7 +154,6 @@ public class StaticProcs {
 	 * 
 	 * @param aByte the byte you wish to convert
 	 * @return a String of 1's and 0's
-	 * @author Arne Kepp
 	 */
 	public static String bitsOfByte(byte aByte) {
 		int temp;
@@ -176,7 +171,6 @@ public class StaticProcs {
 	 * 
 	 * @param aByte the byte you wish to convert
 	 * @return a String of two chars 0-1,A-F
-	 * @author Arne Kepp
 	 */
 	public static String hexOfByte(byte aByte) {
 		String out = "";
@@ -213,7 +207,6 @@ public class StaticProcs {
 	 * 
 	 * @param hex 4 bytes  the byte you wish to convert
 	 * @return a String of two chars 0-1,A-F
-	 * @author Arne Kepp
 	 */
 	public static byte byteOfHex(byte[] hex) {
 		byte retByte = 0;
@@ -252,7 +245,6 @@ public class StaticProcs {
 	 * Print the bits of a byte to standard out. For debugging.
 	 * 
 	 * @param aByte the byte you wish to print out.
-	 * @author Arne Kepp
 	 */
 	public static void printBits(byte aByte) {
 		int temp;

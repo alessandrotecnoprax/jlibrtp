@@ -51,10 +51,11 @@ public class PktBuffer {
 	/** 
 	 * Creates a new PktBuffer, a linked list of PktBufNode
 	 * 
-	 * @param aPkt First packet 
-	 * @param completionLength How many pkts make up a complete frame, depends on paylod type.
+	 * @param rtpSession the parent RTPSession
+	 * @param p the participant to which this packetbuffer belongs.
+	 * @param aPkt The first RTP packet, to be added to the buffer 
 	 */
-	public PktBuffer(RTPSession rtpSession, Participant p, RtpPkt aPkt) {
+	protected PktBuffer(RTPSession rtpSession, Participant p, RtpPkt aPkt) {
 		this.rtpSession = rtpSession;
 		this.p = p;
 		SSRC = aPkt.getSsrc();
@@ -430,9 +431,10 @@ public class PktBuffer {
 	}
 	
 	/**
-	 * Checks whether a packet is too late, i.e. the next packet has already been returned.
-	 * @param aPkt
-	 * @return
+	 * Checks whether a packet is not too late, i.e. the next packet has already been returned.
+	 * @param timeStamp the RTP timestamp of the packet under consideration 
+	 * @param seqNum the sequence number of the packet under consideration
+	 * @return true if newer packets have not been handed to the application
 	 */
 	protected boolean pktOnTime(long timeStamp, int seqNum) {
 		if(this.lastSeqNumber == -1) {
@@ -455,7 +457,7 @@ public class PktBuffer {
 	/** 
 	 * Prints out the packet buffer, oldest node first (on top).
 	 */
-	public void debugPrint() {
+	protected void debugPrint() {
 		System.out.println("PktBuffer.debugPrint() : length "+length+" SSRC "+SSRC+" lastSeqNum:"+lastSeqNumber);
 		PktBufNode tmpNode = oldest;
 		int i = 0;

@@ -102,7 +102,7 @@ public class RTPSession {
 	 protected int conflictCount = 0;
 
 	 // SDES stuff
-	 protected String cname;
+	 protected String cname; //test
 	 public String name = null;
 	 public String email = null;
 	 public String phone = null;
@@ -237,7 +237,7 @@ public class RTPSession {
 	  * Send data to all participants registered as receivers, using the current timeStamp and
 	  * payload type. The RTP timestamp will be the same for all the packets.
 	  * 
-	  * @param buf A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
+	  * @param buffers A buffer of bytes, should not bed padded and less than 1500 bytes on most networks.
 	  * @param csrcArray an array with the SSRCs of contributing sources
 	  * @param markers An array indicating what packets should be marked. Rarely anything but the first one
 	  * @param rtpTimestamp The RTP timestamp to be applied to all packets
@@ -496,16 +496,14 @@ public class RTPSession {
 	 * 
 	 * @param cname a string, e.g. username@hostname. Must be unique for session.
 	 */
-	public void setCNAME(String cname) {
+	public void CNAME(String cname) {
 		this.cname = cname;
 	}
 	
 	/**
-	 * Overrides CNAME, used for outgoing RTCP packets.
-	 * 
-	 * @param cname a string, e.g. username@hostname. Must be unique for session.
+	 * Get the current CNAME, used for outgoing SDES packets
 	 */
-	public String getCNAME() {
+	public String CNAME() {
 		return this.cname;
 	}
 	
@@ -522,15 +520,15 @@ public class RTPSession {
 	}
 	
 	/**
-	 * Change the RTP port of the session. 
+	 * Change the RTP socket of the session. 
 	 * Peers must be notified through SIP or other signalling protocol.
 	 * Only valid if this is a unicast session to begin with.
 	 * 
-	 * @param rtpPort integer for new port number, check it is free first.
+	 * @param newSock integer for new port number, check it is free first.
 	 */
-	public int updateRTPSock(DatagramSocket newSocket) {
+	public int updateRTPSock(DatagramSocket newSock) {
 		if(!mcSession) {
-			 rtpSock = newSocket;
+			 rtpSock = newSock;
 			 return 0;
 		} else {
 			System.out.println("Can't switch from multicast to unicast.");
@@ -539,15 +537,15 @@ public class RTPSession {
 	}
 	
 	/**
-	 * Change the RTCP port of the session. 
+	 * Change the RTCP socket of the session. 
 	 * Peers must be notified through SIP or other signalling protocol.
 	 * Only valid if this is a unicast session to begin with.
 	 * 
-	 * @param rtcpPort integer for new port number, check it is free first.
+	 * @param newSock the new unicast socket for RTP communication.
 	 */
-	public int updateRTCPSock(DatagramSocket newSocket) {
+	public int updateRTCPSock(DatagramSocket newSock) {
 		if(!mcSession) {
-			this.rtcpSession.rtcpSock = newSocket;
+			this.rtcpSession.rtcpSock = newSock;
 			return 0;
 		} else {
 			System.out.println("Can't switch from multicast to unicast.");
@@ -560,7 +558,7 @@ public class RTPSession {
 	 * Peers must be notified through SIP or other signalling protocol.
 	 * Only valid if this is a multicast session to begin with.
 	 * 
-	 * @param rtpSock the new multicast socket for RTP communication.
+	 * @param newSock the new multicast socket for RTP communication.
 	 */
 	public int updateRTPSock(MulticastSocket newSock) {
 		if(mcSession) {
@@ -577,7 +575,7 @@ public class RTPSession {
 	 * Peers must be notified through SIP or other signalling protocol.
 	 * Only valid if this is a multicast session to begin with.
 	 * 
-	 * @param rtcpSock the new multicast socket for RTCP communication.
+	 * @param newSock the new multicast socket for RTCP communication.
 	 */
 	public int updateRTCPSock(MulticastSocket newSock) {
 		if(mcSession) {
@@ -787,7 +785,7 @@ public class RTPSession {
 	 * 
 	 * This function must be
 	 * 
-	 * @param rtcpBandwidth the new value requested, in bytes per second or -1 to disable
+	 * @param bandwidth the new value requested, in bytes per second or -1 to disable
 	 * @return the actual value set
  	 */
 	public int rtcpBandwidth(int bandwidth) {
