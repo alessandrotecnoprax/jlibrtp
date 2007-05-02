@@ -62,6 +62,13 @@ public class ParticipantDatabase {
 		
 	}
 	
+	/**
+	 * Add a multicast participant to the database
+	 * 
+	 * @param cameFrom 0: Application, 1,2: discovered through RTP or RTCP
+	 * @param p the participant to add
+	 * @return 0 if okay, -2 if redundant, -1 if adding participant to multicast
+	 */
 	private int addParticipantMulticast(int cameFrom, Participant p) {
 		if( cameFrom == 0) {
 			System.out.println("ParticipantDatabase.addParticipant() doesnt expect" 
@@ -80,6 +87,15 @@ public class ParticipantDatabase {
 		}
 	}
 	
+	/**
+	 * Add a unicast participant to the database
+	 * 
+	 * Result will be reported back through tpSession.appIntf.userEvent
+	 * 
+	 * @param cameFrom 0: Application, 1,2: discovered through RTP or RTCP
+	 * @param p the participant to add
+	 * @return 0 if okay
+	 */
 	private int addParticipantUnicast(int cameFrom, Participant p) {
 		if(cameFrom == 0) {
 			//Check whether there is a match in the ssrcTable
@@ -141,6 +157,11 @@ public class ParticipantDatabase {
 		}
 	}
 	
+	/**
+	 * Remove a participant from all tables
+	 * 
+	 * @param p the participant to be removed
+	 */
 	protected void removeParticipant(Participant p) {
 		if(! this.rtpSession.mcSession)
 			this.receivers.remove(p);
@@ -148,13 +169,25 @@ public class ParticipantDatabase {
 		this.ssrcTable.remove(p.ssrc, p);
 	}
 		
-	
+	/**
+	 * Find a participant based on the ssrc
+	 * 
+	 * @param ssrc of the participant to be found
+	 * @return the participant, null if unknonw
+	 */
 	protected Participant getParticipant(long ssrc) {
 		Participant p = null;
 		p = ssrcTable.get(ssrc);
 		return p; 
 	}
 	
+	/**
+	 * Iterator for all the unicast receivers.
+	 * 
+	 * This one is used by both RTP for sending packets, as well as RTCP.
+	 * 
+	 * @return iterator for unicast participants
+	 */
 	protected Iterator<Participant> getUnicastReceivers() {
 		if(! this.rtpSession.mcSession) {
 			return this.receivers.iterator();
@@ -164,6 +197,13 @@ public class ParticipantDatabase {
 		}
 	}
 	
+	/**
+	 * Enumeration of all the participants with known ssrcs.
+	 * 
+	 * This is primarily used for sending packets in multicast sessions.
+	 * 
+	 * @return enumerator with all the participants with known SSRCs
+	 */
 	protected Enumeration<Participant> getParticipants() {
 		return this.ssrcTable.elements();
 	}

@@ -1,5 +1,12 @@
 package jlibrtp;
 
+/**
+ * RTCP packets for RTP Feedback Messages 
+ * 
+ * In line with RFC 4585, this packet currently only supports NACKs
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktRTPFB extends RtcpPkt {
 	public boolean notRelevant = false;
 	protected long ssrcPacketSender = -1;
@@ -7,6 +14,15 @@ public class RtcpPktRTPFB extends RtcpPkt {
 	protected int PID[];
 	protected int BLP[];
 	
+	/**
+	 * Constructor for RTP Feedback Message
+	 * 
+	 * @param ssrcPacketSender SSRC of sender, taken from RTPSession
+	 * @param ssrcMediaSource SSRC of recipient of this message
+	 * @param FMT the Feedback Message Subtype
+	 * @param PID RTP sequence numbers of lost packets
+	 * @param BLP bitmask of following lost packets, shared index with PID 
+	 */
 	protected RtcpPktRTPFB(long ssrcPacketSender, long ssrcMediaSource, int FMT, int[] PID, int[] BLP) {
 		super.packetType = 205; //RTPFB
 		super.itemCount = FMT; 
@@ -14,6 +30,13 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		this.BLP = BLP;
 	}
 	
+	/**
+	 * Constructor that parses a raw packet to retrieve information
+	 * 
+	 * @param aRawPkt the raw packet to be parsed
+	 * @param start the start of the packet, in bytes
+	 * @param rtpSession the session on which the callback interface resides
+	 */
 	protected RtcpPktRTPFB(byte[] aRawPkt, int start, RTPSession rtpSession) {		
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktRTPFB(byte[], int start)");
@@ -57,6 +80,11 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		}
 	}
 	
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {
 		super.rawPkt = new byte[12 + this.PID.length*4];
 		
@@ -78,10 +106,17 @@ public class RtcpPktRTPFB extends RtcpPkt {
 		writeHeaders();
 	}
 	
+	/** 
+	 * Get the FMT (Feedback Message Type)
+	 * @return value stored in .itemcount, same field
+	 */
 	protected int getFMT() {
 		return this.itemCount;
 	}
 	
+	/**
+	 * Debug purposes only
+	 */
 	public void debugPrint() {
 		System.out.println("->RtcpPktRTPFB.debugPrint() ");
 		System.out.println("  ssrcPacketSender: " + ssrcPacketSender + "  ssrcMediaSource: " + ssrcMediaSource);

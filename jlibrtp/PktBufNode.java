@@ -49,6 +49,10 @@ public class PktBufNode {
 	// Actual payload
 	public RtpPkt pkt = null;
 	
+	/**
+	 * Create a new packet buffer node based on a packet
+	 * @param aPkt the packet
+	 */
 	public PktBufNode(RtpPkt aPkt) {
 		pkt = aPkt;
 		timeStamp = aPkt.getTimeStamp();

@@ -6,10 +6,21 @@ import java.net.InetSocketAddress;
 import java.util.Enumeration;
 import java.util.Iterator;
 
+/**
+ * This thread hangs on the RTCP socket and waits for new packets
+ * 
+ * @author Arne Kepp
+ *
+ */
 public class RTCPReceiverThread extends Thread {
 	private RTPSession rtpSession = null;
 	private RTCPSession rtcpSession = null;
 	
+	/**
+	 * Constructor for new thread
+	 * @param rtcpSession parent RTCP session
+	 * @param rtpSession parent RTP session
+	 */
 	RTCPReceiverThread(RTCPSession rtcpSession, RTPSession rtpSession) {
 		this.rtpSession = rtpSession;
 		this.rtcpSession = rtcpSession;
@@ -20,6 +31,17 @@ public class RTCPReceiverThread extends Thread {
 
 	}
 	
+	/**
+	 * Find out whether a participant with this SSRC is known.
+	 * 
+	 * If the user is unknown, and the system is operating in unicast mode,
+	 * try to match the ip-address of the sender to the ip address of a
+	 * previously unmatched target
+	 * 
+	 * @param ssrc the SSRC of the participant
+	 * @param packet the packet that notified us
+	 * @return the relevant participant, possibly newly created
+	 */
 	private Participant findParticipant(long ssrc, DatagramPacket packet) {
 		Participant p = rtpSession.partDb.getParticipant(ssrc);
 		if(p == null) {
@@ -47,6 +69,15 @@ public class RTCPReceiverThread extends Thread {
 		return p;
 	}
 	
+	
+	/**
+	 * Parse a received UDP packet
+	 * 
+	 * Perform the header checks and extract the RTCP packets in it
+	 * 
+	 * @param packet the packet to be parsed
+	 * @return -1 if there was a problem, 0 if successfully parsed
+	 */
 	private int parsePacket(DatagramPacket packet) {
 
 		if(packet.getLength() % 4 != 0) {
@@ -206,9 +237,14 @@ public class RTCPReceiverThread extends Thread {
 			}
 		}
 		return 0;
-
 	}
 	
+	/**
+	 * Returns a legible message when an error occurs
+	 * 
+	 * @param errorCode the internal error code, commonly negative of packet type
+	 * @return a string that is hopefully somewhat informative
+	 */
 	private String debugErrorString(int errorCode) {
 		String aStr = "";
 		switch(errorCode) {
@@ -228,6 +264,15 @@ public class RTCPReceiverThread extends Thread {
 		return aStr;
 	}
 
+	/**
+	 * Start the RTCP receiver thread.
+	 * 
+	 * It will
+	 * 1) run when it receives a packet 
+	 * 2) parse the packet
+	 * 3) call any relevant callback functions, update database
+	 * 4) block until the next one arrives.
+	 */
 	public void run() {
 		if(RTPSession.rtcpDebugLevel > 1) {
 			if(rtpSession.mcSession) {

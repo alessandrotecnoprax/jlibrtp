@@ -1,5 +1,10 @@
 package jlibrtp;
 
+/**
+ * RTCP packets for Receiver Reports 
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktRR extends RtcpPkt {
 	protected Participant[] reportees = null;
 	protected long[] reporteeSsrc = null;// -1; //32 bits
@@ -10,6 +15,12 @@ public class RtcpPktRR extends RtcpPkt {
 	protected long[] timeStampLSR = null;//-1; //32 bits
 	protected long[] delaySR = null;//-1; //32 bits
 	
+	/**
+	 * Constructor for a packet with receiver reports
+	 * 
+	 * @param reportees the participants on which to generate reports
+	 * @param ssrc the SSRC of the sender, from the RTPSession
+	 */
 	protected RtcpPktRR(Participant[] reportees, long ssrc) {
 		super.packetType = 201;
 		// Fetch all the right stuff from the database
@@ -17,8 +28,18 @@ public class RtcpPktRR extends RtcpPkt {
 		this.reportees = reportees;
 	}
 
-	// If rcount < 0 we assume we have to parse the entire packet
-	// otherwise we'll just parse the body. 
+
+	/**
+	 * 
+	 * 
+	 * If rcount < 0 we assume we have to parse the entire packet,
+	 * otherwise we'll just parse the receiver report blocks
+	 * (ie. the data came from a Sender Report packet)
+	 * 
+	 * @param aRawPkt the byte[] with the report(s)
+	 * @param start where in the raw packet to start reading
+	 * @param rrCount the number of receiver reports, -1 if this does not come from an SR
+	 */
 	protected RtcpPktRR(byte[] aRawPkt, int start, int rrCount) {
 		//System.out.println("RtcpPktRR: " + rrCount + "  start: " + start);
 		super.rawPkt = aRawPkt;
@@ -61,7 +82,12 @@ public class RtcpPktRR extends RtcpPkt {
 			}
 		}
 	}
-	// Makes a complete packet
+	
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {
 		if(RTPSession.rtpDebugLevel > 9) {
 			System.out.println("  -> RtcpPktRR.encode()");
@@ -93,7 +119,13 @@ public class RtcpPktRR extends RtcpPkt {
 		
 	}
 	
-	// Makes only RR part of packet -> do not include our SSRC
+	/**
+	 * Encodes the individual Receiver Report blocks, 
+	 * 
+	 * so they can be used either in RR packets or appended to SR
+	 * 
+	 * @return the encoded packets
+	 */
 	protected byte[] encodeRR() {
 		if(RTPSession.rtpDebugLevel > 10) {
 			System.out.println("   -> RtcpPktRR.encodeRR()");
@@ -145,6 +177,9 @@ public class RtcpPktRR extends RtcpPkt {
 		return ret;
 	}
 	
+	/**
+	 * Debug purposes only
+	 */
 	public void debugPrint() {
 		System.out.println("RtcpPktRR.debugPrint() ");
 		if(reportees != null) {

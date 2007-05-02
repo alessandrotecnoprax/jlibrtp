@@ -9,6 +9,14 @@ import java.util.Hashtable;
 import java.util.ListIterator;
 import java.util.Arrays;
 
+
+/**
+ * This class acts as an organizer for most of the information
+ * and functions pertaining to RTCP packet generation and reception 
+ * 
+ * @author Arne Kepp
+ *
+ */
 public class RTCPSession {
 	protected long prevTime = System.currentTimeMillis();
 	protected int nextDelay = -1; //Delay between RTCP transmissions, in ms. Initialized in start()
@@ -37,17 +45,34 @@ public class RTCPSession {
 	protected RTCPReceiverThread recvThrd = null;
 	protected RTCPSenderThread senderThrd = null;
 
+	/**
+	 * Constructor for unicast sessions
+	 * 
+	 * @param parent RTPSession that started this
+	 * @param rtcpSocket the socket to use for listening and sending
+	 */
 	protected RTCPSession(RTPSession parent, DatagramSocket rtcpSocket) {
 		this.rtcpSock = rtcpSocket;
 		rtpSession = parent;
 	}
 
+	/**
+	 * Constructor for multicast sessions
+	 * 
+	 * @param parent parent RTPSession
+	 * @param rtcpSocket parent RTPSession that started this
+	 * @param multicastGroup multicast group to bind the socket to
+	 */
 	protected RTCPSession(RTPSession parent, MulticastSocket rtcpSocket, InetAddress multicastGroup) {
 		mcGroup = multicastGroup;
 		this.rtcpSock = rtcpSocket;
 		rtpSession = parent;
 	}
 
+	/**
+	 * Starts the session, calculates delays and fires up the threads.
+	 *
+	 */
 	protected void start() {
 		nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
 		recvThrd = new RTCPReceiverThread(this, this.rtpSession);
@@ -56,10 +81,18 @@ public class RTCPSession {
 		senderThrd.start();
 	}
 
+	/**
+	 * Send bye packets, handled by RTCP Sender thread
+	 *
+	 */
 	protected void sendByes() {
 		senderThrd.sendByes();
 	}
 	
+	/**
+	 * Calculate the delay before the next RTCP packet can be sent
+	 *
+	 */
 	protected void calculateDelay() {
 		switch(rtpSession.rtcpMode) {
 		case 0: calculateRegularDelay(); break;
@@ -67,11 +100,10 @@ public class RTCPSession {
 			System.out.println("RTCPSession.calculateDelay() unknown .mode");
 		}
 	}
-	
-	
+
 	/**
-	 * Update the average packet size
-	 * @param length of latest packet
+	 * Calculates a delay value in accordance with RFC 3550
+	 *
 	 */
 	protected void calculateRegularDelay() {
 		long curTime = System.currentTimeMillis();

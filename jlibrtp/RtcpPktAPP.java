@@ -1,11 +1,24 @@
 package jlibrtp;
 
+/**
+ * Application specific RTCP packets
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktAPP extends RtcpPkt {
 	protected byte[] pktName = null;
 	protected byte[] pktData = null;
-
 	//subtype = super.itemcount
 	
+	
+	/**
+	 * Constructor for a new Application RTCP packet
+	 * 
+	 * @param ssrc the SSRC of the sender, presumably taken from RTPSession
+	 * @param subtype the subtype of packet, application specific
+	 * @param pktName byte[4] representing ASCII name of packet
+	 * @param pktData the byte[4x] data that represents the message itself
+	 */
 	protected RtcpPktAPP(long ssrc, int subtype, byte[] pktName, byte[] pktData) {
 		// Fetch all the right stuff from the database
 		super.ssrc = ssrc;
@@ -15,7 +28,12 @@ public class RtcpPktAPP extends RtcpPkt {
 		this.pktData = pktData;
 	}
 	
-	
+	/**
+	 * Constructor that parses a received Application RTCP packet
+	 * 
+	 * @param aRawPkt the raw packet containing the date
+	 * @param start where in the raw packet this packet starts
+	 */
 	protected RtcpPktAPP(byte[] aRawPkt, int start) {
 		super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
 		
@@ -36,6 +54,11 @@ public class RtcpPktAPP extends RtcpPkt {
 		}
 	}
 	
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {	
 		super.rawPkt = new byte[12 + this.pktData.length];
 		byte[] tmp = StaticProcs.uIntLongToByteWord(super.ssrc);

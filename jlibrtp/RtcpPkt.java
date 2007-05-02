@@ -41,6 +41,13 @@ public class RtcpPkt {
 	protected long time = -1;			// Timestamp to decide whether it is worth sending
 	protected boolean received = false;	// Whether packet was received
 	
+	
+	/**
+	 * Parses the common header of an RTCP packet
+	 * 
+	 * @param where in this.rawPkt the headers start
+	 * @return true if parsing succeeded and header cheks 
+	 */
 	protected boolean parseHeaders(int start) {
 		version = ((rawPkt[start+0] & 0xC0) >>> 6);
 		padding = ((rawPkt[start+0] & 0x20) >>> 5);
@@ -56,14 +63,22 @@ public class RtcpPkt {
 					+" packetType:"+packetType+" length:"+length);
 		}
 		
-		if(version == 2 && packetType < 205 && packetType > 199 && length < 65536) {
+		if(packetType < 207 && packetType > 199) 
+			System.out.println("RtcpPkt.parseHeaders problem discovered, packetType " + packetType);
+		
+		if(version == 2 && length < 65536) {
 			return true;
 		} else {
-			//System.out.println("RtcpPkt.parseHeaders problem discovered.");
+			System.out.println("RtcpPkt.parseHeaders() failed header checks, check size and version");
 			this.problem = -1;
 			return false;
 		}
 	}
+	/**
+	 * Writes the common header of RTCP packets. 
+	 * The values should be filled in when the packet is initiliazed and this function
+	 * called at the very end of .encode()
+	 */
 	protected void writeHeaders() {
 		byte aByte = 0;
 		aByte |=(version << 6);
@@ -80,10 +95,22 @@ public class RtcpPkt {
 		rawPkt[3] = someBytes[1];
 	}
 	
+	/**
+	 * This is just a dummy to make Eclipse complain less.
+	 */
 	protected void encode() {
 		System.out.println("RtcpPkt.encode() should never be invoked!! " + this.packetType);
 	}
 	
+	/**
+	 * Check whether this packet came from the source we expected.
+	 * 
+	 * Not currently used!
+	 * 
+	 * @param adr address that packet came from
+	 * @param partDb the participant database for the session
+	 * @return true if this packet came from the expected source
+	 */
 	protected boolean check(InetAddress adr, ParticipantDatabase partDb) {
 		//Multicast -> We have to be naive
 		if (partDb.rtpSession.mcSession && adr.equals(partDb.rtpSession.mcGroup))

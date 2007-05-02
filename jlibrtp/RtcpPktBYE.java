@@ -1,5 +1,10 @@
 package jlibrtp;
 
+/**
+ * RTCP packets for sending Bye messages
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktBYE extends RtcpPkt {
 	protected long[] ssrcArray = null;//32xn bits, n<16
 	protected byte[] reason = null;

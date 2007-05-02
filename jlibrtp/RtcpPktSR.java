@@ -1,5 +1,10 @@
 package jlibrtp;
 
+/**
+ * RTCP packets for Sender Reports 
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktSR extends RtcpPkt {
 	protected long ntpTs1 = -1; //32 bits
 	protected long ntpTs2 = -1; //32 bits
@@ -8,6 +13,14 @@ public class RtcpPktSR extends RtcpPkt {
 	protected long sendersOctCount = -1; //32 bits
 	protected RtcpPktRR rReports = null;
 	
+	/**
+	 * Constructor for a new Sender Report packet
+	 * 
+	 * @param ssrc the senders SSRC, presumably from RTPSession
+	 * @param pktCount packets sent in this session
+	 * @param octCount octets sent in this session
+	 * @param rReports receiver reports, as RR packets, to be included in this packet
+	 */
 	protected RtcpPktSR(long ssrc, long pktCount, long octCount, RtcpPktRR rReports) {
 		// Fetch all the right stuff from the database
 		super.ssrc = ssrc;
@@ -17,6 +30,13 @@ public class RtcpPktSR extends RtcpPkt {
 		this.rReports = rReports;
 	}
 	
+	/**
+	 * Constructor that parses a received packet
+	 * 
+	 * @param aRawPkt the raw packet
+	 * @param start the position at which SR starts
+	 * @param length used to determine number of included receiver reports
+	 */
 	protected RtcpPktSR(byte[] aRawPkt, int start, int length) {
 		if(RTPSession.rtpDebugLevel > 9) {
 				System.out.println("  -> RtcpPktSR(rawPkt)");
@@ -53,6 +73,11 @@ public class RtcpPktSR extends RtcpPkt {
 		}
 	}
 	
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {		
 		if(RTPSession.rtpDebugLevel > 9) {
 			if(this.rReports != null) {
@@ -109,6 +134,9 @@ public class RtcpPktSR extends RtcpPkt {
 		}
 	}
 
+	/**
+	 * Debug purposes only
+	 */
 	public void debugPrint() {
 		System.out.println("RtcpPktSR.debugPrint() ");
 		System.out.println("  SSRC:"+Long.toString(super.ssrc) +" ntpTs1:"+Long.toString(ntpTs1)

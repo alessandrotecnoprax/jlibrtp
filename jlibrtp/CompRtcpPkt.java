@@ -3,6 +3,20 @@ package jlibrtp;
 import java.util.*;
 import java.net.InetSocketAddress;
 
+/**
+ * Compound RTCP packet class.
+ * 
+ * It basically holds a list of packets. This list can either be constructed
+ * by providing a byte[] of a compound packet, or by adding individual packets.
+ * 
+ * Upon encode(), the packet will call encode on all the added packets.
+ * 
+ * problem == 0 indicates the parsing succeeded.
+ * 
+ * 
+ * @author Arne Kepp
+ */
+
 public class CompRtcpPkt {
 	protected int problem = 0;
 	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
