@@ -84,7 +84,7 @@ public class Participant {
 	protected long addedByApp = -1; //Time the participant was added by application
 	protected long lastRtcpRRPkt = -1; //Timestamp of last time we sent this person an RR packet
 	protected long secondLastRtcpRRPkt = -1; //Timestamp of 2nd to last time we sent this person an RR Packet
-	
+		
 	/**
 	 * Create a basic participant. If this is a <b>unicast</b> session you must provide network address (ipv4 or ipv6) and ports for RTP and RTCP, 
 	 * as well as a cname for this contact. These things should be negotiated through SIP or a similar protocol.

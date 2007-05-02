@@ -104,4 +104,15 @@ public interface RTCPAppIntf {
 	 * @param reason the reason provided in the packet
 	 */
 	public void BYEPktReceived(Participant[] relevantParticipants, String reason);
+	
+	
+	/**
+	 * This function is called whenever an Application (APP) packet is received.
+	 * 
+	 * @param part the participant associated with the SSRC
+	 * @param subtype specified in the packet
+	 * @param name ASCII description of packet
+	 * @param data in the packet
+	 */
+	public void APPPktReceived(Participant part, int subtype, byte[] name, byte[] data);
 }

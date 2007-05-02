@@ -1,12 +1,10 @@
 package jlibrtp;
 
-//import java.util.Vector;
-
 public class RtcpPktPSFB extends RtcpPkt {
 	public boolean notRelevant = false;
 	private RTPSession rtpSession;
-	private long ssrcPacketSender = -1;
-	private long ssrcMediaSource = -1;
+	protected long ssrcPacketSender = -1;
+	protected long ssrcMediaSource = -1;
 	
 	// Slice Loss Indication (SLI)
 	protected int[] sliFirst;

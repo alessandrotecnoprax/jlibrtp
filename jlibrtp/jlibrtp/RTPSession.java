@@ -111,6 +111,18 @@ public class RTPSession {
 	 public String note = null;
 	 public String priv = null;
 	 
+	
+	 // RFC 4585 stuff. This should live on RTCPSession, but we need to have this
+	 // infromation ready by the time the RTCP Session starts
+	 // 0 = RFC 3550 , -1 = ACK , 1 = Immediate feedback, 2 = Early RTCP,  
+	 protected int rtcpMode = 0;
+	 protected int fbEarlyThreshold = -1;		// group size, immediate -> early transition point
+	 protected int fbRegularThreshold = -1;	// group size, early -> regular transition point
+	 protected int minInterval = 5000;		// minimum interval
+	 protected int fbMaxDelay = 1000;			// how long the information is useful
+	 // RTCP bandwidth
+	 protected int rtcpBandwidth = -1;
+	 
 	 
 	 /**
 	  * Returns an instance of a <b>unicast</b> RTP session. 
@@ -357,7 +369,48 @@ public class RTPSession {
 
 		 return ret;
 	 }
+	 
+	 /**
+	  * Send RTCP App packet to receiver specified by ssrc
+	  * 
+	  * 
+	  * 
+	  * Return values:
+	  *  0 okay
+	  * -1 no RTCP session established
+	  * -2 name is not byte[4];
+	  * -3 data is not byte[x], where x = 4*y for syme y
+	  * -4 type is not a 5 bit unsigned integer
+	  * 
+	  * Note that a return value of 0 does not guarantee delivery.
+	  * The participant must also exist in the participant database,
+	  * otherwise the message will eventually be deleted.
+	  * 
+	  * @param ssrc of the participant you want to reach
+	  * @param type the RTCP App packet subtype, default 0
+	  * @param name the ASCII (in byte[4]) representation
+	  * @param data the data itself 
+	  * @return 0 if okay, negative value otherwise (see above)
+	  */
 	
+	 public int sendRTCPAppPacket(long ssrc, int type, byte[] name, byte[] data) {
+		 if(this.rtcpSession == null)
+			 return -1;
+		 
+		 if(name.length != 4)
+			 return -2;
+		 
+		 if(data.length % 4 != 0)
+			 return -3;
+		 
+		 if(type > 63 || type < 0 )
+			 return -4;
+		
+		RtcpPktAPP pkt = new RtcpPktAPP(ssrc, type, name, data);
+		this.rtcpSession.addToAppQueue(ssrc, pkt);
+		
+		return 0;
+	 }
 	 /**
 	  * Add a participant object to the participant database.
 	  * 
@@ -622,18 +675,25 @@ public class RTPSession {
 	/**
 	 * Set whether the stack should operate in RFC 4585 mode.
 	 * 
+	 * T
+	 * 
 	 * This will automatically call adjustPacketBufferBehavior(-1),
 	 * i.e. disable all RTP packet buffering in jlibrtp,
-	 * and disable frame reconstruction
-	 * 
-	 * NOT FULLY IMPLEMENTED!! 
+	 * and disable frame reconstruction 
 	 * 
 	 * @param rtcpAVPFIntf the in
 	 */
-	public void registerAVPFIntf(RTCPAVPFIntf rtcpAVPFIntf) {
-		this.packetBufferBehavior(-1);
-		this.frameReconstruction = false;
-		this.rtcpAVPFIntf = rtcpAVPFIntf;
+	public int registerAVPFIntf(RTCPAVPFIntf rtcpAVPFIntf, int maxDelay, int earlyThreshold, int regularThreshold ) {
+		if(this.rtcpSession != null) {
+			this.packetBufferBehavior(-1);
+			this.frameReconstruction = false;
+			this.rtcpAVPFIntf = rtcpAVPFIntf;
+			this.fbEarlyThreshold = earlyThreshold;
+			this.fbRegularThreshold = regularThreshold;	
+			return 0;
+		} else {
+			return -1;
+		}
 	}
 	
 	/**
@@ -665,6 +725,78 @@ public class RTPSession {
 	 */
 	public boolean frameReconstruction() {
 		return this.frameReconstruction;
+	}
+	
+	/**
+	 * The bandwidth currently allocated to the session,
+	 * in bytes per second. The default is 8000.
+	 * 
+	 * This value is not enforced and currently only
+	 * used to calculate the RTCP interval to ensure the
+	 * control messages do not exceed 5% of the total bandwidth
+	 * described here.
+	 * 
+	 * Since the actual value may change a conservative
+	 * estimate should be used to avoid RTCP flooding.
+	 * 
+	 * see rtcpBandwidth(void)
+	 * 
+	 * @return current bandwidth setting
+	 */
+	public int sessionBandwidth() {
+		return this.bandwidth;
+	}
+	
+	/**
+	 * Set the bandwidth of the session.
+	 * 
+	 * See sessionBandwidth(void) for details. 
+	 * 
+	 * @param bandwidth the new value requested, in bytes per second
+	 * @return the actual value set
+ 	 */
+	public int sessionBandwidth(int bandwidth) {
+		if(bandwidth < 1) {
+			this.bandwidth = 8000;
+		} else {
+			this.bandwidth = bandwidth;
+		}
+		return this.bandwidth;
+	}
+	
+	
+	/**
+	 * RFC 3550 dictates that 5% of the total bandwidth,
+	 * as set by sessionBandwidth, should be dedicated
+	 * to RTCP traffic. This 
+	 * 
+	 * This should normally not be done, but is permissible in 
+	 * conjunction with feedback (RFC 4585) and possibly
+	 * other profiles. 
+	 * 
+	 * Also see sessionBandwidth(void)
+	 * 
+	 * @return current RTCP bandwidth setting, -1 means not in use
+	 */
+	public int rtcpBandwidth() {
+		return this.rtcpBandwidth;
+	}
+	
+	/**
+	 * Set the RTCP bandwidth, see rtcpBandwidth(void) for details. 
+	 * 
+	 * This function must be
+	 * 
+	 * @param rtcpBandwidth the new value requested, in bytes per second or -1 to disable
+	 * @return the actual value set
+ 	 */
+	public int rtcpBandwidth(int bandwidth) {
+		if(bandwidth < -1) {
+			this.rtcpBandwidth = -1;
+		} else {
+			this.rtcpBandwidth = bandwidth;
+		}
+		return this.rtcpBandwidth;
 	}
 	
 	private int getNextSeqNum() {
