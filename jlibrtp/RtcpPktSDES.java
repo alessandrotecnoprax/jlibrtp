@@ -148,9 +148,9 @@ public class RtcpPktSDES extends RtcpPkt {
 		
 		
 		// Here we ought to loop over participants, if we're doing SDES for other participants.
-		
 		super.rawPkt = new byte[pos];
 		itemCount = 1;
+		//This looks wrong, but appears to be fine..
 		System.arraycopy(temp, 0, super.rawPkt, 0, pos);
 		writeHeaders();
 	}
@@ -160,7 +160,7 @@ public class RtcpPktSDES extends RtcpPkt {
 		if(participants != null) {
 			for(int i= 0; i<participants.length; i++) {
 				Participant part = participants[i];
-				System.out.println("     part.ssrc: " + part.ssrc + "  part.cname: " + part.cname);
+				System.out.println("     part.ssrc: " + part.ssrc + "  part.cname: " + part.cname + " part.loc: " + part.loc);
 			}
 		} else {
 			System.out.println("     nothing to report (only valid for received packets)");

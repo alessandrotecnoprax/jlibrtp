@@ -56,32 +56,32 @@ public class RTCPReceiverThread extends Thread {
 			return -1;
 		} else {
 			byte[] rawPkt = packet.getData();
-			
+
 			// Parse the received compound RTCP (?) packet
 			CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), 
 					(InetSocketAddress) packet.getSocketAddress(), rtpSession);
-			
+
 			if(this.rtpSession.debugAppIntf != null) {
 				String intfStr; 
-			
+
 				if(rtpSession.mcSession) {
 					intfStr = this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString();
 				} else {
 					intfStr = this.rtpSession.rtpSock.getLocalSocketAddress().toString();
 				}
-				
+
 				if( compPkt.problem == 0) {
 					String str = new String("Received compound RTCP packet of size " + packet.getLength() + 
 							" from " + packet.getSocketAddress().toString() + " via " + intfStr
 							+ " containing " + compPkt.rtcpPkts.size() + " packets" );
-					
+
 					this.rtpSession.debugAppIntf.debugPacketReceived(1, 
 							(InetSocketAddress) packet.getSocketAddress(), str);
 				} else {
 					String str = new String("Received invalid RTCP packet of size " + packet.getLength() + 
 							" from " + packet.getSocketAddress().toString() + " via " +  intfStr
 							+ ": " + this.debugErrorString(compPkt.problem) );
-					
+
 					this.rtpSession.debugAppIntf.debugPacketReceived(-2, 
 							(InetSocketAddress) packet.getSocketAddress(), str);
 				}
@@ -102,7 +102,7 @@ public class RTCPReceiverThread extends Thread {
 					rtpSession.resolveSsrcConflict();
 					return -1;
 				}
-				
+
 				/**        Receiver Reports        **/
 				if(	aPkt.getClass() == RtcpPktRR.class) {
 					RtcpPktRR rrPkt = (RtcpPktRR) aPkt;
@@ -122,7 +122,7 @@ public class RTCPReceiverThread extends Thread {
 
 					Participant p = findParticipant(srPkt.ssrc, packet);
 					p.lastRtcpPkt = curTime;
-					
+
 					if(p != null) {
 
 						if(p.ntpGradient < 0 && p.lastNtpTs1 > -1) {
@@ -189,7 +189,20 @@ public class RTCPReceiverThread extends Thread {
 					if(rtpSession.rtcpAppIntf != null) {
 						rtpSession.rtcpAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
 					}
-				}
+					
+					/**        Bye Packets       **/
+				} else if(aPkt.getClass() == RtcpPktAPP.class) {
+					RtcpPktAPP appPkt = (RtcpPktAPP) aPkt;
+
+					Participant part = findParticipant(appPkt.ssrc, packet);
+					
+					if(rtpSession.rtcpAppIntf != null) {
+						rtpSession.rtcpAppIntf.APPPktReceived(part, appPkt.itemCount,appPkt.pktName, appPkt.pktData);
+					}
+			}
+
+
+
 			}
 		}
 		return 0;
@@ -206,6 +219,8 @@ public class RTCPReceiverThread extends Thread {
 			case -202: aStr = " Error parsing SDES packet"; break;
 			case -203: aStr = " Error parsing BYE packet."; break;
 			case -204: aStr = " Error parsing Application specific packet."; break;
+			case -205: aStr = " Error parsing RTP Feedback packet."; break;
+			case -206: aStr = " Error parsing Payload-Specific Feedback packet."; break;
 		default:
 			aStr = "Unknown error code " + errorCode + ".";
 		}

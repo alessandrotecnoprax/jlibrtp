@@ -1,6 +1,7 @@
 package jlibrtpDemos;
 
 import jlibrtp.*;
+
 import java.io.FileWriter;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -179,11 +180,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			this.packetCount++;	
 		}
 		
-		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {
-			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
-			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
-			//System.out.println("!!!!!!!!!!!! BYE !!!!!!!!!!!!");
-			
+		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {			
 			Element BYEPkt = new Element("BYEPkt");
 			this.sessionElement.addContent(BYEPkt);
 			
@@ -213,6 +210,40 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			
 			// Terminate the session
 			this.maxPacketCount = this.packetCount;
+		}
+		
+		public void APPPktReceived(Participant part, int subtype, byte[] name, byte[] data) {
+			Element APPPkt = new Element("APPPkt");
+			this.sessionElement.addContent(APPPkt);
+			
+			Element SSRC = new Element("SSRC");
+			SSRC.addContent(Long.toString(part.getSSRC()));
+			APPPkt.addContent(SSRC);
+			
+			Element type = new Element("SubType");
+			type.addContent(Integer.toString(subtype));
+			APPPkt.addContent(type);
+			
+			Element Name = new Element("Name");
+			byte[] tmp;
+			byte[] output = new byte[name.length*2];
+			for(int i=0; i<name.length; i++) {
+				tmp = StaticProcs.hexOfByte(name[i]).getBytes();
+				output[i*2] = tmp[0];
+				output[i*2+1] =  tmp[1];
+			}
+			Name.addContent(new String(output));
+			APPPkt.addContent(Name);
+			
+			Element Data = new Element("Data");
+			output = new byte[data.length*2];
+			for(int i=0; i<name.length; i++) {
+				tmp = StaticProcs.hexOfByte(data[i]).getBytes();
+				output[i*2] = tmp[0];
+				output[i*2+1] =  tmp[1];
+			}
+			Data.addContent(new String(output));
+			APPPkt.addContent(Data);
 		}
 		
 		/**

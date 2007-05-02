@@ -131,7 +131,7 @@ public class RTCPSenderThread extends Thread {
 		}
 		
 		// Give the application a chance to register some participants
-		try { Thread.sleep(100); } 
+		try { Thread.sleep(10); } 
 		catch (Exception e) { System.out.println("RTCPSenderThread didn't get any initial rest."); }
 		
 		// Set up an iterator for the member list
@@ -225,6 +225,15 @@ public class RTCPSenderThread extends Thread {
 				RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
 						this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
 				compPkt.addPacket(srPkt);
+				
+				
+				if(part.ssrc > 0) {
+					RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
+					for(int i=0; i<ar.length; i++) {
+						compPkt.addPacket(ar[i]);
+					}
+				}
+				
 			}
 			
 			//If we got anything from this participant since we sent the 2nd to last RtcpPkt
@@ -236,7 +245,23 @@ public class RTCPSenderThread extends Thread {
 				
 				RtcpPktRR rrPkt = new RtcpPktRR(partArray, rtpSession.ssrc);
 				compPkt.addPacket(rrPkt);
+				
+				if( !incSR && part.ssrc > 0) {
+					RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
+					for(int i=0; i<ar.length; i++) {
+						compPkt.addPacket(ar[i]);
+					}
+				}
 			}
+			
+			// APP packets
+			if(part.ssrc > 0) {
+				RtcpPkt[] ar = this.rtcpSession.getFromAppQueue(part.ssrc);
+				for(int i=0; i<ar.length; i++) {
+					compPkt.addPacket(ar[i]);
+				}
+			}
+			
 			
 			// For now we'll stick the SDES on every time, and only for us
 			RtcpPktSDES sdesPkt = new RtcpPktSDES(true, this.rtpSession, null);

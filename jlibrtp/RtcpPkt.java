@@ -37,6 +37,10 @@ public class RtcpPkt {
 	// Contains the actual data (eventually)
 	protected byte[] rawPkt = null;
 	
+	// These are only used for feedback messages
+	protected long time = -1;			// Timestamp to decide whether it is worth sending
+	protected boolean received = false;	// Whether packet was received
+	
 	protected boolean parseHeaders(int start) {
 		version = ((rawPkt[start+0] & 0xC0) >>> 6);
 		padding = ((rawPkt[start+0] & 0x20) >>> 5);

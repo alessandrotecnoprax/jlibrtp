@@ -104,9 +104,11 @@ public class ValidateRtcpPkt {
 		rtpSession.cname = "cname123@localhost";
 		rtpSession.loc = "right here";
 		sdespkt.encode();
+		rtpSession.cname = "cname124@localhost";
+		rtpSession.loc = "right hera";
 		byte[] rawpktsdes = sdespkt.rawPkt;
 		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpktsdes, 0, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
-		//decsdespkt.debugPrint();
+		decsdespkt.debugPrint();
 		//partDb.debugPrint();
 		
 
