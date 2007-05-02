@@ -2,12 +2,29 @@ package jlibrtp;
 
 import java.net.InetSocketAddress;
 
+/**
+ * RTCP packets for Source Descriptions
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktSDES extends RtcpPkt {
 	boolean reportSelf = true;
 	RTPSession rtpSession = null;
 	protected Participant[] participants = null;
 	
-	protected RtcpPktSDES(boolean reportThisSession, RTPSession rtpSession,Participant[] additionalParticipants) {
+	/**
+	 * Constructor to create a new SDES packet
+	 * 
+	 * TODO:
+	 * Currently the added participants are not actually encoded
+	 * because the library lacks some support for acting as mixer or
+	 * relay in other areas.
+	 * 
+	 * @param reportThisSession include information from RTPSession as a participant
+	 * @param rtpSession the session itself
+	 * @param additionalParticipants additional participants to include
+	 */
+	protected RtcpPktSDES(boolean reportThisSession, RTPSession rtpSession, Participant[] additionalParticipants) {
 		super.packetType = 202;
 		// Fetch all the right stuff from the database
 		reportSelf = reportThisSession;
@@ -15,6 +32,14 @@ public class RtcpPktSDES extends RtcpPkt {
 		this.rtpSession = rtpSession; 
 	}
 	
+	/**
+	 * Constructor that parses a received packet
+	 * 
+	 * @param aRawPkt the byte[] containing the packet
+	 * @param start where in the byte[] this packet starts
+	 * @param socket the address from which the packet was received
+	 * @param partDb the participant database
+	 */
 	protected RtcpPktSDES(byte[] aRawPkt,int start, InetSocketAddress socket, ParticipantDatabase partDb) {
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktSDES(byte[], ParticipantDabase)");
@@ -101,8 +126,12 @@ public class RtcpPktSDES extends RtcpPkt {
 			System.out.println("  <- RtcpPktSDES()");
 		}
 	}
-	
-	// For the time being we'll only advertise ourselves.
+
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {	
 		byte[] temp = new byte[1450];
 		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.rtpSession.ssrc);
@@ -146,8 +175,8 @@ public class RtcpPktSDES extends RtcpPkt {
 			pos += 5;
 		}
 		
+		// TODO Here we ought to loop over participants, if we're doing SDES for other participants.
 		
-		// Here we ought to loop over participants, if we're doing SDES for other participants.
 		super.rawPkt = new byte[pos];
 		itemCount = 1;
 		//This looks wrong, but appears to be fine..
@@ -155,6 +184,9 @@ public class RtcpPktSDES extends RtcpPkt {
 		writeHeaders();
 	}
 	
+	/**
+	 * Debug purposes only
+	 */
 	public void debugPrint() {
 		System.out.println("RtcpPktSDES.debugPrint() ");
 		if(participants != null) {

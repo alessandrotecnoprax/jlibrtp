@@ -4,6 +4,15 @@ import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+/**
+ * This thread sends scheduled RTCP packets 
+ * 
+ * It also performs maintenance of various queues and the participant
+ * database.
+ * 
+ * @author Arne Kepp
+ *
+ */
 public class RTCPSenderThread extends Thread {
 	private RTPSession rtpSession = null;
 	private RTCPSession rtcpSession = null;
@@ -11,7 +20,11 @@ public class RTCPSenderThread extends Thread {
 	// Whether we have sent byes for the last conflict
 	private boolean byesSent = false;
 	
-	
+	/**
+	 * Constructor for new thread
+	 * @param rtcpSession parent RTCP session
+	 * @param rtpSession parent RTP session
+	 */
 	protected RTCPSenderThread(RTCPSession rtcpSession, RTPSession rtpSession) {
 		this.rtpSession = rtpSession;
 		this.rtcpSession = rtcpSession;
@@ -20,6 +33,10 @@ public class RTCPSenderThread extends Thread {
 		} 
 	}
 	
+	/**
+	 * Send BYE messages to all the relevant participants
+	 *
+	 */
 	protected void sendByes() {
 		// Create the packet
 		CompRtcpPkt compPkt = new CompRtcpPkt();
@@ -56,6 +73,13 @@ public class RTCPSenderThread extends Thread {
 			//System.out.println("SENT BYE PACKETS!!!!!");
 		}
 	}
+	
+	/**
+	 * Multicast version of sending a Compound RTCP packet
+	 * 
+	 * @param pkt the packet to best
+	 * @return 0 is successful, -1 otherwise
+	 */
 	protected int mcSendCompRtcpPkt(CompRtcpPkt pkt) {
 		byte[] pktBytes = pkt.encode();
 		DatagramPacket packet;
@@ -90,6 +114,13 @@ public class RTCPSenderThread extends Thread {
 		return packet.getLength();
 	}
 	
+	/**
+	 * Unicast version of sending a Compound RTCP packet
+	 * 
+	 * @param pkt the packet to best
+	 * @param receiver the socket address of the recipient
+	 * @return 0 is successful, -1 otherwise
+	 */
 	protected int sendCompRtcpPkt(CompRtcpPkt pkt, InetSocketAddress receiver) {
 		byte[] pktBytes = pkt.encode();
 		DatagramPacket packet;
@@ -125,6 +156,17 @@ public class RTCPSenderThread extends Thread {
 		return packet.getLength();
 	}
 	
+	
+	/**
+	 * Start the RTCP sender thread.
+	 * 
+	 * RFC 4585 is more complicated, but in general it will
+	 * 1) Wait a precalculated amount of time
+	 * 2) Determine the next RTCP recipient
+	 * 3) Construct a compound packet with all the relevant information
+	 * 4) Send the packet
+	 * 5) Calculate next delay before going to sleep
+	 */
 	public void run() {
 		if(RTPSession.rtcpDebugLevel > 1) {
 			System.out.println("<-> RTCPSenderThread running");

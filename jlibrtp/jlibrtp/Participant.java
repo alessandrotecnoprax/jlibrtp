@@ -259,6 +259,12 @@ public class Participant {
 		return this.ssrc;
 	}
 	
+	/** 
+	 * Updates the participant with information for receiver reports.
+	 * 
+	 * @param packetLength to keep track of received octets
+	 * @param pkt the most recently received packet
+	 */
 	protected void updateRRStats(int packetLength, RtpPkt pkt) {
 		int curSeqNum = pkt.getSeqNumber();
 		
@@ -298,14 +304,26 @@ public class Participant {
 		lastRtpPkt = curTime;
 	}
 	
+	/**
+	 * Calculates the extended highest sequence received by adding 
+	 * the last sequence number to 65536 times the number of times 
+	 * the sequence counter has rolled over.
+	 * 
+	 * @return extended highest sequence
+	 */
 	protected long getExtHighSeqRecv() {
-		return ((10^16)*seqRollOverCount + lastSeqNumber);
+		return (65536*seqRollOverCount + lastSeqNumber);
 	}
 	
+	/**
+	 * Get the fraction of lost packets, calculated as described
+	 * in RFC 3550 as a fraction of 256.
+	 * @return
+	 */
 	protected int getFractionLost() {
 		int denominator = (lastSeqNumber - lastSRRseqNumber);
 		if(denominator < 0)
-			denominator = (10^16) + denominator;
+			denominator = 65536 + denominator;
 
 		int fraction = 256*receivedSinceLastSR;
 		if(denominator > 0) {
@@ -321,6 +339,13 @@ public class Participant {
 		return fraction;
 	}
 	
+	/**
+	 * The total number of packets lost during the session.
+	 * 
+	 * Returns zero if loss is negative, i.e. duplicates have been received.
+	 * 
+	 * @return
+	 */
 	protected long getLostPktCount() {
 		long lost = (this.getExtHighSeqRecv() - this.firstSeqNumber) - receivedPkts;
 		
@@ -329,10 +354,20 @@ public class Participant {
 		return lost;
 	}
 	
+	/** 
+	 * 
+	 * @return the interArrivalJitter, calculated continuously
+	 */
 	protected double getInterArrivalJitter() {
 		return this.interArrivalJitter;
 	}
 	
+	/**
+	 * Set the timestamp for last sender report
+	 * 
+	 * @param ntp1 high order bits
+	 * @param ntp2 low order bits
+	 */
 	protected void setTimeStampLSR(long ntp1, long ntp2) {
 		// Use what we've got
 		byte[] high = StaticProcs.uIntLongToByteWord(ntp1);
@@ -345,6 +380,12 @@ public class Participant {
 		this.timeStampLSR = StaticProcs.bytesToUIntLong(low, 0);
 	}
 	
+	/**
+	 * Calculate the delay between the last received sender report
+	 * and now.
+	 * 
+	 * @return the delay in units of 1/65.536ms
+	 */
 	protected long delaySinceLastSR() {
 		if(this.timeReceivedLSR < 1) 
 			return 0;
@@ -355,6 +396,9 @@ public class Participant {
 		return (long) ((double)delay / 65.536);
 	}
 	
+	/**
+	 * Only for debugging purposes
+	 */
 	public void debugPrint() {
 		System.out.print(" Participant.debugPrint() SSRC:"+this.ssrc+" CNAME:"+this.cname);
 		if(this.rtpAddress != null)

@@ -22,7 +22,9 @@ package jlibrtp;
  * A PktBuffer stores packets either for buffering purposes,
  * or because they need to be assimilated to create a complete frame.
  * 
- * It also drops duplicate packets.
+ * This behavior can be controlled through rtpSession.pktBufBehavior()
+ * 
+ * It optionally drops duplicate packets.
  * 
  * Note that newest is the most recently received, i.e. highest timeStamp
  * Next means new to old (from recently received to previously received) 
@@ -325,6 +327,12 @@ public class PktBuffer {
 		}
 	}
 	
+	/**
+	 * Will return the oldest frame without checking whether it is in
+	 * the right order, or whether we should wate for late arrivals.
+	 * 
+	 * @return the first frame on the queue, null otherwise
+	 */
 	private DataFrame unbufferedPopFrame() {
 		if(oldest != null) {
 			PktBufNode retNode = oldest;
@@ -338,6 +346,13 @@ public class PktBuffer {
 		}
 	}
 	
+	/**
+	 * Only returns if the buffer is full, i.e. length exceeds
+	 * rtpSession.pktBufBehavior, or if the next packet directly
+	 * follows the previous one returned to the application.
+	 * 
+	 * @return first frame in order, null otherwise
+	 */
 	private DataFrame bufferedPopFrame() {
 		PktBufNode retNode = oldest;
 		/**
@@ -366,8 +381,6 @@ public class PktBuffer {
 					rtpSession.appIntf.frameSize(oldest.pkt.getPayloadType()));
 			
 			//DataFrame df = new DataFrame(retNode, this.p, 1);
-			
-			
 			popFrameQueueCleanup(retNode, df.lastSeqNum);
 			
 			return df;
@@ -382,6 +395,13 @@ public class PktBuffer {
 		}
 	}
 	
+	/**
+	 * Cleans the packet buffer before returning the frame,
+	 * i.e. making sure the queue has a head etc.
+	 * 
+	 * @param retNode the node that is about to be popped
+	 * @param highestSeq the highest sequence number returned to the application
+	 */
 	private void popFrameQueueCleanup(PktBufNode retNode, int highestSeq) {
 		if(1 == length) {
 			//There's only one frame

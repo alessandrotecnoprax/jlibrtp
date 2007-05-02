@@ -1,5 +1,10 @@
 package jlibrtp;
 
+/**
+ * RTCP packets for Payload-Specific Feedback Messages 
+ * 
+ * @author Arne Kepp
+ */
 public class RtcpPktPSFB extends RtcpPkt {
 	public boolean notRelevant = false;
 	private RTPSession rtpSession;
@@ -22,7 +27,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 	protected byte[] alfBitString;
 	
 	/**
-	 * Constructor for Picture loss indication
+	 * Generic constructor, then call make<something>
 	 * 
 	 * @param ssrcPacketSender
 	 * @param ssrcMediaSource
@@ -33,10 +38,20 @@ public class RtcpPktPSFB extends RtcpPkt {
 		super.packetType = 206; //PSFB
 	}
 	
+	/**
+	 * Make this packet a Picture loss indication
+	 */
 	protected void makePictureLossIndication() {
 		super.itemCount = 1; //FMT
 	}
 	
+	/**
+	 * Make this packet a Slice Loss Indication
+	 * 
+	 * @param sliFirst macroblock (MB) address of the first lost macroblock
+	 * @param sliNumber number of lost macroblocks
+	 * @param sliPictureId six least significant bits of the codec-specific identifier
+	 */
 	protected void makeSliceLossIndication(int[] sliFirst, int[] sliNumber, int[] sliPictureId) {
 		super.itemCount = 2; //FMT
 		this.sliFirst = sliFirst;
@@ -44,6 +59,13 @@ public class RtcpPktPSFB extends RtcpPkt {
 		this.sliPictureId = sliPictureId;
 	}
 	
+	/**
+	 * Make this packet a Reference Picture Selection Indication
+	 * 
+	 * @param bitPadding number of padded bits at end of bitString
+	 * @param payloadType RTP payload type for codec
+	 * @param bitString RPSI information as natively defined by the video codec
+	 */
 	protected void makeRefPictureSelIndic(int bitPadding, int payloadType, byte[] bitString) {
 		super.itemCount = 3; //FMT
 		this.rpsiPadding = bitPadding;
@@ -51,12 +73,23 @@ public class RtcpPktPSFB extends RtcpPkt {
 		this.rpsiBitString = bitString;
 	}
 	
+	/** 
+	 * Make this packet a Reference Picture Selection Indication
+	 * 
+	 * @param bitString the original application message
+	 */
 	protected void makeAppLayerFeedback(byte[] bitString) {
 		super.itemCount = 15; //FMT
 		this.alfBitString = bitString; 
 	}
 	
-	
+	/**
+	 * Constructor that parses a raw packet to retrieve information
+	 * 
+	 * @param aRawPkt the raw packet to be parsed
+	 * @param start the start of the packet, in bytes
+	 * @param rtpSession the session on which the callback interface resides
+	 */
 	protected RtcpPktPSFB(byte[] aRawPkt, int start, RTPSession rtpSession) {		
 		if(RTPSession.rtpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktPSFB(byte[], int start)");
@@ -102,6 +135,10 @@ public class RtcpPktPSFB extends RtcpPkt {
 		}
 	}
 	
+	/**
+	 * Decode Picture Loss indication
+	 *
+	 */
 	private void decPictureLossIndic() {
 		if(this.rtpSession.rtcpAVPFIntf != null) {
 			this.rtpSession.rtcpAVPFIntf.PSFBPktPictureLossReceived(
@@ -109,6 +146,12 @@ public class RtcpPktPSFB extends RtcpPkt {
 		}
 	}
 	
+	/**
+	 * Decode Slice Loss Indication
+	 * 
+	 * @param aRawPkt
+	 * @param start
+	 */
 	private void decSliceLossIndic(byte[] aRawPkt, int start) {	
 		// 13 bit off-boundary numbers? That's rather cruel
 		//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -136,6 +179,13 @@ public class RtcpPktPSFB extends RtcpPkt {
 					sliFirst, sliNumber, sliPictureId);
 		}
 	}
+	
+	/**
+	 * Decode Reference Picture Selection Indication
+	 * 
+	 * @param aRawPkt
+	 * @param start
+	 */
 	private void decRefPictureSelIndic(byte[] aRawPkt, int start) {	
 		//  0                   1                   2                   3
 		//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -169,6 +219,12 @@ public class RtcpPktPSFB extends RtcpPkt {
 		
 	}
 	
+	/**
+	 * Decode Application specific feedback message
+	 * 
+	 * @param aRawPkt
+	 * @param start
+	 */
 	private void decAppLayerFB(byte[] aRawPkt, int start) {	
 		//Application Message (FCI): variable length
 		int stringLength = (super.length - 2)*4;
@@ -183,6 +239,68 @@ public class RtcpPktPSFB extends RtcpPkt {
 		}
 	}
 	
+
+	
+	/**
+	 * Encode a Slice Loss Indication
+	 */
+	private void encSliceLossIndic() {
+		byte[] firstBytes;
+		byte[] numbBytes;
+		byte[] picBytes;
+		
+		int offset = 8;
+		// Loop over the FCI lines
+		for(int i=0; i < sliFirst.length; i++) {
+			offset = 8 + 8*i;
+			firstBytes = StaticProcs.uIntLongToByteWord(sliFirst[i] << 3);
+			numbBytes = StaticProcs.uIntLongToByteWord(sliNumber[i] << 2);
+			picBytes = StaticProcs.uIntIntToByteWord(sliPictureId[i]);
+			
+			super.rawPkt[offset] = firstBytes[2];
+			super.rawPkt[offset+1] = (byte) (firstBytes[3] | numbBytes[2]);
+			super.rawPkt[offset+2] = numbBytes[3];
+			super.rawPkt[offset+3] = (byte) (numbBytes[3] | picBytes[1]);
+		}
+	}
+	
+	/**
+	 * Encode a Reference Picture Selection Indication
+	 *
+	 */
+	private void encRefPictureSelIndic() {	
+		byte[] someBytes;
+		someBytes = StaticProcs.uIntIntToByteWord(rpsiPadding);
+		super.rawPkt[8] = someBytes[1];
+		someBytes = StaticProcs.uIntIntToByteWord(rpsiPayloadType);
+		super.rawPkt[9] = someBytes[1];
+		
+		System.arraycopy(rpsiBitString, 0, super.rawPkt, 10, rpsiBitString.length);
+	}
+	
+	
+	/**
+	 * Encode Application Layer Feedback
+	 *
+	 */
+	private void encAppLayerFB() {	
+		//Application Message (FCI): variable length
+		System.arraycopy(alfBitString, 0, super.rawPkt, 8, alfBitString.length);
+	}
+	
+	/** 
+	 * Get the FMT (Feedback Message Type)
+	 * @return value stored in .itemcount, same field
+	 */
+	protected int getFMT() {
+		return this.itemCount;
+	}
+	
+	/**
+	 * Encode the packet into a byte[], saved in .rawPkt
+	 * 
+	 * CompRtcpPkt will call this automatically
+	 */
 	protected void encode() {
 		switch(super.itemCount) {
 		case 1: // Picture Loss Indication 
@@ -210,46 +328,10 @@ public class RtcpPktPSFB extends RtcpPkt {
 		
 		writeHeaders();
 	}
-	
-	private void encSliceLossIndic() {
-		byte[] firstBytes;
-		byte[] numbBytes;
-		byte[] picBytes;
-		
-		int offset = 8;
-		// Loop over the FCI lines
-		for(int i=0; i < sliFirst.length; i++) {
-			offset = 8 + 8*i;
-			firstBytes = StaticProcs.uIntLongToByteWord(sliFirst[i] << 3);
-			numbBytes = StaticProcs.uIntLongToByteWord(sliNumber[i] << 2);
-			picBytes = StaticProcs.uIntIntToByteWord(sliPictureId[i]);
-			
-			super.rawPkt[offset] = firstBytes[2];
-			super.rawPkt[offset+1] = (byte) (firstBytes[3] | numbBytes[2]);
-			super.rawPkt[offset+2] = numbBytes[3];
-			super.rawPkt[offset+3] = (byte) (numbBytes[3] | picBytes[1]);
-		}
-	}
-	
-	private void encRefPictureSelIndic() {	
-		byte[] someBytes;
-		someBytes = StaticProcs.uIntIntToByteWord(rpsiPadding);
-		super.rawPkt[8] = someBytes[1];
-		someBytes = StaticProcs.uIntIntToByteWord(rpsiPayloadType);
-		super.rawPkt[9] = someBytes[1];
-		
-		System.arraycopy(rpsiBitString, 0, super.rawPkt, 10, rpsiBitString.length);
-	}
-	
-	private void encAppLayerFB() {	
-		//Application Message (FCI): variable length
-		System.arraycopy(alfBitString, 0, super.rawPkt, 8, alfBitString.length);
-	}
-	
-	protected int getFMT() {
-		return this.itemCount;
-	}
 
+	/**
+	 * Debug purposes only
+	 */
 	public void debugPrint() {
 		System.out.println("->RtcpPktPSFB.debugPrint() ");
 		
