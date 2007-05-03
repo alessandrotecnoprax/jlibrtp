@@ -163,7 +163,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		byte[] abData = new byte[EXTERNAL_BUFFER_SIZE];
 		long start = System.currentTimeMillis();
 		try {
-			while (nBytesRead != -1 && pktCount < 200) {
+			while (nBytesRead != -1 && pktCount < 800) {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
 				
 				if (nBytesRead >= 0) {

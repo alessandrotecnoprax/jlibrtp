@@ -139,7 +139,13 @@ public class RTCPSenderThread extends Thread {
 		
 		//Send packet
 		if(RTPSession.rtcpDebugLevel > 5) {
-			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() unicast " + receiver);
+			Iterator<RtcpPkt> iter = pkt.rtcpPkts.iterator();
+			String str = " ";
+			while(iter.hasNext()) {
+				RtcpPkt aPkt = iter.next();
+				str += (aPkt.getClass().toString() + ":"+aPkt.itemCount+ ", ");
+			}
+			System.out.println("<-> RTCPSenderThread.SendCompRtcpPkt() unicast to " + receiver + str);
 		}
 		try {
 			rtcpSession.rtcpSock.send(packet);
@@ -158,6 +164,142 @@ public class RTCPSenderThread extends Thread {
 		return packet.getLength();
 	}
 	
+	/**
+	 * Check whether we can send an immediate feedback packet to this person
+	 * @param ssrc SSRC of participant
+	 */
+	protected void reconsiderTiming(long ssrc) {
+		Participant part =  this.rtpSession.partDb.getParticipant(ssrc);
+		
+		if( part != null && this.rtcpSession.fbSendImmediately()) {
+			CompRtcpPkt compPkt = preparePacket(part, false);
+			/*********** Send the packet ***********/
+			// Keep track of sent packet length for average;
+			int datagramLength;
+			if(rtpSession.mcSession) {
+				datagramLength = this.mcSendCompRtcpPkt(compPkt);
+			} else {
+				//part.debugPrint();
+				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
+			}
+			/*********** Administrative tasks ***********/			
+			//Update average packet size
+			if(datagramLength > 0) {
+				rtcpSession.updateAvgPacket(datagramLength);
+			}
+		} else if(part != null 
+				&& this.rtcpSession.fbAllowEarly 
+				&& this.rtcpSession.fbSendEarly()) {
+			
+			// Make sure we dont do it too often
+			this.rtcpSession.fbAllowEarly = false;
+			
+			CompRtcpPkt compPkt = preparePacket(part, true);
+			/*********** Send the packet ***********/
+			// Keep track of sent packet length for average;
+			int datagramLength;
+			if(rtpSession.mcSession) {
+				datagramLength = this.mcSendCompRtcpPkt(compPkt);
+			} else {
+				//part.debugPrint();
+				datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
+			}
+			/*********** Administrative tasks ***********/			
+			//Update average packet size
+			if(datagramLength > 0) {
+				rtcpSession.updateAvgPacket(datagramLength);
+			}
+			rtcpSession.calculateDelay();
+		}
+		
+		//Out of luck, fb message will have to go with next regular packet
+		//Sleep for the remaining time.
+		this.rtcpSession.nextDelay -= System.currentTimeMillis() - this.rtcpSession.prevTime;
+		if(this.rtcpSession.nextDelay < 0)
+			this.rtcpSession.nextDelay = 0;
+		
+	}
+	
+	/** 
+	 * Prepare a packet. The output depends on the participant and how the
+	 * packet is scheduled.
+	 * 
+	 * @param part the participant to report to
+	 * @param regular whether this is a regularly, or early scheduled RTCP packet
+	 * @return compound RTCP packet
+	 */
+	protected CompRtcpPkt preparePacket(Participant part, boolean regular) {
+		/*********** Figure out what we are going to send ***********/
+		// Check whether this person has sent RTP packets since the last RR.
+		boolean incRR = false;
+		if(part.secondLastRtcpRRPkt > part.lastRtcpRRPkt) {
+			incRR = true;
+			part.secondLastRtcpRRPkt = part.lastRtcpRRPkt;
+			part.lastRtcpRRPkt = System.currentTimeMillis();
+		}
+		
+		// Are we sending packets? -> add SR
+		boolean incSR = false;
+		if(rtpSession.sentPktCount > 0 && regular) {
+			incSR = true;
+		}
+		
+		
+		/*********** Actually create the packet ***********/
+		// Create compound packet
+		CompRtcpPkt compPkt = new CompRtcpPkt();
+		
+		//If we're sending packets we'll use a SR for header
+		if(incSR) {
+			RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
+					this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
+			compPkt.addPacket(srPkt);
+			
+			
+			if(part.ssrc > 0) {
+				RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
+				for(int i=0; i<ar.length; i++) {
+					compPkt.addPacket(ar[i]);
+				}
+			}
+			
+		}
+		
+		//If we got anything from this participant since we sent the 2nd to last RtcpPkt
+		if(incRR || !incSR) {
+			Participant[] partArray = {part};
+			
+			if(part.receivedPkts < 1)
+				partArray = null;
+			
+			RtcpPktRR rrPkt = new RtcpPktRR(partArray, rtpSession.ssrc);
+			compPkt.addPacket(rrPkt);
+			
+			if( !incSR && part.ssrc > 0) {
+				RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
+				for(int i=0; i<ar.length; i++) {
+					compPkt.addPacket(ar[i]);
+				}
+			}
+		}
+		
+		// APP packets
+		if(regular && part.ssrc > 0) {
+			RtcpPkt[] ar = this.rtcpSession.getFromAppQueue(part.ssrc);
+			for(int i=0; i<ar.length; i++) {
+				compPkt.addPacket(ar[i]);
+			}
+		}
+		
+		
+		// For now we'll stick the SDES on every time, and only for us
+		//if(regular) {
+			RtcpPktSDES sdesPkt = new RtcpPktSDES(true, this.rtpSession, null);
+			compPkt.addPacket(sdesPkt);
+		//}
+		
+		return compPkt;
+	}
 	
 	/**
 	 * Start the RTCP sender thread.
@@ -194,8 +336,23 @@ public class RTCPSenderThread extends Thread {
 			}
 			
 			try { Thread.sleep(rtcpSession.nextDelay); } 
-			catch (Exception e) { System.out.println("RTCPSenderThread Exception message:" + e.getMessage());}
+			catch (Exception e) { 
+				System.out.println("RTCPSenderThread Exception message:" + e.getMessage());
+				// Is the party over?
+				if(this.rtpSession.endSession) {
+					continue;
+				}
+				
+				if(rtcpSession.fbWaiting != -1) {
+					reconsiderTiming(rtcpSession.fbWaiting);
+					continue;
+				}
+			}
 			
+			/** Came here the regular way */
+			this.rtcpSession.fbAllowEarly = true;
+			
+				
 			if(RTPSession.rtcpDebugLevel > 5) {
 				System.out.println("<-> RTCPSenderThread waking up");
 			}
@@ -244,72 +401,7 @@ public class RTCPSenderThread extends Thread {
 					continue;
 			}
 			
-			/*********** Figure out what we are going to send ***********/
-			// Check whether this person has sent RTP packets since the last RR.
-			boolean incRR = false;
-			if(part.secondLastRtcpRRPkt > part.lastRtcpRRPkt) {
-				incRR = true;
-				part.secondLastRtcpRRPkt = part.lastRtcpRRPkt;
-				part.lastRtcpRRPkt = System.currentTimeMillis();
-			}
-			
-			// Are we sending packets? -> add SR
-			boolean incSR = false;
-			if(rtpSession.sentPktCount > 0) {
-				incSR = true;
-			}
-			
-			
-			/*********** Actually create the packet ***********/
-			// Create compound packet
-			CompRtcpPkt compPkt = new CompRtcpPkt();
-			
-			//If we're sending packets we'll use a SR for header
-			if(incSR) {
-				RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
-						this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
-				compPkt.addPacket(srPkt);
-				
-				
-				if(part.ssrc > 0) {
-					RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
-					for(int i=0; i<ar.length; i++) {
-						compPkt.addPacket(ar[i]);
-					}
-				}
-				
-			}
-			
-			//If we got anything from this participant since we sent the 2nd to last RtcpPkt
-			if(incRR || !incSR) {
-				Participant[] partArray = {part};
-				
-				if(part.receivedPkts < 1)
-					partArray = null;
-				
-				RtcpPktRR rrPkt = new RtcpPktRR(partArray, rtpSession.ssrc);
-				compPkt.addPacket(rrPkt);
-				
-				if( !incSR && part.ssrc > 0) {
-					RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
-					for(int i=0; i<ar.length; i++) {
-						compPkt.addPacket(ar[i]);
-					}
-				}
-			}
-			
-			// APP packets
-			if(part.ssrc > 0) {
-				RtcpPkt[] ar = this.rtcpSession.getFromAppQueue(part.ssrc);
-				for(int i=0; i<ar.length; i++) {
-					compPkt.addPacket(ar[i]);
-				}
-			}
-			
-			
-			// For now we'll stick the SDES on every time, and only for us
-			RtcpPktSDES sdesPkt = new RtcpPktSDES(true, this.rtpSession, null);
-			compPkt.addPacket(sdesPkt);
+			CompRtcpPkt compPkt = preparePacket(part, true);
 			
 			/*********** Send the packet ***********/
 			// Keep track of sent packet length for average;

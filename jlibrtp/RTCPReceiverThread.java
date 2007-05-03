@@ -119,6 +119,17 @@ public class RTCPReceiverThread extends Thread {
 							(InetSocketAddress) packet.getSocketAddress(), str);
 				}
 			}
+			
+			if(RTPSession.rtcpDebugLevel > 5) {
+				Iterator<RtcpPkt> iter = compPkt.rtcpPkts.iterator();
+				String str = " ";
+				while(iter.hasNext()) {
+					RtcpPkt aPkt = iter.next();
+					str += (aPkt.getClass().toString() + ":"+aPkt.itemCount+ ", ");
+				}
+				System.out.println("<-> RTCPSenderThread.parsePacket() from " + packet.getSocketAddress().toString() + str);
+			}
+			
 
 			//Loop over the information
 			Iterator iter = compPkt.rtcpPkts.iterator();

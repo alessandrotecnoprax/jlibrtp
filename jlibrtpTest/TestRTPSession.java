@@ -45,18 +45,24 @@ public class TestRTPSession implements RTPAppIntf {
 	
 	public static void main(String[] args) {
 		TestRTPSession test = new TestRTPSession();
-		try { Thread.currentThread().sleep(10000); } catch (Exception e) {  };
-	
+		//try { Thread.currentThread().sleep(10000); } catch (Exception e) {  };
+		long teststart = System.currentTimeMillis();
+		String str = "abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd abce abcd ";
+		byte[] data = str.getBytes();
+		System.out.println(data.length);
+		
 		int i=0;
-		while(i<1000) {
-				String str = "abcd";
-				test.rtpSession.sendData(str.getBytes());
-				try { Thread.currentThread().sleep(500); } catch (Exception e) {  };
+		while(i<100000) {
+				test.rtpSession.sendData(data);
+				//try { Thread.currentThread().sleep(500); } catch (Exception e) {  };
 				i++;
 		}
 
-		String str = "efgh";
+		long testend = System.currentTimeMillis();
+		//String str = "efgh";
 
-		test.rtpSession.sendData(str.getBytes());
+		//test.rtpSession.sendData(str.getBytes());
+		
+		System.out.println("" + (testend - teststart));
 	}
 }
