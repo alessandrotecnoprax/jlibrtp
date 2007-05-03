@@ -7,7 +7,7 @@ Columbia University
 New York, NY 10027
 USA
 
-This library was started as a term project in VoIP Security, a class taught of by 
+This library was started as a term project in VoIP Security, a class taught by 
 Prof. Henning Schulzrinne at Columbia University. Version 0.1 (not released as such)
 was written by Vaishnav Janardhan (vj2135@columbia.edu) and Arne Kepp (ak2618@columbia.edu).
 
@@ -22,7 +22,7 @@ create applications for peer to peer streaming of audio, video and other data.
 In addition, developers will need a protocol to establish contact with peers, 
 such as Session Initialization Protocol (SIP) and/or SDP.
 
-Our library accepts any kind of binary data, handles packet parsing and reordering, 
+The library accepts any kind of binary data, handles packet parsing and reordering, 
 maintains a participant database and the control connection associated with the 
 protocol. The application is notified of received data through a callback-interface. 
 The library supports IPv4, IPv6 and multicast. It does currently not support encryption, 

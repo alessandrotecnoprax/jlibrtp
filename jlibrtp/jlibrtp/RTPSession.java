@@ -679,7 +679,13 @@ public class RTPSession {
 	 */
 	public int packetBufferBehavior(int behavior) {
 		if(behavior > -2) {
-			return this.pktBufBehavior = behavior; 
+			this.pktBufBehavior = behavior; 
+			// Signal the thread that pushes data to application
+			this.pktBufLock.lock();
+			try { this.pktBufDataReady.signalAll(); } finally {
+				this.pktBufLock.unlock();
+			}
+			return this.pktBufBehavior;
 		} else {
 			return this.pktBufBehavior;
 		}
