@@ -309,15 +309,15 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			
 			// Stats
 			dataCount += payload.length;
-			if(pktCount % 10 == 0) {
-				System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
+			//if(pktCount % 10 == 0) {
+			//	System.out.println("pktCount:" + pktCount + " dataCount:" + dataCount);
 
-				long test = 0;
-				for(int i=0; i<payload.length; i++) {
-					test += payload[i];
-				}
-				System.out.println(Long.toString(test));
-			}
+			//	long test = 0;
+			//	for(int i=0; i<payload.length; i++) {
+			//		test += payload[i];
+			//	}
+			//	System.out.println(Long.toString(test));
+			//}
 			pktCount++;
 			
 			this.packetCount++;
@@ -385,12 +385,12 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 						"the system will run until it receives a BYE message.");
 				System.out.println("");
 				System.out.println("Using default values for testing, will only work on a UNIX clone:");
-				System.out.println("java XmlPacketRecorder 16384 16385 ~/jlibrtp_packets.xml 500");
+				System.out.println("java XmlPacketRecorder 16384 16385 ~/jlibrtp_packets.xml 1300");
 
 		    	rtpPortNum = 16384;
 		    	rtcpPortNum = 16385;
 		    	filename =  "/home/ak/jlibrtp_packets.xml";
-		    	maxPacketCount = 500;
+		    	maxPacketCount = 1300;
 				
 				run = true;
 			} else {

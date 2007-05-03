@@ -176,6 +176,7 @@ public class CompRtcpPkt {
 			} else if(aPkt.packetType == 202) {
 				RtcpPktSDES pkt = (RtcpPktSDES) aPkt;
 				pkt.encode();
+				//System.out.println(" ENCODE SIZE: " + pkt.rawPkt.length);
 				System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
 				index += pkt.rawPkt.length;
 			} else if(aPkt.packetType == 203) {

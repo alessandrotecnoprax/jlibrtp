@@ -36,6 +36,7 @@ public class RtcpPktAPP extends RtcpPkt {
 	 */
 	protected RtcpPktAPP(byte[] aRawPkt, int start) {
 		super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4);
+		super.rawPkt = aRawPkt;
 		
 		if(!super.parseHeaders(start) || packetType != 204 ) {
 			if(RTPSession.rtpDebugLevel > 2) {
@@ -43,13 +44,14 @@ public class RtcpPktAPP extends RtcpPkt {
 			}
 			super.problem = -204;
 		} else {
-			if(super.length > 11) {
+			//System.out.println("super.length:  " + super.length);
+			if(super.length > 1) {
 				pktName = new byte[4];
 				System.arraycopy(aRawPkt, 8, pktName, 0, 4);
 			}
-			if(super.length > 12) {
-				pktData = new byte[super.length - 12];
-				System.arraycopy(pktData, 12, pktData, 0, (super.length - 12));
+			if(super.length > 2) {
+				pktData = new byte[(super.length+1)*4 - 12];
+				System.arraycopy(aRawPkt, 12, pktData, 0, pktData.length);
 			}
 		}
 	}
@@ -66,5 +68,6 @@ public class RtcpPktAPP extends RtcpPkt {
 		System.arraycopy(this.pktName, 0, super.rawPkt, 8, 4);
 		System.arraycopy(this.pktData, 0, super.rawPkt, 12, this.pktData.length);
 		writeHeaders();
+		//System.out.println("ENCODE: " + super.length + " " + rawPkt.length + " " + pktData.length);
 	}
 }

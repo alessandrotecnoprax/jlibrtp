@@ -31,7 +31,7 @@ import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.lang.String;
 import java.net.DatagramSocket;
-
+import java.util.Enumeration;
 import jlibrtp.*;
 
 /**
@@ -42,7 +42,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 	static int pktCount = 0;
 	static int dataCount = 0;
 	private String filename;
-	private final int EXTERNAL_BUFFER_SIZE = 256;
+	private final int EXTERNAL_BUFFER_SIZE = 1024;
 	SourceDataLine auline;
 	private Position curPosition;
 	boolean local;
@@ -64,7 +64,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		
 		rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 		rtpSession.RTPSessionRegister(this,null, null);
-		
+		System.out.println("CNAME: " + rtpSession.CNAME());
 		this.local = isLocal;
 	}
 	
@@ -163,7 +163,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 		byte[] abData = new byte[EXTERNAL_BUFFER_SIZE];
 		long start = System.currentTimeMillis();
 		try {
-			while (nBytesRead != -1 && pktCount < 800) {
+			while (nBytesRead != -1 && pktCount < 200) {
 				nBytesRead = audioInputStream.read(abData, 0, abData.length);
 				
 				if (nBytesRead >= 0) {
@@ -188,6 +188,27 @@ public class SoundSenderDemo implements RTPAppIntf  {
 					//	System.out.println("Time!!!!!!!!! " + Long.toString(System.currentTimeMillis()));
 					//}
 					//System.out.println("yep");
+				}
+				if(pktCount == 100) {
+					Enumeration<Participant> iter = this.rtpSession.getParticipants();
+					//System.out.println("iter " + iter.hasMoreElements());
+					Participant p = null;
+					
+					while(iter.hasMoreElements()) {
+						p = iter.nextElement();
+
+						String name = "name";
+						byte[] nameBytes = name.getBytes();
+						String data= "abcd";
+						byte[] dataBytes = data.getBytes();
+						
+						
+						int ret = rtpSession.sendRTCPAppPacket(p.getSSRC(), 0, nameBytes, dataBytes);
+						System.out.println("!!!!!!!!!!!! ADDED APPLICATION SPECIFIC " + ret);
+						continue;
+					}
+					if(p == null)
+						System.out.println("No participant with SSRC available :(");
 				}
 			}
 		} catch (IOException e) {
