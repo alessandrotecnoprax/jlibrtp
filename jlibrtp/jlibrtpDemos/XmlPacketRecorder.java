@@ -10,10 +10,10 @@ import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
 
 /**
- * Restriction jdom does not support text longer than...
- * 
- * @author ak
  *
+ *
+ * 
+ * @author Arne Kepp
  */
 
 public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf {
@@ -57,14 +57,17 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			this.rtpSession.naivePktReception(true);
 		}
 		
-		public void debugPacketReceived(int type, InetSocketAddress socket, String description) {
+		public void packetReceived(int type, InetSocketAddress socket, String description) {
 			System.out.println("***** " + description);
 		}
 		
-		public void debugPacketSent(int type, InetSocketAddress socket, String description) {
+		public void packetSent(int type, InetSocketAddress socket, String description) {
 			System.out.println("***** " + description);
 		}
 		
+		public void importantEvent(int type, String description) {
+			
+		}
 		/**
 		 * RTCP
 		 */			
@@ -333,8 +336,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		}
 		
 		/**
-		 * 
-		 * @param args
+		 * Creates the document instance that will hold all other elements.
 		 */
 	    public void createDocument() {
 	        // Create the root element
@@ -351,7 +353,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 	        sessionInformation.addContent(ssrc);
 	        
 	        Element cname = new Element("CNAME");
-	        cname.addContent( rtpSession.getCNAME());
+	        cname.addContent( rtpSession.CNAME());
 	        sessionInformation.addContent(cname);
 	        
 	        Element sessionStart = new Element("sessionStart");
