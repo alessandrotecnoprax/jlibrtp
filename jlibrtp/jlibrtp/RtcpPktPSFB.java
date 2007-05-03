@@ -79,7 +79,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 	}
 	
 	/** 
-	 * Make this packet a Reference Picture Selection Indication
+	 * Make this packet an Application specific feedback message
 	 * 
 	 * @param bitString the original application message
 	 */

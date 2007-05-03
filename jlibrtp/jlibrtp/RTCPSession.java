@@ -42,13 +42,15 @@ public class RTCPSession {
 	/** Pessimistic case estimate of the current number of senders */
 	protected int senderCount = 1;
 	/** Whether next RTCP packet can be sent early */
-	protected boolean allowEarly = false;
+	protected boolean fbAllowEarly = false;
 	/** Feedback queue , index is SSRC of target */
 	protected Hashtable<Long, LinkedList<RtcpPkt>> fbQueue = null;
 	/** APP queue , index is SSRC of target */
 	protected Hashtable<Long, LinkedList<RtcpPktAPP>> appQueue = null;
 	/** Are we just starting up? */
 	protected boolean initial = true;
+	/** Is there a feedback packet waiting? SSRC of destination */
+	protected long fbWaiting = -1;
 
 	/**
 	 * Constructor for unicast sessions
@@ -79,7 +81,8 @@ public class RTCPSession {
 	 *
 	 */
 	protected void start() {
-		nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
+		//nextDelay = 2500 + rtpSession.random.nextInt(1000) - 500;
+		this.calculateDelay();
 		recvThrd = new RTCPReceiverThread(this, this.rtpSession);
 		senderThrd = new RTCPSenderThread(this, this.rtpSession);
 		recvThrd.start();
@@ -116,7 +119,7 @@ public class RTCPSession {
 		if(rtpSession.bandwidth != 0 && ! this.initial && rtpSession.partDb.ssrcTable.size() > 4) {
 			// RTPs mechanisms for RTCP scalability
 			int rand = rtpSession.random.nextInt(10000) - 5000; //between -500 and +500
-			double randDouble = ((double) rand)/1000.0;
+			double randDouble =  ((double) 1000 + rand)/1000.0;
 			
 			
 			Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
@@ -147,7 +150,7 @@ public class RTCPSession {
 			} else {
 				double numerator = ((double) this.avgPktSize)*((double) rtpSession.partDb.ssrcTable.size());;
 				double denominator = bw;
-				this.nextDelay = (int) Math.round(1000.0*(numerator/denominator)) + rand;
+				this.nextDelay = (int) Math.round(1000.0*(numerator/denominator)) * (1000 + rand);
 			}
 		} else {
 			// Not enough data to scale, use random values
@@ -158,7 +161,7 @@ public class RTCPSession {
 				this.initial = false;
 			} else {
 				// 4.5 to 5.5 seconds, randomly
-				this.nextDelay = 5000 + rand;
+				this.nextDelay = 5500 + rand;
 			}
 
 		}
@@ -391,6 +394,46 @@ public class RTCPSession {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Check whether the conditions are satisfied to send a feedbkac packet immediately.
+	 * 
+	 * @return true if they are, false otherwise
+	 */
+	protected boolean fbSendImmediately() {
+		if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbEarlyThreshold 
+				&& rtpSession.partDb.receivers.size() > this.rtpSession.fbEarlyThreshold)
+			return false;
+		
+		return true;
+	}
+	
+	
+	/**
+	 * Check whether the conditions are satisfied to send a feedbkac packet immediately.
+	 * 
+	 * @return true if they are, false otherwise
+	 */
+	protected boolean fbSendEarly() {
+		if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbRegularThreshold 
+				&& rtpSession.partDb.receivers.size() > this.rtpSession.fbRegularThreshold)
+			return false;
+		
+		return true;
+	}
+	
+	/**
+	 * Wake the sender thread because of this ssrc
+	 * 
+	 * @param ssrc that has feedback waiting.
+	 */
+	protected void wakeSenderThread(long ssrc) {
+		this.fbWaiting = ssrc;
+		this.senderThrd.interrupt();
+		
+		// Give it a chance to catch up
+		try { Thread.sleep(0,1); } catch (Exception e){ };
 	}
 	
 	/**

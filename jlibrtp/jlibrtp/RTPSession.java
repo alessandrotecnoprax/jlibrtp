@@ -45,14 +45,14 @@ public class RTPSession {
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTP related things.
 	  */
-	 final static public int rtpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 2;
 	 /**
 	  * The debug level is final to avoid compilation of if-statements.</br>
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTCP related things.
 	  */
-	 final static public int rtcpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 6;
 	 
 	 /** RTP unicast socket */
 	 protected DatagramSocket rtpSock = null;
@@ -155,7 +155,10 @@ public class RTPSession {
 	 
 	 /**
 	  * Returns an instance of a <b>unicast</b> RTP session. 
-	  * Following this you should register your application.
+	  * Following this you should adjust any settings and then register your application.
+	  * 
+	  * The sockets should have external ip addresses, else your CNAME automatically
+	  * generated CNAMe will be bad.
 	  * 
 	  * @param	rtpSocket UDP socket to receive RTP communication on
 	  * @param	rtcpSocket UDP socket to receive RTCP communication on, null if none.
@@ -163,8 +166,8 @@ public class RTPSession {
 	 public RTPSession(DatagramSocket rtpSocket, DatagramSocket rtcpSocket) {
 		 mcSession = false;
 		 rtpSock = rtpSocket;
-		 this.generateSsrc();
 		 this.generateCNAME();
+		 this.generateSsrc();
 		 this.rtcpSession = new RTCPSession(this,rtcpSocket);
 		 
 		 // The sockets are not always imediately available?
@@ -174,6 +177,9 @@ public class RTPSession {
 	 /**
 	  * Returns an instance of a <b>multicast</b> RTP session. 
 	  * Following this you should register your application.
+	  * 
+	  * The sockets should have external ip addresses, else your CNAME automatically
+	  * generated CNAMe will be bad.
 	  * 
 	  * @param	rtpSock a multicast socket to receive RTP communication on
 	  * @param	rtcpSock a multicast socket to receive RTP communication on
@@ -185,8 +191,8 @@ public class RTPSession {
 		 mcGroup = multicastGroup;
 		 rtpMCSock.joinGroup(mcGroup);
 		 rtcpSock.joinGroup(mcGroup);
-		 this.generateSsrc();
 		 this.generateCNAME();
+		 this.generateSsrc();
 		 this.rtcpSession = new RTCPSession(this,rtcpSock,mcGroup);
 		 
 		 // The sockets are not always imediately available?
@@ -539,6 +545,7 @@ public class RTPSession {
 	public long getSsrc() {
 		return this.ssrc;
 	}
+	
 	private void generateCNAME() {
 		cname = System.getProperty ("user.name") + "@";
 		if(this.mcSession) {
@@ -708,8 +715,6 @@ public class RTPSession {
 	/**
 	 * Set whether the stack should operate in RFC 4585 mode.
 	 * 
-	 * T
-	 * 
 	 * This will automatically call adjustPacketBufferBehavior(-1),
 	 * i.e. disable all RTP packet buffering in jlibrtp,
 	 * and disable frame reconstruction 
@@ -733,10 +738,13 @@ public class RTPSession {
 	 * Unregisters the RTCP AVPF interface, thereby going from
 	 * RFC 4585 mode to RFC 3550
 	 * 
-	 * NOT FULLY IMPLEMENTED!! 
+	 * You still have to adjust packetBufferBehavior() and
+	 * frameReconstruction.
 	 * 	
 	 */
 	public void unregisterAVPFIntf() {
+		this.fbEarlyThreshold = -1;
+		this.fbRegularThreshold = -1;	
 		this.rtcpAVPFIntf = null;
 	}
 	
@@ -832,6 +840,124 @@ public class RTPSession {
 		return this.rtcpBandwidth;
 	}
 	
+	/********************************************* Feedback message stuff ***************************************/
+	
+	/**
+	 * Adds a Picture Loss Indication to the feedback queue
+	 * 
+	 * @param ssrcMediaSource
+	 * @return 0 if packet was queued, -1 if no feedback support, 1 if redundant
+	 */
+	public int fbPictureLossIndication(long ssrcMediaSource) {
+		int ret = 0;
+		
+		if(this.rtcpAVPFIntf == null)
+			return -1;
+		
+		RtcpPktPSFB pkt = new RtcpPktPSFB(this.ssrc, ssrcMediaSource);
+		pkt.makePictureLossIndication();
+		ret = this.rtcpSession.addToFbQueue(ssrcMediaSource, pkt);
+		if(ret == 0)
+			this.rtcpSession.wakeSenderThread(ssrcMediaSource);
+		return ret; 
+	}
+	
+	/**
+	 * Adds a Slice Loss Indication to the feedback queue
+	 * 
+	 * @param ssrcMediaSource
+	 * @param sliFirst macroblock (MB) address of the first lost macroblock
+	 * @param sliNumber number of lost macroblocks
+	 * @param sliPictureId six least significant bits of the codec-specific identif
+	 * @return 0 if packet was queued, -1 if no feedback support, 1 if redundant
+	 */
+	public int fbSlicLossIndication(long ssrcMediaSource, int[] sliFirst, int[] sliNumber, int[] sliPictureId) {
+		int ret = 0;
+		if(this.rtcpAVPFIntf == null)
+			return -1;
+		
+		RtcpPktPSFB pkt = new RtcpPktPSFB(this.ssrc, ssrcMediaSource);
+		pkt.makeSliceLossIndication(sliFirst, sliNumber, sliPictureId);
+		
+		ret = this.rtcpSession.addToFbQueue(ssrcMediaSource, pkt);
+		if(ret == 0)
+			this.rtcpSession.wakeSenderThread(ssrcMediaSource);
+		return ret; 
+	}
+	
+	/**
+	 * Adds a Reference Picture Selection Indication to the feedback queue
+	 * 
+	 * @param ssrcMediaSource
+	 * @param bitPadding number of padded bits at end of bitString
+	 * @param payloadType RTP payload type for codec
+	 * @param bitString RPSI information as natively defined by the video codec
+	 * @return 0 if packet was queued, -1 if no feedback support, 1 if redundant
+	 */
+	public int fbRefPictureSelIndic(long ssrcMediaSource, int bitPadding, int payloadType, byte[] bitString) {
+		int ret = 0;
+		
+		if(this.rtcpAVPFIntf == null)
+			return -1;
+		
+		RtcpPktPSFB pkt = new RtcpPktPSFB(this.ssrc, ssrcMediaSource);
+		pkt.makeRefPictureSelIndic(bitPadding, payloadType, bitString);
+		ret = this.rtcpSession.addToFbQueue(ssrcMediaSource, pkt);
+		if(ret == 0)
+			this.rtcpSession.wakeSenderThread(ssrcMediaSource);
+		return ret; 
+	}
+	
+	/**
+	 * Adds a Picture Loss Indication to the feedback queue
+	 * 
+	 * @param ssrcMediaSource
+	 * @param bitString the original application message
+	 * @return 0 if packet was queued, -1 if no feedback support, 1 if redundant
+	 */
+	public int fbAppLayerFeedback(long ssrcMediaSource, byte[] bitString) {
+		int ret = 0;
+		
+		if(this.rtcpAVPFIntf == null)
+			return -1;
+		
+		RtcpPktPSFB pkt = new RtcpPktPSFB(this.ssrc, ssrcMediaSource);
+		pkt.makeAppLayerFeedback(bitString);
+		ret = this.rtcpSession.addToFbQueue(ssrcMediaSource, pkt);
+		if(ret == 0)
+			this.rtcpSession.wakeSenderThread(ssrcMediaSource);
+		return ret; 
+	}
+	
+	
+	/**
+	 * Adds a RTP Feedback packet to the feedback queue.
+	 * 
+	 * These are mostly used for NACKs.
+	 * 
+	 * @param ssrcMediaSource
+	 * @param FMT the Feedback Message Subtype
+	 * @param PID RTP sequence numbers of lost packets
+	 * @param BLP bitmask of following lost packets, shared index with PID 
+	 * @return 0 if packet was queued, -1 if no feedback support, 1 if redundant
+	 */
+	public int fbPictureLossIndication(long ssrcMediaSource, int FMT, int[] PID, int[] BLP) {
+		int ret = 0;
+		
+		if(this.rtcpAVPFIntf == null)
+			return -1;
+		
+		RtcpPktRTPFB pkt = new RtcpPktRTPFB(this.ssrc, ssrcMediaSource, FMT, PID, BLP);
+		ret = this.rtcpSession.addToFbQueue(ssrcMediaSource, pkt);
+		if(ret == 0)
+			this.rtcpSession.wakeSenderThread(ssrcMediaSource);
+		return ret; 
+	}
+		
+	/**
+	 * Fetches the next sequence number for RTP packets.
+	 * @return the next sequence number 
+	 */
 	private int getNextSeqNum() {
 		seqNum++;
 		// 16 bit number
@@ -841,11 +967,19 @@ public class RTPSession {
 		return seqNum;
 	}
 	
+	/** 
+	 * Initializes a random variable
+	 *
+	 */
 	private void createRandom() {
 		this.random = new Random(System.currentTimeMillis() + Thread.currentThread().getId() 
-				- Thread.currentThread().hashCode());
+				- Thread.currentThread().hashCode() + this.cname.hashCode());
 	}
 	
+	
+	/** 
+	 * Generates a random sequence number
+	 */
 	private void generateSeqNum() {
 		if(this.random == null)
 			createRandom();
@@ -858,6 +992,9 @@ public class RTPSession {
 		}
 	}
 	
+	/**
+	 * Generates a random SSRC
+	 */
 	private void generateSsrc() {
 		if(this.random == null)
 			createRandom();
@@ -869,6 +1006,14 @@ public class RTPSession {
 		}	
 	}
 	
+	/**
+	 * Resolve an SSRC conflict.
+	 * 
+	 * Also increments the SSRC conflict counter, after 5 conflicts
+	 * it is assumed there is a loop somewhere and the session will
+	 * terminate. 
+	 *
+	 */
 	protected void resolveSsrcConflict() {
 		System.out.println("!!!!!!! Beginning SSRC conflict resolution !!!!!!!!!");
 		this.conflictCount++;
