@@ -86,7 +86,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 			if(elm.getName().equals("SSRC")) {
 				//Ignore
 			} else if(elm.getName().equals("CNAME")) {
-				this.rtpSession.setCNAME(elm.getValue());
+				this.rtpSession.CNAME(elm.getValue());
 			} else if(elm.getName().equals("sessionStart")) {
 				this.origStartTime = Long.parseLong(elm.getValue());
 			}
