@@ -6,7 +6,9 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktBYE extends RtcpPkt {
-	protected long[] ssrcArray = null;//32xn bits, n<16
+	/** SSRCs saying bye, 32xn bits, n<16 */
+	protected long[] ssrcArray = null;
+	/** Optional reason */
 	protected byte[] reason = null;
 	
 	protected RtcpPktBYE(long[] ssrcs,byte[] aReason) {

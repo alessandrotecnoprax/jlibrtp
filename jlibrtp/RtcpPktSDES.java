@@ -8,8 +8,11 @@ import java.net.InetSocketAddress;
  * @author Arne Kepp
  */
 public class RtcpPktSDES extends RtcpPkt {
+	/** Whether the RTP Session object should be inclduded */
 	boolean reportSelf = true;
+	/** The parent RTP Session object, holds participant database */
 	RTPSession rtpSession = null;
+	/** The participants to create SDES packets for */
 	protected Participant[] participants = null;
 	
 	/**

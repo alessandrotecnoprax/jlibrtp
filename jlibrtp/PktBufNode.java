@@ -30,23 +30,19 @@ package jlibrtp;
  *
  */
 public class PktBufNode {
-	// These are used to sort within the list of frames
-	// Looking from the back, next means older!
+	/** The next node (RTP Timestamp), looking from the back -> next means older */
 	protected PktBufNode nextFrameQueueNode = null;
+	/** The previous node (RTP Timestmap), looking from the back -> prev means newer */
 	protected PktBufNode prevFrameQueueNode = null;
-	
-	// These are used to sort packets for a single frame.
+	/** The next node within the frame, i.e. higher sequence number, same RTP timestamp */
 	protected PktBufNode nextFrameNode = null;
-	//public PktBufNode prevFrameNode = null;
-	
-	// Bookkeeping stuff
+	/** Number of packets with the same RTP timestamp */
 	protected int pktCount;
-	
-	// Cached information from packet
+	/** The RTP timeStamp associated with this node */
 	protected long timeStamp;
+	/** The sequence number associated with this node */
 	protected int seqNum;
-	
-	// Actual payload
+	/** The payload, a parsed RTP Packet */
 	protected RtpPkt pkt = null;
 	
 	/**

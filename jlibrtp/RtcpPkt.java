@@ -25,21 +25,28 @@ import java.net.InetAddress;
  * @author Arne Kepp
  */
 public class RtcpPkt {
-	//protected boolean rawPktCurrent = false;
+	/** Whether a problem has been encountered during parsing */
 	protected int problem = 0;
-	protected int version = 2; 		//2 bits
-	protected int padding = 0; 		//1 bit
-	protected int itemCount = 0;	 //5 bits
-	protected int packetType = -1;	//8 bits
-	protected int length = -1;		//16 bits
+	/** The version, always 2, 2 bits */
+	protected int version = 2;
+	/** Padding , 1 bit */
+	protected int padding = 0;
+	/** Number of items, e.g. receiver report blocks. Usage may vary. 5 bits */
+	protected int itemCount = 0;
+	/** The type of RTCP packet, 8 bits */
+	protected int packetType = -1;
+	/** The length of the RTCP packet, in 32 bit blocks minus 1. 16 bits*/
+	protected int length = -1;
+	/** The ssrc that sent this, usually dictated by RTP Session */
 	protected long ssrc = -1;
 	
-	// Contains the actual data (eventually)
+	/** Contains the actual data (eventually) */
 	protected byte[] rawPkt = null;
 	
-	// These are only used for feedback messages
-	protected long time = -1;			// Timestamp to decide whether it is worth sending
-	protected boolean received = false;	// Whether packet was received
+	/** Only used for feedback messages: Time message was generated */
+	protected long time = -1;
+	/** Only used for feedback message: Whether this packet was received */
+	protected boolean received = false;
 	
 	
 	/**

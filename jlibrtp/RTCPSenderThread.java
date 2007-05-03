@@ -14,10 +14,12 @@ import java.util.*;
  *
  */
 public class RTCPSenderThread extends Thread {
+	/** Parent RTP Session */
 	private RTPSession rtpSession = null;
+	/** Parent RTCP Session */
 	private RTCPSession rtcpSession = null;
 	
-	// Whether we have sent byes for the last conflict
+	/** Whether we have sent byes for the last conflict */
 	private boolean byesSent = false;
 	
 	/**
@@ -101,7 +103,7 @@ public class RTCPSenderThread extends Thread {
 			rtcpSession.rtcpMCSock.send(packet);
 			//Debug
 			if(this.rtpSession.debugAppIntf != null) {
-				this.rtpSession.debugAppIntf.debugPacketSent(3, (InetSocketAddress) packet.getSocketAddress(), 
+				this.rtpSession.debugAppIntf.packetSent(3, (InetSocketAddress) packet.getSocketAddress(), 
 						new String("Sent multicast RTCP packet of size " + packet.getLength() + 
 								" to " + packet.getSocketAddress().toString() + " via " 
 								+ this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()));
@@ -143,7 +145,7 @@ public class RTCPSenderThread extends Thread {
 			rtcpSession.rtcpSock.send(packet);
 			//Debug
 			if(this.rtpSession.debugAppIntf != null) {
-				this.rtpSession.debugAppIntf.debugPacketSent(2, (InetSocketAddress) packet.getSocketAddress(), 
+				this.rtpSession.debugAppIntf.packetSent(2, (InetSocketAddress) packet.getSocketAddress(), 
 						new String("Sent unicast RTCP packet of size " + packet.getLength() + 
 								" to " + packet.getSocketAddress().toString() + " via " 
 								+ this.rtcpSession.rtcpSock.getLocalSocketAddress().toString()));

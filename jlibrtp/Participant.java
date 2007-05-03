@@ -25,64 +25,87 @@ import java.net.InetSocketAddress;
  * these objects, packets are processed and statistics generated for RTCP.
  */
 public class Participant {
+	/** Whether the participant is unexpected, e.g. arrived through unicast with SDES */
 	protected boolean unexpected = false;
-	protected InetSocketAddress rtpAddress = null; 	
+	/** Where to send RTP packets (unicast)*/
+	protected InetSocketAddress rtpAddress = null; 
+	/** Where to send RTCP packets (unicast) */
 	protected InetSocketAddress rtcpAddress = null;
-	//These are used for matchin SSRC packets without owners
+	/** Where the first RTP packet was received from */
 	protected InetSocketAddress rtpReceivedFromAddress = null;
+	/** Where the first RTCP packet was received from */
 	protected InetSocketAddress rtcpReceivedFromAddress = null;
 	
-	// SDES Items
+	/** SSRC of participant */
 	protected long ssrc = -1;
+	/** SDES CNAME */
 	protected String cname = null;
+	/** SDES The participant's real name */
 	protected String name = null;
+	/** SDES The participant's email */
 	protected String email = null;
+	/** SDES The participant's phone number */
 	protected String phone = null;
+	/** SDES The participant's location*/
 	protected String loc = null;
+	/** SDES The tool the participants is using */
 	protected String tool = null;
+	/** SDES A note */
 	protected String note = null;
+	/** SDES A priv string, loosely defined */
 	protected String priv = null;
 	
 	// Receiver Report Items
+	/** RR First sequence number */
 	protected int firstSeqNumber = 0;
+	/** RR Last sequence number */
 	protected int lastSeqNumber = 0;
-	protected int recvPktCount = 0;
-	protected int receivedSinceLastSR = 0;
-	protected int lastSRRseqNumber = 0;
+	/** RR Number of times sequence number has rolled over */
 	protected long seqRollOverCount = 0;
-	
+	/** RR Number of packets received */
+	protected long receivedPkts = 0;
+	/** RR Number of octets received */
+	protected long receivedOctets = 0;
+	/** RR Number of packets received since last SR */
+	protected int receivedSinceLastSR = 0;
+	/** RR Sequence number associated with last SR */
+	protected int lastSRRseqNumber = 0;
+	/** RR Interarrival jitter */
 	protected double interArrivalJitter = -1.0;
+	/** RR Last received RTP Timestamp */
 	protected long lastRtpTimestamp = 0;
 	
-	protected long timeStampLSR = 0;		//Middle 32 bits of the NTP timestamp in the last SR
-	protected long timeReceivedLSR = 0; 	//The time when we actually got it
+	/** RR Middle 32 bits of the NTP timestamp in the last SR */
+	protected long timeStampLSR = 0;
+	/** RR The time when we actually got the last SR */
+	protected long timeReceivedLSR = 0;
 	
-	// Sender Report Items
-	//protected long reportedPkts = -1;
-	//protected long reportedOctets = -1;
-	//protected long reportedPktsOffset = -1;
-	//protected long reportedOctetsOffset = -1;
-	protected long receivedPkts = 0;
-	protected long receivedOctets = 0;
-	
-	protected double ntpGradient = -1; // How many ms for each RTP time unit
-	protected long ntpOffset = -1;	// NTP offset in ms, compared to our system time
-	
+	/** Gradient where UNIX timestamp = ntpGradient*RTPTimestamp * ntpOffset */
+	protected double ntpGradient = -1;
+	/** Offset where UNIX timestamp = ntpGradient*RTPTimestamp * ntpOffset */
+	protected long ntpOffset = -1;
+	/** Last NTP received in SR packet, MSB */
 	protected long lastNtpTs1 = 0; //32 bits
+	/** Last NTP received in SR packet, LSB */
 	protected long lastNtpTs2 = 0; //32 bits
+	/** RTP Timestamp in last SR packet */
 	protected long lastSRRtpTs = 0; //32 bits
 	
-	// BYE Items
+	/** UNIX time when a BYE was received from this participant, for pruning */
 	protected long timestampBYE = -1;	// The user said BYE at this time
 	
-	//Store the packets received from this participant
+	/** Store the packets received from this participant */
 	protected PktBuffer pktBuffer = null;
 
-	//To check whether this participant has sent anything recently
+	/** UNIX time of last RTP packet, to check whether this participant has sent anything recently */
 	protected long lastRtpPkt = -1; //Time of last RTP packet
+	/** UNIX time of last RTCP packet, to check whether this participant has sent anything recently */
 	protected long lastRtcpPkt = -1; //Time of last RTCP packet
+	/** UNIX time this participant was added by application, to check whether we ever heard back */
 	protected long addedByApp = -1; //Time the participant was added by application
+	/** UNIX time of last time we sent an RR to this user */
 	protected long lastRtcpRRPkt = -1; //Timestamp of last time we sent this person an RR packet
+	/** Unix time of second to last time we sent and RR to this user */
 	protected long secondLastRtcpRRPkt = -1; //Timestamp of 2nd to last time we sent this person an RR Packet
 		
 	/**

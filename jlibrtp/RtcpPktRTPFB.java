@@ -8,10 +8,13 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktRTPFB extends RtcpPkt {
+	/** If this packet was for a different SSRC */
 	protected boolean notRelevant = false;
-	protected long ssrcPacketSender = -1;
+	/** SSRC we are sending feeback to */
 	protected long ssrcMediaSource = -1;
+	/** RTP sequence numbers of lost packets */
 	protected int PID[];
+	/** bitmask of following lost packets, shared index with PID */
 	protected int BLP[];
 	
 	/**
@@ -55,7 +58,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 			ssrcMediaSource = StaticProcs.bytesToUIntLong(aRawPkt,8+start);
 			
 			if(ssrcMediaSource == rtpSession.ssrc) {
-				ssrcPacketSender = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
+				super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
 				int loopStop = super.length - 2;
 				PID = new int[loopStop];
 				BLP = new int[loopStop];
@@ -69,7 +72,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 				}
 
 				rtpSession.rtcpAVPFIntf.RTPFBPktReceived(
-						ssrcPacketSender, super.itemCount, PID, BLP);
+						super.ssrc, super.itemCount, PID, BLP);
 			}
 		}
 		
@@ -88,7 +91,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 	protected void encode() {
 		super.rawPkt = new byte[12 + this.PID.length*4];
 		
-		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.ssrcPacketSender);
+		byte[] someBytes = StaticProcs.uIntLongToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		someBytes = StaticProcs.uIntLongToByteWord(this.ssrcMediaSource);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);
@@ -119,7 +122,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 	 */
 	protected void debugPrint() {
 		System.out.println("->RtcpPktRTPFB.debugPrint() ");
-		System.out.println("  ssrcPacketSender: " + ssrcPacketSender + "  ssrcMediaSource: " + ssrcMediaSource);
+		System.out.println("  ssrcPacketSender: " + super.ssrc + "  ssrcMediaSource: " + ssrcMediaSource);
 		
 		if(this.PID != null && this.PID.length < 1) {
 			System.out.println("  No Feedback Control Information (FCI) fields");

@@ -18,32 +18,37 @@ import java.util.Arrays;
  *
  */
 public class RTCPSession {
-	protected long prevTime = System.currentTimeMillis();
-	protected int nextDelay = -1; //Delay between RTCP transmissions, in ms. Initialized in start()
-	protected int avgPktSize = 200; //The average compound RTCP packet size, in octets, including UDP and IP headers
-	protected int senderCount = 1;	
-	protected boolean allowEarly = false;	// whether next RTCP packet can be sent early
-	
-	//Feedback queue , index is SSRC of target
-	protected Hashtable<Long, LinkedList<RtcpPkt>> fbQueue = null;
-
-	//APP queue , index is SSRC of target
-	protected Hashtable<Long, LinkedList<RtcpPktAPP>> appQueue = null;
-	
-	// Just starting up?
-	protected boolean initial = true;
-
-	// Parent session
+	/** Parent session */
 	protected RTPSession rtpSession = null;
 	
-	// Network stuff
+	/** Unicast socket */
 	protected DatagramSocket rtcpSock = null;
+	/** Multicast socket */
 	protected MulticastSocket rtcpMCSock = null;
+	/** Multicast group */
 	protected InetAddress mcGroup = null;
 
-	// Threads
+	/** RTCP Receiver thread */
 	protected RTCPReceiverThread recvThrd = null;
+	/** RTCP Sender thread */
 	protected RTCPSenderThread senderThrd = null;
+	
+	/** Previous time a delay was calculated */
+	protected long prevTime = System.currentTimeMillis();
+	/** Delay between RTCP transmissions, in ms. Initialized in start() */
+	protected int nextDelay = -1; //
+	/** The average compound RTCP packet size, in octets, including UDP and IP headers */
+	protected int avgPktSize = 200; //
+	/** Pessimistic case estimate of the current number of senders */
+	protected int senderCount = 1;
+	/** Whether next RTCP packet can be sent early */
+	protected boolean allowEarly = false;
+	/** Feedback queue , index is SSRC of target */
+	protected Hashtable<Long, LinkedList<RtcpPkt>> fbQueue = null;
+	/** APP queue , index is SSRC of target */
+	protected Hashtable<Long, LinkedList<RtcpPktAPP>> appQueue = null;
+	/** Are we just starting up? */
+	protected boolean initial = true;
 
 	/**
 	 * Constructor for unicast sessions

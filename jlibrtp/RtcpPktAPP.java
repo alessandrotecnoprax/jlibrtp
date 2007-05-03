@@ -6,10 +6,10 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktAPP extends RtcpPkt {
+	/** Name of packet, 4 bytes ASCII */
 	protected byte[] pktName = null;
-	protected byte[] pktData = null;
-	//subtype = super.itemcount
-	
+	/** Data of packet */
+	protected byte[] pktData = null;	
 	
 	/**
 	 * Constructor for a new Application RTCP packet

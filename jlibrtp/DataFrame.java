@@ -29,20 +29,34 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class DataFrame {
+	/** The share RTP timestamp */
 	private long rtpTimestamp;
+	/** The calculated UNIX timestamp, guessed after 2 Sender Reports */
 	private long timestamp = -1;
+	/** the SSRC from which this frame originated */
 	private long SSRC;
+	/** contributing CSRCs, only read from the first packet */
 	private long[] CSRCs;
+	/** RTP payload type */
 	private int payloadType;
+	/** The marks on individual packets, ordered */
 	private boolean[] marks;
+	/** Whether any packets were marked or not */
 	private boolean anyMarked = false;
+	/** Whether the frame contains the expected number of packets */
 	private int isComplete = 0;
 	//private int dataLength;
+	/** The data from the individual packets, ordered */
 	private byte[][] data;
+	/** The sequence numbers of the individual packets, ordered */
 	private int[] seqNum;
+	/** The total amount of data bytes in this frame */
 	private int totalLength = 0;
+	/** The last sequence number in this frame */
 	protected int lastSeqNum;
+	/** The first sequence number in this frame */
 	protected int firstSeqNum;
+	/** The number of packets expected for a complete frame */
 	protected int noPkts;
 	
 	/**

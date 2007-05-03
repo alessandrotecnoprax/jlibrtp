@@ -32,20 +32,22 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class PktBuffer {
-	// Just to get maxBufferSize
+	/** The RTPSession holds information common to all packetBuffers, such as max size */
 	RTPSession rtpSession;
-	
-	//Used to identify the buffer
+	/** SSRC of the the participant that this buffer is for */
 	long SSRC;
+	/** The parent participant */
 	Participant p;
-	
-	//Bookkeeping
+	/** The length of the buffer */
 	int length = 0;
-
+	/** The oldest, least recently received, packet */
 	PktBufNode oldest = null;
+	/** The newest, most recently received, packet */
 	PktBufNode newest = null;
 	
+	/** The last sequence number received */
 	int lastSeqNumber = -1;
+	/** The last timestamp */
 	long lastTimestamp = -1;
 
 	/** 
