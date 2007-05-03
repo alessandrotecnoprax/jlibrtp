@@ -33,6 +33,7 @@ import java.net.InetSocketAddress;
  * @author Arne Kepp
  */
 public class RTPReceiverThread extends Thread {
+	/** Parent RTP Session */
 	RTPSession rtpSession = null;
 
 	RTPReceiverThread(RTPSession session) {

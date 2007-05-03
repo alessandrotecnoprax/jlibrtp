@@ -32,7 +32,9 @@ import java.util.Enumeration;
  * @author Arne Kepp
  */
 public class AppCallerThread extends Thread {
+	/**  The parent RTP Session */
 	RTPSession rtpSession;
+	/**  The applications interface, where the callback methods are called */
 	RTPAppIntf appl;
 	
 	/**

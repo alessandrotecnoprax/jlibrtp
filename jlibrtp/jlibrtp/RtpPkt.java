@@ -36,19 +36,30 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtpPkt {
+	/** Whether the packet has been changed since encode() */
 	private boolean rawPktCurrent = false;
+	/** The version, always 2, 2 bits */
 	private int version = 2; 		//2 bits
+	/** Whether the packet is padded, 1 bit */
 	private int padding; 			//1 bit
+	/** Whether and extension is used, 1 bit */
 	private int extension = 0; 		//1 bit
+	/** Whether the packet is marked, 1 bit */
 	private int marker = 0;			//1 bit
-	private int payloadType;		//7 bits
+	/** What payload type is used, 7 bits */
+	private int payloadType;		//
+	/** The sequence number, taken from RTP Session, 16 bits */
 	private int seqNumber;			//16 bits
+	/** The RTP timestamp, 32bits */
 	private long timeStamp;			//32 bits
+	/** The SSRC of the packet sender, 32 bits*/
 	private long ssrc;				//32 bits
-	private long[] csrcArray = null;//32xn bits, n<16
+	/** SSRCs of contributing sources, 32xn bits, n<16 */ 
+	private long[] csrcArray = null;//
 	
-	// Contains the actual data (eventually)
+	/** Contains the actual data (eventually) */
 	private byte[] rawPkt = null;
+	/** The actual data, without any RTP stuff */
 	private byte[] payload = null;
 
 	/**

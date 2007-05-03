@@ -13,7 +13,9 @@ import java.util.Iterator;
  *
  */
 public class RTCPReceiverThread extends Thread {
+	/** Parent RTP Session */
 	private RTPSession rtpSession = null;
+	/** Parent RTCP Session */
 	private RTCPSession rtcpSession = null;
 	
 	/**
@@ -106,14 +108,14 @@ public class RTCPReceiverThread extends Thread {
 							" from " + packet.getSocketAddress().toString() + " via " + intfStr
 							+ " containing " + compPkt.rtcpPkts.size() + " packets" );
 
-					this.rtpSession.debugAppIntf.debugPacketReceived(1, 
+					this.rtpSession.debugAppIntf.packetReceived(1, 
 							(InetSocketAddress) packet.getSocketAddress(), str);
 				} else {
 					String str = new String("Received invalid RTCP packet of size " + packet.getLength() + 
 							" from " + packet.getSocketAddress().toString() + " via " +  intfStr
 							+ ": " + this.debugErrorString(compPkt.problem) );
 
-					this.rtpSession.debugAppIntf.debugPacketReceived(-2, 
+					this.rtpSession.debugAppIntf.packetReceived(-2, 
 							(InetSocketAddress) packet.getSocketAddress(), str);
 				}
 			}

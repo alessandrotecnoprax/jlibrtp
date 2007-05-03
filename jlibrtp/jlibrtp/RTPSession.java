@@ -43,75 +43,104 @@ public class RTPSession {
 	  * The debug level is final to avoid compilation of if-statements.</br>
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
+	  * Debug level for RTP related things.
 	  */
 	 final static public int rtpDebugLevel = 0;
+	 /**
+	  * The debug level is final to avoid compilation of if-statements.</br>
+	  * 0 provides no debugging information, 20 provides everything </br>
+	  * Debug output is written to System.out</br>
+	  * Debug level for RTCP related things.
+	  */
 	 final static public int rtcpDebugLevel = 0;
 	 
-	 // Network stuff
+	 /** RTP unicast socket */
 	 protected DatagramSocket rtpSock = null;
+	 /** RTP multicast socket */
 	 protected MulticastSocket rtpMCSock = null;
+	 /** RTP multicast group */
 	 protected InetAddress mcGroup = null;
 	 
 	 // Internal state
-	 protected boolean mcSession = false; // Multicast session?
+	 /** Whether this session is a multicast session or not */
+	 protected boolean mcSession = false;
+	 /** Current payload type, can be changed by application */
 	 protected int payloadType = 0;
+	 /** SSRC of this session */
 	 protected long ssrc;
+	 /** The last timestamp when we sent something */
 	 protected long lastTimestamp = 0;
+	 /** Current sequence number */
 	 protected int seqNum = 0;
+	 /** Number of packets sent by this session */
 	 protected int sentPktCount = 0;
+	 /** Number of octets sent by this session */
 	 protected int sentOctetCount = 0;
 	 
-	 //Save the random seed
+	 /** The random seed */
 	 protected Random random = null;
 	 
-	 //Session bandwidth in BYTES per second
+	 /** Session bandwidth in BYTES per second */
 	 protected int bandwidth = 8000;
 	 
-	 //By default we do not return packets from strangers.
+	 /** By default we do not return packets from strangers in unicast mode */
 	 protected boolean naiveReception = false;
 	 
-	 //Should the library attempt frame reconstruction?
+	 /** Should the library attempt frame reconstruction? */
 	 protected boolean frameReconstruction = true;
 	 
-	 //Maximum number of packets used for reordering
+	 /** Maximum number of packets used for reordering */
 	 protected int pktBufBehavior = 3;
 	 
-	 // List of participants
+	 /** Participant database */
 	 protected ParticipantDatabase partDb = new ParticipantDatabase(this); 
-	 // Handles to application
+	 /** Handle to application interface for RTP */
 	 protected RTPAppIntf appIntf = null;
+	 /** Handle to application interface for RTCP (optional) */
 	 protected RTCPAppIntf rtcpAppIntf = null;
+	 /** Handle to application interface for AVPF, RFC 4585 (optional) */
 	 protected RTCPAVPFIntf rtcpAVPFIntf = null;
+	 /** Handle to application interface for debugging */
 	 protected DebugAppIntf debugAppIntf = null;
 	 
-	 // Threads etc.
+	 /** The RTCP session associated with this RTP Session */
 	 protected RTCPSession rtcpSession = null;
+	 /** The thread for receiving RTP packets */
 	 protected RTPReceiverThread recvThrd = null;
+	 /** The thread for invoking callbacks for RTP packets */
 	 protected AppCallerThread appCallerThrd = null;
 	 
-	 // Locks
+	 /** Lock to protect the packet buffers */
 	 final protected Lock pktBufLock = new ReentrantLock();
+	 /** Condition variable, to tell the  */
 	 final protected Condition pktBufDataReady = pktBufLock.newCondition();
 	 
-	 // Enough is enough, set to true when you want to quit.
+	 /** Enough is enough, set to true when you want to quit. */
 	 protected boolean endSession = false;
-	 // Only one registered application, please
+	 /** Only one registered application, please */
 	 protected boolean registered = false;
-	 // We're busy resolving a conflict, please try again later
+	 /** We're busy resolving a SSRC conflict, please try again later */
 	 protected boolean conflict = false;
+	 /** Number of conflicts observed, exessive number suggests loop in network */
 	 protected int conflictCount = 0;
-
-	 // SDES stuff
-	 protected String cname; //test
-	 public String name = null;
-	 public String email = null;
-	 public String phone = null;
-	 public String loc = null;
-	 public String tool = null;
-	 public String note = null;
-	 public String priv = null;
 	 
-	
+	 /** SDES CNAME */
+	 protected String cname = null;
+	 /** SDES The participant's real name */
+	 public String name = null;
+	 /** SDES The participant's email */
+	 public String email = null;
+	 /** SDES The participant's phone number */
+	 public String phone = null;
+	 /** SDES The participant's location*/
+	 public String loc = null;
+	 /** SDES The tool the participants is using */
+	 public String tool = null;
+	 /** SDES A note */
+	 public String note = null;
+	 /** SDES A priv string, loosely defined */
+	 public String priv = null;
+		
 	 // RFC 4585 stuff. This should live on RTCPSession, but we need to have this
 	 // infromation ready by the time the RTCP Session starts
 	 // 0 = RFC 3550 , -1 = ACK , 1 = Immediate feedback, 2 = Early RTCP,  
@@ -310,7 +339,7 @@ public class RTPSession {
 					 rtpMCSock.send(packet);
 					 //Debug
 					 if(this.debugAppIntf != null) {
-						 this.debugAppIntf.debugPacketSent(1, (InetSocketAddress) packet.getSocketAddress(), 
+						 this.debugAppIntf.packetSent(1, (InetSocketAddress) packet.getSocketAddress(), 
 								 new String("Sent multicast RTP packet of size " + packet.getLength() + 
 										 " to " + packet.getSocketAddress().toString() + " via " 
 										 + rtpMCSock.getLocalSocketAddress().toString()));
@@ -345,7 +374,7 @@ public class RTPSession {
 						 rtpSock.send(packet);
 						 //Debug
 						 if(this.debugAppIntf != null) {
-							 this.debugAppIntf.debugPacketSent(0, (InetSocketAddress) packet.getSocketAddress(), 
+							 this.debugAppIntf.packetSent(0, (InetSocketAddress) packet.getSocketAddress(), 
 									 new String("Sent unicast RTP packet of size " + packet.getLength() + 
 											 " to " + packet.getSocketAddress().toString() + " via " 
 											 + rtpSock.getLocalSocketAddress().toString()));

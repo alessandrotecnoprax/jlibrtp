@@ -6,24 +6,29 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktPSFB extends RtcpPkt {
+	/** If this packet was for a different SSRC */
 	protected boolean notRelevant = false;
+	/** Parent RTP Session */
 	private RTPSession rtpSession;
-	protected long ssrcPacketSender = -1;
+	/** SSRC we are sending feeback to */
 	protected long ssrcMediaSource = -1;
-	
-	// Slice Loss Indication (SLI)
+	 
+	/** SLI macroblock (MB) address of the first lost macroblock number */
 	protected int[] sliFirst;
+	/** SLI number of lost macroblocks */
 	protected int[] sliNumber;
+	/** SLI six least significant bits of the codec-specific identifier */
 	protected int[] sliPictureId;
 	
 	// Picture loss indication
-	
-	// Reference Picture Selection Indication (RPSI)
+	/** RPSI number of padded bits at end of bitString */
 	protected int rpsiPadding = -1;
+	/** RPSI payloadType RTP payload type */
 	protected int rpsiPayloadType = -1;
+	/** RPSI information as natively defined by the video codec */
 	protected byte[] rpsiBitString;
 	
-	// Application Layer Feedback Messages
+	/** Application Layer Feedback Message */
 	protected byte[] alfBitString;
 	
 	/**
@@ -33,7 +38,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 	 * @param ssrcMediaSource
 	 */
 	protected RtcpPktPSFB(long ssrcPacketSender, long ssrcMediaSource) {
-		this.ssrcPacketSender = ssrcPacketSender;
+		super.ssrc = ssrcPacketSender;
 		this.ssrcMediaSource = ssrcMediaSource;
 		super.packetType = 206; //PSFB
 	}
@@ -108,7 +113,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 			ssrcMediaSource = StaticProcs.bytesToUIntLong(aRawPkt,8+start);
 			
 			if(ssrcMediaSource == rtpSession.ssrc) {
-				ssrcPacketSender = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
+				super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
 				
 				switch(super.itemCount) {
 				case 1: // Picture Loss Indication 
@@ -142,7 +147,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 	private void decPictureLossIndic() {
 		if(this.rtpSession.rtcpAVPFIntf != null) {
 			this.rtpSession.rtcpAVPFIntf.PSFBPktPictureLossReceived(
-					this.ssrcPacketSender);
+					super.ssrc);
 		}
 	}
 	
@@ -175,7 +180,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 		
 		if(this.rtpSession.rtcpAVPFIntf != null) {
 			this.rtpSession.rtcpAVPFIntf.PSFBPktSliceLossIndic(
-					ssrcPacketSender,
+					super.ssrc,
 					sliFirst, sliNumber, sliPictureId);
 		}
 	}
@@ -213,7 +218,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 		
 		if(this.rtpSession.rtcpAVPFIntf != null) {
 			this.rtpSession.rtcpAVPFIntf.PSFBPktRefPictureSelIndic(
-					ssrcPacketSender,
+					super.ssrc,
 					rpsiPayloadType, rpsiBitString, rpsiPadding);
 		}
 		
@@ -235,7 +240,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 
 		if(this.rtpSession.rtcpAVPFIntf != null) {
 			this.rtpSession.rtcpAVPFIntf.PSFBPktAppLayerFBReceived(
-					ssrcPacketSender, alfBitString);
+					super.ssrc, alfBitString);
 		}
 	}
 	
@@ -321,7 +326,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 			break;
 		}
 		
-		byte[] someBytes = StaticProcs.uIntLongToByteWord(this.ssrcPacketSender);
+		byte[] someBytes = StaticProcs.uIntLongToByteWord(super.ssrc);
 		System.arraycopy(someBytes, 0, super.rawPkt, 4, 4);
 		someBytes = StaticProcs.uIntLongToByteWord(this.ssrcMediaSource);
 		System.arraycopy(someBytes, 0, super.rawPkt, 8, 4);

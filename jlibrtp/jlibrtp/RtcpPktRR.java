@@ -6,13 +6,21 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktRR extends RtcpPkt {
+	/** Array of participants to send Receiver Reports to */
 	protected Participant[] reportees = null;
+	/** SSRC of participants the reports are for */
 	protected long[] reporteeSsrc = null;// -1; //32 bits
+	/** Fraction (over 256) of packets lost */
 	protected int[] lossFraction = null;//-1; //8 bits
+	/** Number of lost packets */
 	protected int[] lostPktCount = null;//-1; //24 bits
+	/** Extended highest sequence received */
 	protected long[] extHighSeqRecv = null;//-1; //32 bits
+	/** Interarrival jitter*/
 	protected long[] interArvJitter = null;//-1; //32 bits
+	/** Middle 32 bits of NTP when last SR was received */
 	protected long[] timeStampLSR = null;//-1; //32 bits
+	/** Delay on last SRC */
 	protected long[] delaySR = null;//-1; //32 bits
 	
 	/**

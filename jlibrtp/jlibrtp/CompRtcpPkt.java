@@ -18,7 +18,9 @@ import java.net.InetSocketAddress;
  */
 
 public class CompRtcpPkt {
+	/** Problem indicator, negative values denote packet type that cause problem */
 	protected int problem = 0;
+	/** Stores the different subclasses of RtcpPkt that make up the compound packet */
 	protected LinkedList<RtcpPkt> rtcpPkts = new LinkedList<RtcpPkt>();
 	
 	/**

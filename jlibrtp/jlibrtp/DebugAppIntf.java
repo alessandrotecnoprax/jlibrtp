@@ -2,6 +2,15 @@ package jlibrtp;
 
 import java.net.InetSocketAddress;
 
+/**
+ * DebugAppIntf can be registered on RTPSession to provide simple
+ * debugging functionality. This is particularly useful to determine
+ * whether the client is receing any data at all.
+ * 
+ * @author Arne Kepp
+ *
+ */
+
 public interface DebugAppIntf {
 	/**
 	 * This function wil notify you of any packets received, valid or not.
@@ -24,7 +33,7 @@ public interface DebugAppIntf {
 	 * @param socket , taken directly from the UDP packet
 	 * @param description , see above. 
 	 */
-	public void debugPacketReceived(int type, InetSocketAddress socket, String description);
+	public void packetReceived(int type, InetSocketAddress socket, String description);
 	
 	/**
 	 * This function will notify you of any packets sent from this instance of RTPSession.
@@ -44,5 +53,14 @@ public interface DebugAppIntf {
 	 * @param socket , taken directly from the UDP packet
 	 * @param description , see above
 	 */
-	public void debugPacketSent(int type, InetSocketAddress socket, String description);
+	public void packetSent(int type, InetSocketAddress socket, String description);
+	
+	/**
+	 * Other important events that can occur in session
+	 * -1 SSRC conflict
+	 *  0 Session is terminating
+	 * @param type see above
+	 * @param description , see above
+	 */
+	public void importantEvent(int type, String description);
 }

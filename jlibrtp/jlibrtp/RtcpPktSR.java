@@ -6,11 +6,17 @@ package jlibrtp;
  * @author Arne Kepp
  */
 public class RtcpPktSR extends RtcpPkt {
+	/** NTP timestamp, MSB */
 	protected long ntpTs1 = -1; //32 bits
+	/** NTP timestamp, LSB */
 	protected long ntpTs2 = -1; //32 bits
+	/** RTP timestamp */
 	protected long rtpTs = -1; //32 bits
+	/** Senders packet count */
 	protected long sendersPktCount = -1; //32 bits
+	/** Senders octet count */
 	protected long sendersOctCount = -1; //32 bits
+	/** RR packet with receiver reports that we can append */
 	protected RtcpPktRR rReports = null;
 	
 	/**
