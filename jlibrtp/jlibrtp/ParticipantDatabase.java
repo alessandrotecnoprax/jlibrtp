@@ -147,21 +147,35 @@ public class ParticipantDatabase {
 			
 			while(notDone && iter.hasNext()) {
 				Participant part = iter.next();
-
-				if((cameFrom == 1 && p.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))
-					|| (cameFrom == 2 && p.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress()))) {
 				
-					p.rtpAddress = part.rtpAddress;
-					p.rtcpAddress = part.rtcpAddress;
-					p.unexpected = false;
-
+				//System.out.println(part.rtpAddress.getAddress().toString()
+				//		+ " " + part.rtcpAddress.getAddress().toString() 
+				//		+ " " + p.rtpReceivedFromAddress.getAddress().toString()
+				//		+ " " + p.rtcpReceivedFromAddress.getAddress().toString());
+				
+				//System.out.println(" HUUHHHH?  " + p.rtcpReceivedFromAddress.getAddress().equals(part.rtcpAddress.getAddress()));
+				if((cameFrom == 1 && p.rtpReceivedFromAddress.getAddress().equals(part.rtpAddress.getAddress()))
+					|| (cameFrom == 2 && p.rtcpReceivedFromAddress.getAddress().equals(part.rtcpAddress.getAddress()))) {
+				
+					part.rtpReceivedFromAddress = p.rtpReceivedFromAddress;
+					part.rtcpReceivedFromAddress = p.rtcpReceivedFromAddress;
+					
+					// Move information
+					part.ssrc = p.ssrc;
+					part.cname = p.cname;
+					part.name = p.name;
+					part.loc = p.loc;
+					part.phone = p.phone;
+					part.email = p.email;
+					part.note = p.note;
+					part.tool = p.tool;
+					part.priv = p.priv;
+					
+					this.ssrcTable.put(part.ssrc, part);
+					
 					//Report the match back to the application
 					Participant[] partArray = {part};
 					this.rtpSession.appIntf.userEvent(5, partArray);
-					
-					//Remove the old one, add this one
-					this.receivers.remove(part);
-					this.receivers.add(p);
 					notDone = false;
 				}
 			}

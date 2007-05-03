@@ -258,8 +258,10 @@ public class RTCPSenderThread extends Thread {
 			
 			if(part.ssrc > 0) {
 				RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
-				for(int i=0; i<ar.length; i++) {
-					compPkt.addPacket(ar[i]);
+				if(ar != null) {
+					for(int i=0; i<ar.length; i++) {
+						compPkt.addPacket(ar[i]);
+					}
 				}
 			}
 			
@@ -277,8 +279,10 @@ public class RTCPSenderThread extends Thread {
 			
 			if( !incSR && part.ssrc > 0) {
 				RtcpPkt[] ar = this.rtcpSession.getFromFbQueue(part.ssrc);
-				for(int i=0; i<ar.length; i++) {
-					compPkt.addPacket(ar[i]);
+				if(ar != null) {
+					for(int i=0; i<ar.length; i++) {
+						compPkt.addPacket(ar[i]);
+					}
 				}
 			}
 		}
@@ -286,8 +290,12 @@ public class RTCPSenderThread extends Thread {
 		// APP packets
 		if(regular && part.ssrc > 0) {
 			RtcpPkt[] ar = this.rtcpSession.getFromAppQueue(part.ssrc);
-			for(int i=0; i<ar.length; i++) {
-				compPkt.addPacket(ar[i]);
+			if(ar != null) {
+				for(int i=0; i<ar.length; i++) {
+					compPkt.addPacket(ar[i]);
+				}
+			} else {
+				//Nope
 			}
 		}
 		

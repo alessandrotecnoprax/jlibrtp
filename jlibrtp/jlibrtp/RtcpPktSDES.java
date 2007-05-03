@@ -55,6 +55,8 @@ public class RtcpPktSDES extends RtcpPkt {
 			}
 			super.problem = -202;
 		} else {
+			//System.out.println(" DECODE SIZE: " + super.length);
+			
 			int curPos = 4 + start;
 			int curLength;
 			int curType;
@@ -67,8 +69,8 @@ public class RtcpPktSDES extends RtcpPkt {
 				ssrc = StaticProcs.bytesToUIntLong(aRawPkt, curPos);
 				Participant part = partDb.getParticipant(ssrc);
 				if(part == null) {
-					if(RTPSession.rtpDebugLevel > 1) {
-						System.out.println("RtcpPktSDES(byte[], ParticipantDabase) adding new participant, ssrc:"+ssrc);
+					if(RTPSession.rtcpDebugLevel > 1) {
+						System.out.println("RtcpPktSDES(byte[], ParticipantDabase) adding new participant, ssrc:"+ssrc+" "+socket);
 					}
 					
 					//InetSocketAddress nullSocket = null;
@@ -77,9 +79,7 @@ public class RtcpPktSDES extends RtcpPkt {
 					partDb.addParticipant(2,part);
 				}
 				curPos += 4;
-				
-				this.participants[i] = part;
-				
+								
 				while(!endReached && (curPos/4) < this.length) {
 					//System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
 					curType = (int) aRawPkt[curPos];
@@ -95,7 +95,7 @@ public class RtcpPktSDES extends RtcpPkt {
 							byte[] item = new byte[curLength];
 							//System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
 							System.arraycopy(aRawPkt, curPos + 2, item, 0, curLength);
-
+							
 							switch(curType) {
 							case 1:  part.cname = new String(item); break;
 							case 2:  part.name = new String(item); break;
@@ -106,6 +106,8 @@ public class RtcpPktSDES extends RtcpPkt {
 							case 7:  part.note = new String(item); break;
 							case 8:  part.priv = new String(item); break;
 							}
+							//System.out.println("TYPE " + curType + part.cname );
+							
 						} else {
 							switch(curType) {
 							case 1:  part.cname = null; break;
@@ -117,12 +119,13 @@ public class RtcpPktSDES extends RtcpPkt {
 							case 7:  part.note = null; break;
 							case 8:  part.priv = null; break;
 							}
-
+							
 						}
 						curPos = curPos + curLength + 2;
 					}
-
 				}
+				this.participants[i] = part;
+				//System.out.println("HEPPPPPP " + participants[i].cname );
 			}
 		}
 		if(RTPSession.rtpDebugLevel > 8) {
@@ -142,7 +145,7 @@ public class RtcpPktSDES extends RtcpPkt {
 		int pos = 8;
 	
 		String tmpString = null;
-		for(int i=1; i<9;i++) {
+		for(int i=1; i<9;i++) {			
 			switch(i) {
 				case 1:  tmpString = this.rtpSession.cname; break;
 				case 2:  tmpString = this.rtpSession.name; break;
@@ -161,6 +164,9 @@ public class RtcpPktSDES extends RtcpPkt {
 				System.arraycopy(someBytes, 0, temp, pos + 2, someBytes.length);
 				//System.out.println("i: "+i+" pos:"+pos+" someBytes.length:"+someBytes.length);
 				pos = pos + someBytes.length + 2;
+				//if(i == 1 ) {
+				//	System.out.println("trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" + tmpString);
+				//}
 			}
 		}
 		int leftover = pos % 4;

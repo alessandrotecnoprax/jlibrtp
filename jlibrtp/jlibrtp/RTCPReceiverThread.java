@@ -127,7 +127,7 @@ public class RTCPReceiverThread extends Thread {
 					RtcpPkt aPkt = iter.next();
 					str += (aPkt.getClass().toString() + ":"+aPkt.itemCount+ ", ");
 				}
-				System.out.println("<-> RTCPSenderThread.parsePacket() from " + packet.getSocketAddress().toString() + str);
+				System.out.println("<-> RTCPReceiverThread.parsePacket() from " + packet.getSocketAddress().toString() + str);
 			}
 			
 
@@ -234,14 +234,14 @@ public class RTCPReceiverThread extends Thread {
 						rtpSession.rtcpAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
 					}
 					
-					/**        Bye Packets       **/
+					/**        Application specific Packets       **/
 				} else if(aPkt.getClass() == RtcpPktAPP.class) {
 					RtcpPktAPP appPkt = (RtcpPktAPP) aPkt;
 
 					Participant part = findParticipant(appPkt.ssrc, packet);
 					
 					if(rtpSession.rtcpAppIntf != null) {
-						rtpSession.rtcpAppIntf.APPPktReceived(part, appPkt.itemCount,appPkt.pktName, appPkt.pktData);
+						rtpSession.rtcpAppIntf.APPPktReceived(part, appPkt.itemCount, appPkt.pktName, appPkt.pktData);
 					}
 			}
 

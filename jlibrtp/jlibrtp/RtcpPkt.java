@@ -70,7 +70,7 @@ public class RtcpPkt {
 					+" packetType:"+packetType+" length:"+length);
 		}
 		
-		if(packetType < 207 && packetType > 199) 
+		if(packetType > 207 || packetType < 200) 
 			System.out.println("RtcpPkt.parseHeaders problem discovered, packetType " + packetType);
 		
 		if(version == 2 && length < 65536) {
