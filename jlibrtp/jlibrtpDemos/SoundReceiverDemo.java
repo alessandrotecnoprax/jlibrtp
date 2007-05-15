@@ -1,3 +1,7 @@
+/* This file is based on 
+ * http://www.anyexample.com/programming/java/java_play_wav_sound_file.xml
+ * Please see the site for license information.
+ */
 package jlibrtpDemos;
 
 import java.net.DatagramSocket;
