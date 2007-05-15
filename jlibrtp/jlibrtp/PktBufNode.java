@@ -1,6 +1,5 @@
-package jlibrtp;
 /**
- * Java RTP Library
+ * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
  * 
  * This library is free software; you can redistribute it and/or
@@ -17,7 +16,7 @@ package jlibrtp;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+package jlibrtp;
 
 /**
  * This is a four-directional data structures used for

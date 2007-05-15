@@ -1,5 +1,5 @@
 /**
- * Java RTP Library
+ * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
  * 
  * This library is free software; you can redistribute it and/or
