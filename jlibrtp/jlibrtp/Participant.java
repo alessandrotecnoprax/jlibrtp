@@ -54,10 +54,10 @@ public class Participant {
 	protected String note = null;
 	/** SDES A priv string, loosely defined */
 	protected String priv = null;
-	
+
 	// Receiver Report Items
 	/** RR First sequence number */
-	protected int firstSeqNumber = 0;
+	protected int firstSeqNumber = -1;
 	/** RR Last sequence number */
 	protected int lastSeqNumber = 0;
 	/** RR Number of times sequence number has rolled over */
@@ -325,6 +325,7 @@ public class Participant {
 		}
 
 		lastRtpPkt = curTime;
+		lastRtpTimestamp = pkt.getTimeStamp();
 	}
 	
 	/**
