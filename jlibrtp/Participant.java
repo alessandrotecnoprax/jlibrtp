@@ -418,7 +418,7 @@ public class Participant {
 		long delay = System.currentTimeMillis() - this.timeReceivedLSR;
 		
 		//Convert ms into 1/65536s = 1/65.536ms
-		return (long) ((double)delay / 65.536);
+		return (long) ((double)delay * 65.536);
 	}
 	
 	/**
