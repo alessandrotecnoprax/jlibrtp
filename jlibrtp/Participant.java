@@ -346,13 +346,13 @@ public class Participant {
 	 * @return the fraction of lost packets since last SR received
 	 */
 	protected int getFractionLost() {
-		int denominator = (lastSeqNumber - lastSRRseqNumber);
-		if(denominator < 0)
-			denominator = 65536 + denominator;
-
-		int fraction = 256*receivedSinceLastSR;
-		if(denominator > 0) {
-			fraction = (fraction / denominator);
+		int expected = (lastSeqNumber - lastSRRseqNumber);
+		if(expected < 0)
+			expected = 65536 + expected;
+                
+		int fraction = 256 * (expected - receivedSinceLastSR);
+		if(expected > 0) {
+			fraction = (fraction / expected);
 		} else {
 			fraction = 0;
 		}
