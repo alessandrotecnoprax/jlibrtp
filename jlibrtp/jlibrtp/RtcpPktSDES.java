@@ -62,7 +62,7 @@ public class RtcpPktSDES extends RtcpPkt {
 	 * @param partDb the participant database
 	 */
 	protected RtcpPktSDES(byte[] aRawPkt,int start, InetSocketAddress socket, ParticipantDatabase partDb) {
-		if(RTPSession.rtpDebugLevel > 8) {
+		if(RTPSession.rtcpDebugLevel > 8) {
 			System.out.println("  -> RtcpPktSDES(byte[], ParticipantDabase)");
 		}
 		rawPkt = aRawPkt;
@@ -73,13 +73,14 @@ public class RtcpPktSDES extends RtcpPkt {
 			}
 			super.problem = -202;
 		} else {
-			//System.out.println(" DECODE SIZE: " + super.length);
+			System.out.println(" DECODE SIZE: " + super.length + " itemcount " + itemCount );
 			
 			int curPos = 4 + start;
 			int curLength;
 			int curType;
 			long ssrc;
 			boolean endReached = false;
+			boolean newPart;
 			this.participants = new Participant[itemCount];
 			
 			// Loop over SSRC SDES chunks
@@ -91,15 +92,18 @@ public class RtcpPktSDES extends RtcpPkt {
 						System.out.println("RtcpPktSDES(byte[], ParticipantDabase) adding new participant, ssrc:"+ssrc+" "+socket);
 					}
 					
-					//InetSocketAddress nullSocket = null;
-					//This needs to be sorted out anyway
 					part = new Participant(socket, socket , ssrc);
-					partDb.addParticipant(2,part);
+					newPart = true;
+				} else {
+					newPart = false;
 				}
+				
 				curPos += 4;
-								
+							
+				System.out.println("PRE endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
+				
 				while(!endReached && (curPos/4) < this.length) {
-					//System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
+					System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
 					curType = (int) aRawPkt[curPos];
 					
 					if(curType == 0) {	
@@ -107,15 +111,17 @@ public class RtcpPktSDES extends RtcpPkt {
 						endReached = true;
 					} else {
 						curLength  = (int) aRawPkt[curPos + 1];
-						//System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
+						System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
 
 						if(curLength > 0) {
 							byte[] item = new byte[curLength];
-							//System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
+							System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
 							System.arraycopy(aRawPkt, curPos + 2, item, 0, curLength);
 							
 							switch(curType) {
-							case 1:  part.cname = new String(item); break;
+							case 1:  part.cname = new String(item); 
+							System.out.println("PARSING CNAME");
+							break;
 							case 2:  part.name = new String(item); break;
 							case 3:  part.email = new String(item); break;
 							case 4:  part.phone = new String(item); break;
@@ -124,7 +130,7 @@ public class RtcpPktSDES extends RtcpPkt {
 							case 7:  part.note = new String(item); break;
 							case 8:  part.priv = new String(item); break;
 							}
-							//System.out.println("TYPE " + curType + part.cname );
+							System.out.println("TYPE " + curType + part.cname );
 							
 						} else {
 							switch(curType) {
@@ -142,11 +148,16 @@ public class RtcpPktSDES extends RtcpPkt {
 						curPos = curPos + curLength + 2;
 					}
 				}
+				
+				// Save the participant
 				this.participants[i] = part;
-				//System.out.println("HEPPPPPP " + participants[i].cname );
+				if(newPart)
+					partDb.addParticipant(2,part);
+				
+				System.out.println("HEPPPPPP " + participants[i].cname );
 			}
 		}
-		if(RTPSession.rtpDebugLevel > 8) {
+		if(RTPSession.rtcpDebugLevel > 8) {
 			System.out.println("  <- RtcpPktSDES()");
 		}
 	}

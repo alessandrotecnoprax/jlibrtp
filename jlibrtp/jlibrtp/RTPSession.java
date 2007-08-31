@@ -45,14 +45,14 @@ public class RTPSession {
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTP related things.
 	  */
-	 final static public int rtpDebugLevel = 0;
+	 final static public int rtpDebugLevel = 2;
 	 /**
 	  * The debug level is final to avoid compilation of if-statements.</br>
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTCP related things.
 	  */
-	 final static public int rtcpDebugLevel = 0;
+	 final static public int rtcpDebugLevel = 15;
 	 
 	 /** RTP unicast socket */
 	 protected DatagramSocket rtpSock = null;
@@ -455,6 +455,7 @@ public class RTPSession {
 	  */
 	public int addParticipant(Participant p) {
 		//For now we make all participants added this way persistent
+		p.unexpected = false;
 		return this.partDb.addParticipant(0, p);
 	}
 	
@@ -547,12 +548,19 @@ public class RTPSession {
 	}
 	
 	private void generateCNAME() {
-		cname = System.getProperty ("user.name") + "@";
+		String hostname;
+		
 		if(this.mcSession) {
-			cname += this.rtpMCSock.getLocalAddress().toString();
+			hostname = this.rtpMCSock.getLocalAddress().getCanonicalHostName();
 		} else {
-			cname += this.rtpSock.getLocalAddress().toString();
+			hostname = this.rtpSock.getLocalAddress().getCanonicalHostName();
 		}
+		
+		//if(hostname.equals("0.0.0.0") && System.getenv("HOSTNAME") != null) {
+		//	hostname = System.getenv("HOSTNAME");
+		//}
+		
+		cname = System.getProperty("user.name") + "@" + hostname;
 	}
 	
 	/**
