@@ -108,7 +108,7 @@ public class ParticipantDatabase {
 	 * 
 	 * @param cameFrom 0: Application, 1,2: discovered through RTP or RTCP
 	 * @param p the participant to add
-	 * @return 0 if okay
+	 * @return 0 if new, 1 if 
 	 */
 	private int addParticipantUnicast(int cameFrom, Participant p) {
 		if(cameFrom == 0) {
@@ -142,21 +142,22 @@ public class ParticipantDatabase {
 		} else {
 			//Check whether there's a match in the receivers table
 			boolean notDone = true;
-			
+			System.out.println("GOT " + p.cname);
 			Iterator<Participant> iter = this.receivers.iterator();
 			
 			while(notDone && iter.hasNext()) {
 				Participant part = iter.next();
 				
-				//System.out.println(part.rtpAddress.getAddress().toString()
-				//		+ " " + part.rtcpAddress.getAddress().toString() 
-				//		+ " " + p.rtpReceivedFromAddress.getAddress().toString()
-				//		+ " " + p.rtcpReceivedFromAddress.getAddress().toString());
+				System.out.println(part.rtpAddress.getAddress().toString()
+						+ " " + part.rtcpAddress.getAddress().toString() 
+						+ " " + p.rtpReceivedFromAddress.getAddress().toString()
+						+ " " + p.rtcpReceivedFromAddress.getAddress().toString());
 				
 				//System.out.println(" HUUHHHH?  " + p.rtcpReceivedFromAddress.getAddress().equals(part.rtcpAddress.getAddress()));
 				if((cameFrom == 1 && p.rtpReceivedFromAddress.getAddress().equals(part.rtpAddress.getAddress()))
 					|| (cameFrom == 2 && p.rtcpReceivedFromAddress.getAddress().equals(part.rtcpAddress.getAddress()))) {
-				
+					
+					System.out.println("MATCH!!!!!!!!");
 					part.rtpReceivedFromAddress = p.rtpReceivedFromAddress;
 					part.rtcpReceivedFromAddress = p.rtcpReceivedFromAddress;
 					
@@ -176,10 +177,11 @@ public class ParticipantDatabase {
 					//Report the match back to the application
 					Participant[] partArray = {part};
 					this.rtpSession.appIntf.userEvent(5, partArray);
-					notDone = false;
+					return 0;
 				}
 			}
 			
+			// No match? ok
 			this.ssrcTable.put(p.ssrc, p);				
 			return 0;
 		}

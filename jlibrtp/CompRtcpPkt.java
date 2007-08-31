@@ -84,7 +84,7 @@ public class CompRtcpPkt {
 	 * @param rtpSession the RTPSession with the participant database
 	 */
 	protected CompRtcpPkt(byte[] rawPkt, int packetSize, InetSocketAddress adr, RTPSession rtpSession) {
-		if(RTPSession.rtpDebugLevel > 7) {
+		if(RTPSession.rtcpDebugLevel > 7) {
 			System.out.println("-> CompRtcpPkt(" + rawPkt.getClass() + ", size " + packetSize + ", from " + adr.toString() + ", " + rtpSession.getClass() + ")");
 		}
 		//System.out.println("rawPkt.length:" + rawPkt.length + " packetSize:" + packetSize);
@@ -111,7 +111,7 @@ public class CompRtcpPkt {
 			if(start == 0) {
 				// Compound packets need to start with SR or RR
 				if(pktType != 200 && pktType != 201 ) {
-					if(RTPSession.rtpDebugLevel > 3) {
+					if(RTPSession.rtcpDebugLevel > 3) {
 						System.out.println("!!!! CompRtcpPkt(rawPkt...) packet did not start with SR or RR");
 					}
 					this.problem = -1;
@@ -119,14 +119,14 @@ public class CompRtcpPkt {
 				
 				// Padding bit should be zero for the first packet
 				if(((rawPkt[start] & 0x20) >>> 5) == 1) {
-					if(RTPSession.rtpDebugLevel > 3) {
+					if(RTPSession.rtcpDebugLevel > 3) {
 						System.out.println("!!!! CompRtcpPkt(rawPkt...) first packet was padded");
 					}
 					this.problem = -2;
 				}
 			}
 			
-			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
+			System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
 			if(pktType == 200) {
 				addPacket(new RtcpPktSR(rawPkt,start,length*4));
 			} else if(pktType == 201 ) {
@@ -150,11 +150,11 @@ public class CompRtcpPkt {
 			
 			start += length*4;
 			
-			if(RTPSession.rtpDebugLevel > 12) {
+			if(RTPSession.rtcpDebugLevel > 12) {
 				System.out.println(" start:"+start+"  parsing pktType "+pktType+" length: "+length);
 			}
 		}
-		if(RTPSession.rtpDebugLevel > 7) {
+		if(RTPSession.rtcpDebugLevel > 7) {
 			System.out.println("<- CompRtcpPkt(rawPkt....)");
 		}
 	}
