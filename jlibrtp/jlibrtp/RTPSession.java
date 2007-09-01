@@ -45,14 +45,14 @@ public class RTPSession {
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTP related things.
 	  */
-	 final static public int rtpDebugLevel = 2;
+	 final static public int rtpDebugLevel = 0;
 	 /**
 	  * The debug level is final to avoid compilation of if-statements.</br>
 	  * 0 provides no debugging information, 20 provides everything </br>
 	  * Debug output is written to System.out</br>
 	  * Debug level for RTCP related things.
 	  */
-	 final static public int rtcpDebugLevel = 15;
+	 final static public int rtcpDebugLevel = 0;
 	 
 	 /** RTP unicast socket */
 	 protected DatagramSocket rtpSock = null;

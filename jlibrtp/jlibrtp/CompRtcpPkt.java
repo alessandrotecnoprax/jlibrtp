@@ -126,7 +126,7 @@ public class CompRtcpPkt {
 				}
 			}
 			
-			System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
+			//System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
 			if(pktType == 200) {
 				addPacket(new RtcpPktSR(rawPkt,start,length*4));
 			} else if(pktType == 201 ) {
