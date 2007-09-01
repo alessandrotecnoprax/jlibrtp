@@ -82,10 +82,10 @@ public class ValidateRtcpPkt {
 		compkt.addPacket(rrpkt);
 		compkt.addPacket(rrpkt);
 		
-		byte[] test = compkt.encode();
+		byte[] test2 = compkt.encode();
 		//System.out.print(StaticProcs.bitsOfBytes(test));
 		System.out.println("****************************** DONE ENCODING *******************************");
-		CompRtcpPkt decomppkt = new CompRtcpPkt(test,test.length,testadr,rtpSession);
+		CompRtcpPkt decomppkt = new CompRtcpPkt(test2,test2.length,testadr,rtpSession);
 		System.out.println("****************************** DONE DECODING *******************************");
 		System.out.println("Problem code:" + decomppkt.problem);
 		
@@ -115,20 +115,26 @@ public class ValidateRtcpPkt {
 		byte[] rawpktbye = byepkt.rawPkt;
 		
 		RtcpPktBYE byepkt2 = new RtcpPktBYE(rawpktbye,0);
-		byepkt2 .debugPrint();
+		byepkt2.debugPrint();
 		
 		System.out.println("****************************** SDES *******************************");
 		RtcpPktSDES sdespkt = new RtcpPktSDES(true,rtpSession,null);
 		rtpSession.cname = "cname123@localhost";
-		rtpSession.loc = "right here";
+		//rtpSession.loc = "right here";
 		sdespkt.encode();
-		rtpSession.cname = "cname124@localhost";
-		rtpSession.loc = "right hera";
+		//rtpSession.cname = "cname124@localhost";
+		//rtpSession.loc = "right hera";
 		byte[] rawpktsdes = sdespkt.rawPkt;
+		InetSocketAddress tmpAdr = (InetSocketAddress) rtpSock.getLocalSocketAddress();
 		RtcpPktSDES decsdespkt = new RtcpPktSDES(rawpktsdes, 0, (InetSocketAddress) rtpSock.getLocalSocketAddress() , partDb);
 		decsdespkt.debugPrint();
 		//partDb.debugPrint();
 		
-
+		CompRtcpPkt compkt2 = new CompRtcpPkt();
+		compkt2.addPacket(srpkt);
+		compkt2.addPacket(sdespkt);
+		byte[] compkt2Raw = compkt.encode();
+		
+		CompRtcpPkt compkt3 = new CompRtcpPkt(compkt2Raw,compkt2Raw.length,tmpAdr,rtpSession);
 	}
 }

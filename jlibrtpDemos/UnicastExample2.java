@@ -32,9 +32,10 @@ import jlibrtp.*;
  */
 public class UnicastExample2 implements RTPAppIntf {
 	/** The tests included in this file */
-	static boolean jing = true;
-	static boolean abhijeet = false;
+	static boolean jing = false;
+	static boolean abhijeet = true;
 	static long byteCounter = 0;
+	static long pktCounter = 0;
 	
 	/** Holds a RTPSession instance */
 	RTPSession rtpSession = null;
@@ -53,18 +54,18 @@ public class UnicastExample2 implements RTPAppIntf {
 		 * into a single byte[]
 		 */
 		byte[] data = frame.getConcatenatedData();
-		
 		byteCounter += data.length;
+		pktCounter++;
 		
-		/**
-		 * This returns the CNAME, if any, associated with the SSRC
-		 * that was provided in the RTP packets received.
-		 */
-		String cname = p.getCNAME();
-		if(! abhijeet) {
-			System.out.println("Received data from " + cname); 
-			System.out.println(new String(data));
+		if(pktCounter%100 == 0) {
+			System.out.print(".");
 		}
+		
+		//String cname = p.getCNAME();
+		//if(! abhijeet) {
+		//	System.out.println("Received data from " + cname); 
+		//	System.out.println(new String(data));
+		//}
 	}
 	
 	/** Used to communicate updates to the user database through RTCP */
@@ -145,15 +146,19 @@ public class UnicastExample2 implements RTPAppIntf {
 		//       receive participants before continuing
 		
 		// 6. Send some data
+		if(args[0].equals("1")) {
+			System.out.print("Sending data");
+		} else {
+			System.out.print("Receiving data");	
+		}
 		if(jing) {
 			// RTCP SR, RR test for Jing... so we send a little data, and spend a long 
 			// time doing it to collect some reports
 			byte[] tmp = new byte[10];
 			int i;
-			
-			System.out.print("Sending data");
+				
 			for(i=0; i < 60; i++) {
-				try{ Thread.sleep(100); } catch(Exception e) {}
+				try{ Thread.sleep(200); } catch(Exception e) {}
 				
 				if(args[0].equals("1"))
 					rtpSession.sendData(tmp);
@@ -162,7 +167,9 @@ public class UnicastExample2 implements RTPAppIntf {
 					System.out.print(".");
 			}
 			
-			System.out.println("Done sending data, sent " + (i*10) + " bytes ");
+			if(args[0].equals("1"))
+				System.out.println("Done, sent " + (i*10) + " bytes ");
+			
 		} else if(abhijeet) {
 			// Test for abhijeet
 			
@@ -172,17 +179,20 @@ public class UnicastExample2 implements RTPAppIntf {
 			
 			byte[] tmp = new byte[1024];
 			int i;
-			System.out.print("Sending data");
+			
 			for(i=0; i < 4000; i++) {
 				try{ Thread.sleep(5); } catch(Exception e) {}
 				
-				if(args[0].equals("1"))
+				if(args[0].equals("1")) {
 					rtpSession.sendData(tmp);
-				if(i%100 == 0)
-					System.out.print(".");
+				
+					if(i%100 == 0)
+						System.out.print(".");
+				}
 			}
-			System.out.println("");
-			System.out.println("Done sending data, sent " + i + " kbytes ");	
+			
+			if(args[0].equals("1"))
+				System.out.println("Done sent, sent " + i + " kbytes ");	
 		}
 		
 		// Give the sending threads etc a chance to complete.

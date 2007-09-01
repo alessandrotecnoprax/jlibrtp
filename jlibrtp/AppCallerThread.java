@@ -84,10 +84,10 @@ public class AppCallerThread extends Thread {
 					boolean done = false;
 					//System.out.println(p.ssrc + " " + !done +" " + p.rtpAddress 
 					//		+ " " + rtpSession.naiveReception + " " + p.pktBuffer);
-					System.out.println("done: " + done + "  p.unexpected: " + p.unexpected);
+					//System.out.println("done: " + done + "  p.unexpected: " + p.unexpected);
 					while(!done && (!p.unexpected || rtpSession.naiveReception) 
 							&& p.pktBuffer != null && p.pktBuffer.length > 0) {
-						System.out.println("huh?");
+
 						DataFrame aFrame = p.pktBuffer.popOldestFrame();
 						if(aFrame == null) {
 							done = true;

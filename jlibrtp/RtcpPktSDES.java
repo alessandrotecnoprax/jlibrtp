@@ -73,7 +73,7 @@ public class RtcpPktSDES extends RtcpPkt {
 			}
 			super.problem = -202;
 		} else {
-			System.out.println(" DECODE SIZE: " + super.length + " itemcount " + itemCount );
+			//System.out.println(" DECODE SIZE: " + super.length + " itemcount " + itemCount );
 			
 			int curPos = 4 + start;
 			int curLength;
@@ -100,10 +100,10 @@ public class RtcpPktSDES extends RtcpPkt {
 				
 				curPos += 4;
 							
-				System.out.println("PRE endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
+				//System.out.println("PRE endReached " + endReached + " curPos: " + curPos + " length:" + this.length + (!endReached && (curPos/4) < this.length));
 				
-				while(!endReached && (curPos/4) < this.length) {
-					System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
+				while(!endReached && (curPos/4) <= this.length) {
+					//System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
 					curType = (int) aRawPkt[curPos];
 					
 					if(curType == 0) {	
@@ -111,17 +111,15 @@ public class RtcpPktSDES extends RtcpPkt {
 						endReached = true;
 					} else {
 						curLength  = (int) aRawPkt[curPos + 1];
-						System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
+						//System.out.println("curPos:"+curPos+" curType:"+curType+" curLength:"+curLength+" read from:"+(curPos + 1));
 
 						if(curLength > 0) {
 							byte[] item = new byte[curLength];
-							System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
+							//System.out.println("curPos:"+curPos+" arawPkt.length:"+aRawPkt.length+" curLength:"+curLength);
 							System.arraycopy(aRawPkt, curPos + 2, item, 0, curLength);
 							
 							switch(curType) {
-							case 1:  part.cname = new String(item); 
-							System.out.println("PARSING CNAME");
-							break;
+							case 1:  part.cname = new String(item); break;
 							case 2:  part.name = new String(item); break;
 							case 3:  part.email = new String(item); break;
 							case 4:  part.phone = new String(item); break;
@@ -130,7 +128,7 @@ public class RtcpPktSDES extends RtcpPkt {
 							case 7:  part.note = new String(item); break;
 							case 8:  part.priv = new String(item); break;
 							}
-							System.out.println("TYPE " + curType + part.cname );
+							//System.out.println("TYPE " + curType + " value:" + new String(item) );
 							
 						} else {
 							switch(curType) {
@@ -154,7 +152,7 @@ public class RtcpPktSDES extends RtcpPkt {
 				if(newPart)
 					partDb.addParticipant(2,part);
 				
-				System.out.println("HEPPPPPP " + participants[i].cname );
+				//System.out.println("HEPPPPPP " + participants[i].cname );
 			}
 		}
 		if(RTPSession.rtcpDebugLevel > 8) {
