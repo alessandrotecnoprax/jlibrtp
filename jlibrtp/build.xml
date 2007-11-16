@@ -1,5 +1,6 @@
 <!--
-  - JVoiceXML Demo - Demo for the free VoiceXML implementation JVoiceXML
+  - jlibrtp - library that makes it easy to support RTP (RFC 3550,3551) in Java
+  - applications
   -
   - Copyright (C) 2007 Dirk Schnelle
   -
