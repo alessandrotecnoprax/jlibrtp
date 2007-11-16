@@ -18,13 +18,20 @@
  */
 package org.jlibrtp.demo;
 
-import jlibrtp.*;
 import java.io.FileWriter;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.XMLOutputter;
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.DebugAppIntf;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTCPAppIntf;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
+import org.jlibrtp.StaticProcs;
 
 /**
  *

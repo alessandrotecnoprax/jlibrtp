@@ -8,6 +8,9 @@ package org.jlibrtp.demo;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.util.Enumeration;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -16,10 +19,11 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.lang.String;
-import java.net.DatagramSocket;
-import java.util.Enumeration;
-import jlibrtp.*;
+
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
 
 /**
  * @author Arne Kepp

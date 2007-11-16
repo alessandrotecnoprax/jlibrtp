@@ -1,7 +1,10 @@
 package org.jlibrtp.test;
 import java.net.DatagramSocket;
 
-import jlibrtp.*;
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
 
 public class TestRTPSession implements RTPAppIntf {
 	public RTPSession rtpSession = null;

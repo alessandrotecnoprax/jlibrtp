@@ -19,15 +19,19 @@
 
 package org.jlibrtp.demo;
 
-import jlibrtp.*;
-
 import java.io.File;
 import java.net.DatagramSocket;
-//import java.net.InetSocketAddress;
+import java.util.Iterator;
+import java.util.List;
+
 import org.jdom.Document;
 import org.jdom.Element;
-import org.jdom.input.*;
-import java.util.*;
+import org.jdom.input.SAXBuilder;
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
+import org.jlibrtp.StaticProcs;
 
 public class XmlPacketPlayer implements RTPAppIntf {
 	RTPSession rtpSession = null;
