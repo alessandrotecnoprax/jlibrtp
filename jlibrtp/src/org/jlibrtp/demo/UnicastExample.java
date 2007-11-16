@@ -19,7 +19,11 @@
 package org.jlibrtp.demo;
 
 import java.net.DatagramSocket;
-import jlibrtp.*;
+
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
 
 /**
  * <p>This is an example of how to set up a Unicast session.</p>

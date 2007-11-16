@@ -19,7 +19,11 @@
 package org.jlibrtp.validateccrtp;
 
 import java.net.DatagramSocket;
-import jlibrtp.*;
+
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
 
 /**
  * Receives and prints packets sent by the rtpsend demo program in ccrtp 1.5.x
