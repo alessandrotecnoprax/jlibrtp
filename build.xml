@@ -26,18 +26,31 @@ This file builds jlibrtp.
 
   <target name="-init">
     <property name="src.dir" value="src" />
+    <property name="demo.dir" value="demo" />
     <property name="bin.dir" value="bin" />
     <property name="lib.dir" value="lib" />
     <property name="api.dir" value="api" />
+  	
+  	<property name="jar" value="jlibrtp.jar" />
   	<mkdir dir="${bin.dir}"/>
   </target>
 
   <target name="clean" depends="-init" description="Remove all compiled classes">
     <delete dir="${bin.dir}"/>
+  	<delete file="${jar}"/>
   </target>
 
   <target name="compile" depends="-init" description="Compile everything">
-    <javac srcdir="${src.dir}" destdir="${bin.dir}">
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true"
+        optimize="false">
+      <include name="**/*.java" />
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="jdom.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+    <javac srcdir="${demo.dir}" destdir="${bin.dir}">
       <include name="**/*.java" />
       <classpath>
         <fileset dir="${lib.dir}">
@@ -49,9 +62,9 @@ This file builds jlibrtp.
 
   <target name="jar" depends="compile"
   	description="Create a redistributable jar">
-    <jar destfile="jlibrtp.jar">
+    <jar destfile="${jar}">
       <fileset dir="${bin.dir}">
-        <include name="org/jlibrtp/**/*.class" />
+        <include name="org/jlibrtp/*.class" />
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${user.name}" />
