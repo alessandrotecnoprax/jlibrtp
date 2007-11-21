@@ -313,6 +313,15 @@ public class RTCPReceiverThread extends Thread {
 			}
 		}
 
+		if(! rtpSession.mcSession) {
+		    if (rtcpSession.rtcpSock == null) {
+		        return;
+		    }
+		} else {
+		    if (rtcpSession.rtcpMCSock == null) {
+		        return;
+		    }
+		}
 		while(!rtpSession.endSession) {
 			
 			if(RTPSession.rtcpDebugLevel > 4) {
