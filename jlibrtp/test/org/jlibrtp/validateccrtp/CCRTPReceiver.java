@@ -71,7 +71,7 @@ public class CCRTPReceiver implements RTPAppIntf {
 		
 		me.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 		me.rtpSession.naivePktReception(true);
-		me.rtpSession.RTPSessionRegister(me,null,null);
+		me.rtpSession.registerRTPSession(me,null,null);
 		
 		Participant p = new Participant("127.0.0.1",16386,16387);		
 		me.rtpSession.addParticipant(p);
