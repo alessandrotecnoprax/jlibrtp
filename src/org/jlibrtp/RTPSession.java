@@ -209,7 +209,7 @@ public class RTPSession {
 	  * @param	rtcpApp an object that implements the RTCPAppIntf-interface (optional)
 	  * @return	-1 if this RTPSession-instance already has an application registered.
 	  */
-	 public int RTPSessionRegister(RTPAppIntf rtpApp, RTCPAppIntf rtcpApp, DebugAppIntf debugApp) {
+	 public int registerRTPSession(RTPAppIntf rtpApp, RTCPAppIntf rtcpApp, DebugAppIntf debugApp) {
 		if(registered) {
 			System.out.println("RTPSessionRegister(): Can\'t register another application!");
 			return -1;
@@ -511,7 +511,7 @@ public class RTPSession {
 			// No more RTP packets, please
 			if(this.mcSession) {
 				this.rtcpSession.rtcpMCSock.close();
-			} else {
+			} else if (rtcpSession.rtcpSock != null){
 				this.rtcpSession.rtcpSock.close();
 			}
 		}
@@ -565,7 +565,7 @@ public class RTPSession {
 	
 	/**
 	 * Change the RTP socket of the session. 
-	 * Peers must be notified through SIP or other signalling protocol.
+	 * Peers must be notified through SIP or other signaling protocol.
 	 * Only valid if this is a unicast session to begin with.
 	 * 
 	 * @param newSock integer for new port number, check it is free first.
@@ -582,7 +582,7 @@ public class RTPSession {
 	
 	/**
 	 * Change the RTCP socket of the session. 
-	 * Peers must be notified through SIP or other signalling protocol.
+	 * Peers must be notified through SIP or other signaling protocol.
 	 * Only valid if this is a unicast session to begin with.
 	 * 
 	 * @param newSock the new unicast socket for RTP communication.
@@ -616,7 +616,7 @@ public class RTPSession {
 	
 	/**
 	 * Change the RTCP multicast socket of the session. 
-	 * Peers must be notified through SIP or other signalling protocol.
+	 * Peers must be notified through SIP or other signaling protocol.
 	 * Only valid if this is a multicast session to begin with.
 	 * 
 	 * @param newSock the new multicast socket for RTCP communication.
