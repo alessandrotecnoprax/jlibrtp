@@ -102,7 +102,7 @@ public class CompRtcpPkt {
             int length = (StaticProcs.bytesToUIntInt(rawPkt, start + 2)) + 1;
 
             if(length*4 + start > rawPkt.length) {
-                System.out.println("!!!! CompRtcpPkt.(rawPkt,..,..) length ("+ (length*4+start)
+                LOGGER.warning("!!!! CompRtcpPkt.(rawPkt,..,..) length ("+ (length*4+start)
                         + ") exceeds size of raw packet ("+rawPkt.length+") !");
                 this.problem = -3;
             }
@@ -219,7 +219,7 @@ public class CompRtcpPkt {
                 System.arraycopy(pkt.rawPkt, 0, rawPkt, index, pkt.rawPkt.length);
                 index += pkt.rawPkt.length;
             } else {
-                System.out.println("CompRtcpPkt aPkt.packetType:" + aPkt.packetType);
+                LOGGER.warning("CompRtcpPkt aPkt.packetType:" + aPkt.packetType);
             }
             //System.out.println(" packetType:" + aPkt.packetType + " length:" + aPkt.rawPkt.length + " index:" + index);
         } 

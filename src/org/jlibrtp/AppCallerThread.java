@@ -79,7 +79,7 @@ public class AppCallerThread extends Thread {
                 }
 
                 try { rtpSession.pktBufDataReady.await(); } 
-                catch (Exception e) { System.out.println("AppCallerThread:" + e.getMessage());}
+                catch (Exception e) { LOGGER.log(Level.WARNING, "AppCallerThread:" + e.getMessage(), e);}
 
                 // Next loop over all participants and check whether they have anything for us.
                 Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
