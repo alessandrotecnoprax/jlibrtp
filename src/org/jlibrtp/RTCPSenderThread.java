@@ -366,7 +366,7 @@ public class RTCPSenderThread extends Thread {
 
             try { Thread.sleep(rtcpSession.nextDelay); } 
             catch (Exception e) { 
-                LOGGER.log(Level.WARNING, "RTCPSenderThread Exception message:" + e.getMessage(), e);
+                LOGGER.log(Level.FINEST, "RTCPSenderThread Exception message:" + e.getMessage(), e);
                 // Is the party over?
                 if(this.rtpSession.endSession) {
                     continue;
