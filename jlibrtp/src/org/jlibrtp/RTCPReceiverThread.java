@@ -233,7 +233,11 @@ public class RTCPReceiverThread extends Thread {
 
                     /**        Source Descriptions       **/
                 } else if(aPkt.getClass() == RtcpPktSDES.class) {
-                    RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;				
+                    RtcpPktSDES sdesPkt = (RtcpPktSDES) aPkt;
+
+                    if (rtpSession.appIntf != null) {
+                        rtpSession.appIntf.userEvent(4, sdesPkt.participants);
+                    }
 
                     // The the participant database is updated
                     // when the SDES packet is reconstructed by CompRtcpPkt	
@@ -254,6 +258,9 @@ public class RTCPReceiverThread extends Thread {
                             partArray[i].timestampBYE = time;
                     }
 
+                    if (rtpSession.appIntf != null) {
+                        rtpSession.appIntf.userEvent(1, partArray);
+                    }
                     if(rtpSession.rtcpAppIntf != null) {
                         rtpSession.rtcpAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
                     }
