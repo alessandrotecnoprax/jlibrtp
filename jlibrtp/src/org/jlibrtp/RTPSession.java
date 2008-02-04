@@ -253,7 +253,7 @@ public class RTPSession {
      */
     public long[] sendData(byte[] buf, long rtpTimestamp, long seqNum) {
         byte[][] tmp = {buf};
-        long[][] ret = this.sendData(tmp, null, null, -1, null);
+        long[][] ret = this.sendData(tmp, null, null, rtpTimestamp, null);
 
         if(ret != null)
             return ret[0];
