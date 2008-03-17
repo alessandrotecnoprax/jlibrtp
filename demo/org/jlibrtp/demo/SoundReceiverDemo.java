@@ -138,7 +138,7 @@ public class SoundReceiverDemo implements RTPAppIntf {
 		auline.start();
 		try {
 			while (nBytesRead != -1) {
-				// Used to write audiot to auline here,
+				// Used to write audio to auline here,
 				// now moved directly to receiveData.
 				try { Thread.sleep(1000); } catch(Exception e) { }
 			}

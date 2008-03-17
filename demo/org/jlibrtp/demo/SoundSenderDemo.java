@@ -76,7 +76,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
         if(args.length == 0) {
             args = new String[4];
             args[1] = "127.0.0.1";
-            args[0] = "/home/ak/wonderwall.wav";
+            args[0] = "demo/test.wav";
             args[2] = "16384";
             args[3] = "16385";
         }

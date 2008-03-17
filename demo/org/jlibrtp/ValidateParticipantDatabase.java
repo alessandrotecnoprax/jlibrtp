@@ -21,6 +21,10 @@ package org.jlibrtp;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+import org.jlibrtp.Participant;
+import org.jlibrtp.ParticipantDatabase;
+import org.jlibrtp.RTPSession;
+
 public class ValidateParticipantDatabase {
 
 	/**

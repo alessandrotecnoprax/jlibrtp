@@ -18,6 +18,8 @@
  */
 package org.jlibrtp;
 
+import org.jlibrtp.StaticProcs;
+
 
 /**
  * Validates the StaticProcs.

@@ -1,6 +1,5 @@
 <!--
-  - jlibrtp - library that makes it easy to support RTP (RFC 3550,3551) in Java
-  - applications
+  - jlibrtp - Java library for the Real-Time Transport Protocol (RTP)
   -
   - Copyright (C) 2007 Dirk Schnelle
   -
@@ -25,6 +24,9 @@ This file builds jlibrtp.
   </description>
 
   <target name="-init">
+  	<!-- Allow to override settings.-->
+  	<propertyfile file="jlibrtp.properties"/>
+  	
     <property name="src.dir" value="src" />
     <property name="demo.dir" value="demo" />
     <property name="bin.dir" value="bin" />
@@ -42,7 +44,7 @@ This file builds jlibrtp.
 
   <target name="compile" depends="-init" description="Compile everything">
     <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true"
-        optimize="false">
+        optimize="false" source="1.6" target="1.6">
       <include name="**/*.java" />
       <classpath>
         <fileset dir="${lib.dir}">

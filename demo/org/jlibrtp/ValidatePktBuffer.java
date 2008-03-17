@@ -20,6 +20,12 @@ package org.jlibrtp;
 
 import java.net.DatagramSocket;
 
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
+import org.jlibrtp.PktBuffer;
+import org.jlibrtp.RTPSession;
+import org.jlibrtp.RtpPkt;
+
 
 /**
  * Validates the PktBuffer and associated classes.
