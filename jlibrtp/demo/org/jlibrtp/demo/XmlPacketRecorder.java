@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -36,7 +36,7 @@ import org.jlibrtp.StaticProcs;
 /**
  *
  *
- * 
+ *
  * @author Arne Kepp
  */
 
@@ -47,15 +47,15 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		int packetCount = 0;
 		int maxPacketCount = -1;
 		boolean noBye = true;
-		
+
 		// Debug
 		int dataCount = 0;
 		int pktCount = 0;
-		
+
 		// For the document
 		Document sessionDocument = null;
 		Element sessionElement = null;
-		
+
 		/**
 		 * Constructor
 		 */
@@ -63,7 +63,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			DatagramSocket rtpSocket = null;
 			DatagramSocket rtcpSocket = null;
 			this.maxPacketCount = maxPacketCount;
-			
+
 			try {
 				rtpSocket = new DatagramSocket(rtpPortNum);
 				rtcpSocket = new DatagramSocket(rtcpPortNum);
@@ -71,82 +71,82 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				System.out.println(e.getMessage());
 				System.out.println("RTPSession failed to obtain port");
 			}
-			
-			
+
+
 			this.rtpSession = new RTPSession(rtpSocket, rtcpSocket);
 			this.rtpSession.registerRTPSession(this,this, this);
-			
+
 			Participant p = new Participant("127.0.0.1", 16386, 16387);
 			this.rtpSession.addParticipant(p);
 			this.rtpSession.naivePktReception(true);
 		}
-		
+
 		public void packetReceived(int type, InetSocketAddress socket, String description) {
 			System.out.println("***** " + description);
 		}
-		
+
 		public void packetSent(int type, InetSocketAddress socket, String description) {
 			System.out.println("***** " + description);
 		}
-		
+
 		public void importantEvent(int type, String description) {
-			
+
 		}
 		/**
 		 * RTCP
-		 */			
-		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder, 
+		 */
+		public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder,
 				long rtpTimestamp, long packetCount, long octetCount,
 				// Get the receiver reports, if any
-				long[] reporteeSsrc, int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 
+				long[] reporteeSsrc, int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq,
 				long[] interArrivalJitter, long[] lastSRTimeStamp, long[] delayLastSR) {
 			Element SRPkt = new Element("SRPkt");
 			this.sessionElement.addContent(SRPkt);
-			
+
 			Element ArrivalTimestamp = new Element("ArrivalTimestamp");
 			ArrivalTimestamp.addContent(Long.toString(System.currentTimeMillis()));
 			SRPkt.addContent(ArrivalTimestamp);
-			
+
 			Element RTPTimestamp = new Element("RTPTimestamp");
 			RTPTimestamp.addContent(Long.toString(rtpTimestamp));
 			SRPkt.addContent(RTPTimestamp);
-			
+
 			Element NTPHigh = new Element("NTPHigh");
 			NTPHigh.addContent(Long.toString(ntpHighOrder));
 			SRPkt.addContent(NTPHigh);
-			
+
 			Element NTPLow = new Element("NTPLow");
 			NTPLow.addContent(Long.toString(ntpLowOrder));
 			SRPkt.addContent(NTPLow);
-			
+
 			Element SSRC = new Element("SSRC");
 			SSRC.addContent(Long.toString(ssrc));
 			SRPkt.addContent(SSRC);
-			
+
 			Element PacketCount = new Element("PacketCount");
 			PacketCount.addContent(Long.toString(packetCount));
 			SRPkt.addContent(PacketCount);
-			
+
 			Element OctetCount = new Element("OctetCount");
 			OctetCount.addContent(Long.toString(octetCount));
 			SRPkt.addContent(OctetCount);
-			
+
 
 			this.packetCount++;
 		}
-		
-		public void RRPktReceived(long reporterSsrc, long[] reporteeSsrc, 
-				int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq, 
+
+		public void RRPktReceived(long reporterSsrc, long[] reporteeSsrc,
+				int[] lossFraction, int[] cumulPacketsLost, long[] extHighSeq,
 				long[] interArrivalJitter, long[] lastSRTimeStamp, long[] delayLastSR) {
-				
-			this.sessionElement.addContent(new Element("RRPkt"));			
-			this.packetCount++;	
+
+			this.sessionElement.addContent(new Element("RRPkt"));
+			this.packetCount++;
 		}
-		
+
 		public void SDESPktReceived(Participant[] relevantParticipants) {
 			Element SDESPkt = new Element("SDESPkt");
 			this.sessionElement.addContent(SDESPkt);
-			
+
 			if(relevantParticipants != null) {
 				for(int i=0;i<relevantParticipants.length;i++) {
 					Participant part = relevantParticipants[i];
@@ -204,27 +204,27 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				System.out.println("SDES with no participants?");
 			}
 
-			this.packetCount++;	
+			this.packetCount++;
 		}
-		
-		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {			
+
+		public void BYEPktReceived(Participant[] relevantParticipants, String reason) {
 			Element BYEPkt = new Element("BYEPkt");
 			this.sessionElement.addContent(BYEPkt);
-			
+
 			if(relevantParticipants != null) {
 				for(int i=0;i<relevantParticipants.length;i++) {
 					Element Participant = new Element("Participant");
 					BYEPkt.addContent(Participant);
-					
+
 					Element SSRC = new Element("SSRC");
 					SSRC.addContent(Long.toString(relevantParticipants[i].getSSRC()));
 					Participant.addContent(SSRC);
-					
+
 					if(relevantParticipants[i].getCNAME() != null) {
 						Element CNAME = new Element("CNAME");
 						CNAME.addContent(relevantParticipants[i].getCNAME());
 						Participant.addContent(CNAME);
-					}					
+					}
 				}
 			}
 			if(reason != null) {
@@ -232,25 +232,25 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				Reason.addContent(reason);
 				BYEPkt.addContent(Reason);
 			}
-			
+
 			this.packetCount++;
-			
+
 			// Terminate the session
 			this.maxPacketCount = this.packetCount;
 		}
-		
+
 		public void APPPktReceived(Participant part, int subtype, byte[] name, byte[] data) {
 			Element APPPkt = new Element("APPPkt");
 			this.sessionElement.addContent(APPPkt);
-			
+
 			Element SSRC = new Element("SSRC");
 			SSRC.addContent(Long.toString(part.getSSRC()));
 			APPPkt.addContent(SSRC);
-			
+
 			Element type = new Element("SubType");
 			type.addContent(Integer.toString(subtype));
 			APPPkt.addContent(type);
-			
+
 			Element Name = new Element("Name");
 			byte[] tmp;
 			byte[] output = new byte[name.length*2];
@@ -261,7 +261,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			}
 			Name.addContent(new String(output));
 			APPPkt.addContent(Name);
-			
+
 			Element Data = new Element("Data");
 			output = new byte[data.length*2];
 			for(int i=0; i<name.length; i++) {
@@ -272,7 +272,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			Data.addContent(new String(output));
 			APPPkt.addContent(Data);
 		}
-		
+
 		/**
 		 * RTP
 		 */
@@ -280,45 +280,45 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			//System.out.println(" RECEIVING RECEIVING ");
 			Element RTPPkt = new Element("RTPpacket");
 			this.sessionElement.addContent(RTPPkt);
-			
+
 			Element ArrivalTimestamp = new Element("ArrivalTimestamp");
 			ArrivalTimestamp.addContent(Long.toString(System.currentTimeMillis()));
 			RTPPkt.addContent(ArrivalTimestamp);
-			
+
 			Element RTPTimestamp = new Element("RTPTimestamp");
 			RTPTimestamp.addContent(Long.toString(frame.rtpTimestamp()));
 			RTPPkt.addContent(RTPTimestamp);
-			
+
 			Element SequenceNumber = new Element("SequenceNumber");
 			int[] seqNums = frame.sequenceNumbers();
 			SequenceNumber.addContent(Long.toString(seqNums[0]));
 			RTPPkt.addContent(SequenceNumber);
-			
+
 			if(frame.timestamp() > 0) {
 				Element Timestamp = new Element("Timestamp");
 				Timestamp.addContent(Long.toString(frame.timestamp()));
 				RTPPkt.addContent(Timestamp);
 			}
-			
+
 			Element PayloadType = new Element("PayloadType");
 			PayloadType.addContent(Integer.toString(frame.payloadType()));
 			RTPPkt.addContent(PayloadType);
-			
+
 			Element Marked = new Element("Marked");
 			Marked.addContent(Boolean.toString(frame.marked()));
 			RTPPkt.addContent(Marked);
-			
+
 			Element SSRC = new Element("SSRC");
 			SSRC.addContent(Long.toString(frame.ssrc()));
 			RTPPkt.addContent(SSRC);
-			
+
 			long[] csrcArray = frame.csrcs();
 			for(int i=0; i< csrcArray.length; i++) {
 				Element CSRC = new Element("CSRC");
 				CSRC.addContent(Long.toString(csrcArray[i]));
 				RTPPkt.addContent(CSRC);
 			}
-			
+
 			Element Payload = new Element("Payload");
 			byte[] payload = frame.getConcatenatedData();
 			byte[] tmp;
@@ -330,7 +330,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			}
 			Payload.addContent(new String(output));
 			RTPPkt.addContent(Payload);
-			
+
 			// Stats
 			dataCount += payload.length;
 			//if(pktCount % 10 == 0) {
@@ -343,10 +343,10 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 			//	System.out.println(Long.toString(test));
 			//}
 			pktCount++;
-			
+
 			this.packetCount++;
 		}
-		
+
 		public void userEvent(int type, Participant[] participant) {
 			if(type == 1) {
 				this.noBye = false;
@@ -354,11 +354,11 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				//Do nothing
 			}
 		}
-		
+
 		public int frameSize(int payloadType) {
 			return 1;
 		}
-		
+
 		/**
 		 * Creates the document instance that will hold all other elements.
 		 */
@@ -368,24 +368,24 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 	        //create the document
 	        this.sessionDocument = new Document(sessionElement);
 	        //add an attribute to the root element
-	        
+
 	        Element sessionInformation = new Element("sessionInformation");
 	        this.sessionElement.addContent(sessionInformation);
-	        
+
 	        Element ssrc = new Element("SSRC");
 	        ssrc.addContent( Long.toString(this.rtpSession.getSsrc()));
 	        sessionInformation.addContent(ssrc);
-	        
+
 	        Element cname = new Element("CNAME");
 	        cname.addContent( rtpSession.CNAME());
 	        sessionInformation.addContent(cname);
-	        
+
 	        Element sessionStart = new Element("sessionStart");
 	        sessionStart.addContent(Long.toString(System.currentTimeMillis()));
 	        sessionStart.setAttribute("unit","ms");
 	        sessionInformation.addContent(sessionStart);
 	    }
-	
+
 		public static void main(String[] args) {
 			int rtpPortNum = -1;
 			int rtcpPortNum = -1;
@@ -415,7 +415,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 		    	rtcpPortNum = 16385;
 		    	filename =  "/home/ak/jlibrtp_packets.xml";
 		    	maxPacketCount = 1300;
-				
+
 				run = true;
 			} else {
 				System.out.println("Syntax: ");
@@ -423,15 +423,15 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 				System.out.println("If \"max number of packets\" is set to something negative " +
 						"the system will run until it receives a BYE message.");
 			}
-			
+
 			if(run) {
 				XmlPacketRecorder recorder = new XmlPacketRecorder(rtpPortNum, rtcpPortNum, maxPacketCount);
 				recorder.createDocument();
 
 				System.out.println("Waiting for packets, dots denote received packets in interval of 500ms.");
 				int prevCount = 0;
-				while((recorder.packetCount < 0 || recorder.packetCount < recorder.maxPacketCount) 
-						&& recorder.noBye) {	
+				while((recorder.packetCount < 0 || recorder.packetCount < recorder.maxPacketCount)
+						&& recorder.noBye) {
 					if(recorder.packetCount > prevCount)
 						System.out.print(".");
 					prevCount = recorder.packetCount;
