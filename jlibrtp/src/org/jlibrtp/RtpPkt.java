@@ -154,7 +154,8 @@ public class RtpPkt {
         return 12 + 4*getCsrcCount();
     }
     protected int getPayloadLength() {
-        return payload.length;
+        if (payload != null) return payload.length;
+        return 0;
     }
     //public int getPaddingLength() {
     //	return lenPadding;
