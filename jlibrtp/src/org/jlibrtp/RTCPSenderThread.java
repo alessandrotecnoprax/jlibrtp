@@ -354,11 +354,11 @@ public class RTCPSenderThread extends Thread {
         Iterator<Participant> iter = null;
 
         // TODO Change to rtcpReceivers
-        if(rtpSession.mcSession) {
+        /*if(rtpSession.mcSession) {
             enu = rtpSession.partDb.getParticipants();
         } else {
             iter = rtpSession.partDb.getUnicastReceivers();
-        }
+        }*/
         while(! rtpSession.endSession) {
             if(LOGGER.isLoggable(Level.FINEST)) {
                 LOGGER.finest("<-> RTCPSenderThread sleeping for " +rtcpSession.nextDelay+" ms");
@@ -403,6 +403,13 @@ public class RTCPSenderThread extends Thread {
             //Grab the next person
             Participant part = null;
 
+            //copied from above to reduce the ConcurrentModificationException freq.
+            if(rtpSession.mcSession) {
+                enu = rtpSession.partDb.getParticipants();
+            } else {
+                iter = rtpSession.partDb.getUnicastReceivers();
+            }
+
             //Multicast
             if(this.rtpSession.mcSession) {
                 if(! enu.hasMoreElements())
@@ -421,8 +428,9 @@ public class RTCPSenderThread extends Thread {
                 }
 
                 if(iter.hasNext() ) {
-                    while( iter.hasNext() && (part == null || part.rtcpAddress == null)) {
-                        part = iter.next();
+                    while (iter.hasNext() &&
+                           (part == null || part.rtcpAddress == null)) {
+                        part = iter.next();//Some time there's a ConcurrentModificationException here
                     }
                 }
 
