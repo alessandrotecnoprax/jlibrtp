@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -25,10 +25,10 @@ import java.util.logging.Logger;
 /**
  * Data structure to hold a complete frame if frame reconstruction
  * is enabled, or the data from an individual packet if it is not
- * 
- * It also contains most of the data from the individual packets 
+ *
+ * It also contains most of the data from the individual packets
  * that it is based on.
- * 
+ *
  * @author Arne Kepp
  */
 public class DataFrame {
@@ -83,10 +83,11 @@ public class DataFrame {
         this.rtpTimestamp = aBufNode.timeStamp;
         SSRC = aPkt.getSsrc();
         CSRCs = aPkt.getCsrcArray();
+        payloadType = aPkt.getPayloadType();
 
-        // Check whether we can compute an NTPish timestamp? Requires two SR reports 
+        // Check whether we can compute an NTPish timestamp? Requires two SR reports
         if(p.ntpGradient > 0) {
-            //System.out.print(Long.toString(p.ntpOffset)+" " 
+            //System.out.print(Long.toString(p.ntpOffset)+" "
             timestamp =  p.ntpOffset + (long) (p.ntpGradient*(double)(this.rtpTimestamp-p.lastSRRtpTs));
         }
 
@@ -139,9 +140,9 @@ public class DataFrame {
 
     /**
      * Returns a two dimensial array where the first dimension represents individual
-     * packets, from which the frame is made up, in order of increasing sequence number. 
+     * packets, from which the frame is made up, in order of increasing sequence number.
      * These indeces can be matched to the sequence numbers returned by sequenceNumbers().
-     * 
+     *
      * @return 2-dim array with raw data from packets
      */
     public byte[][] getData() {
@@ -153,7 +154,7 @@ public class DataFrame {
      * It ignores missing sequence numbers, but then isComplete()
      * will return false provided that RTPAppIntf.frameSize()
      * provides a non-negative number for this payload type.
-     * 
+     *
      * @return byte[] with all the data concatenated
      */
     public byte[] getConcatenatedData() {
@@ -165,7 +166,7 @@ public class DataFrame {
                 int length = data[i].length;
 
                 // Last packet may be shorter
-                if(pos + length > totalLength) 
+                if(pos + length > totalLength)
                     length = totalLength - pos;
 
                 System.arraycopy(data[i], 0, ret, pos, length);
@@ -178,14 +179,14 @@ public class DataFrame {
     }
 
     /**
-     * If two SR packet have been received jlibrtp will attempt to calculate 
+     * If two SR packet have been received jlibrtp will attempt to calculate
      * the local UNIX timestamp (in milliseconds) of all packets received.
-     * 
-     * This value should ideally correspond to the local time when the 
+     *
+     * This value should ideally correspond to the local time when the
      * SSRC sent the packet. Note that the source may not be reliable.
-     * 
+     *
      * Returns -1 if less than two SRs have been received
-     * 
+     *
      * @return the UNIX timestamp, similar to System.currentTimeMillis() or -1;
      */
     public long timestamp() {
@@ -195,7 +196,7 @@ public class DataFrame {
 
     /**
      * Returns the RTP timestamp of all the packets in the frame.
-     * 
+     *
      * @return unmodified RTP timestamp
      */
     public long rtpTimestamp() {
@@ -204,7 +205,7 @@ public class DataFrame {
 
     /**
      * Returns the payload type of the packets
-     * 
+     *
      * @return the payload type of the packets
      */
     public int payloadType() {
@@ -212,12 +213,12 @@ public class DataFrame {
     }
 
     /**
-     * Returns an array whose values, for the same index, correpond to the 
+     * Returns an array whose values, for the same index, correpond to the
      * sequence number of the packet from which the data came.
-     * 
-     * This information can be valuable in conjunction with getData(), 
+     *
+     * This information can be valuable in conjunction with getData(),
      * to identify what parts of a frame are missing.
-     * 
+     *
      * @return array with sequence numbers
      */
     public int[] sequenceNumbers() {
@@ -225,11 +226,11 @@ public class DataFrame {
     }
 
     /**
-     * Returns an array whose values, for the same index, correpond to 
-     * whether the data was marked or not. 
-     * 
+     * Returns an array whose values, for the same index, correpond to
+     * whether the data was marked or not.
+     *
      * This information can be valuable in conjunction with getData().
-     * 
+     *
      * @return array of booleans
      */
     public boolean[] marks() {
@@ -238,10 +239,10 @@ public class DataFrame {
 
     /**
      * Returns true if any packet in the frame was marked.
-     * 
+     *
      * This function should be used if all your frames fit
      * into single packets.
-     * 
+     *
      * @return true if any packet was marked, false otherwise
      */
     public boolean marked() {
@@ -250,7 +251,7 @@ public class DataFrame {
 
     /**
      * The SSRC associated with this frame.
-     * 
+     *
      * @return the ssrc that created this frame
      */
     public long ssrc() {
@@ -259,7 +260,7 @@ public class DataFrame {
 
     /**
      * The SSRCs that contributed to this frame
-     * 
+     *
      * @return an array of contributing SSRCs, or null
      */
     public long[] csrcs() {
@@ -271,7 +272,7 @@ public class DataFrame {
      * to the number of packets received for the current timestamp,
      * and whether this value corresponds to the expected number of
      * packets.
-     * 
+     *
      * @return true if the right number of packets make up the frame
      */
     public int complete() {
