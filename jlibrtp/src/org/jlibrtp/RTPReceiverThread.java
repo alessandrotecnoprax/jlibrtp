@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,12 +26,12 @@ import java.util.logging.Logger;
 
 /**
  * The RTP receiver thread waits on the designated UDP socket for new packets.
- * 
- * Once one arrives, it is parsed and tested. We also check the ip-address of the sender. 
+ *
+ * Once one arrives, it is parsed and tested. We also check the ip-address of the sender.
  * If accepted, the packet is added onto the packet buffer of the participant.
- * 
+ *
  * A separate thread moves the packet from the packet buffer to the application.
- * 
+ *
  * @author Arne Kepp
  */
 public class RTPReceiverThread extends Thread {
@@ -46,7 +46,7 @@ public class RTPReceiverThread extends Thread {
         rtpSession = session;
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTPReceiverThread created");
-        } 
+        }
     }
 
     public void run() {
@@ -83,7 +83,7 @@ public class RTPReceiverThread extends Thread {
                     }
                 }
             } else {
-                //Multicast 
+                //Multicast
                 try {
                     rtpSession.rtpMCSock.receive(packet);
                 } catch (IOException e) {
@@ -147,8 +147,8 @@ public class RTPReceiverThread extends Thread {
                     part.pktBuffer = pktBuffer;
                 }
             } else {
-                LOGGER.warning("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc() 
-                        + " the sending ip-address was " + packet.getAddress().toString() 
+                LOGGER.warning("RTPReceiverThread: Got an unexpected packet from " + pkt.getSsrc()
+                        + " the sending ip-address was " + packet.getAddress().toString()
                         + ", we expected from " + part.rtpAddress.toString());
             }
 

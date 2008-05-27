@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,17 +24,17 @@ import java.util.logging.Logger;
 
 /**
  * The participant database maintains three hashtables with participants.
- * 
+ *
  * The key issue is to be fast for operations that happen every time an
- * RTP packet is sent or received. We allow linear searching in cases 
+ * RTP packet is sent or received. We allow linear searching in cases
  * where we need to update participants with information.
- * 
+ *
  * The keying is therefore usually the SSRC. In cases where we have the
  * cname, but no SSRC is known (no SDES packet has been received), a
  * simple hash i calculated based on the CNAME. The RTCP code should,
  * when receiving SDES packets, check whether the participant is known
  * and update the copy in this database with SSRC if needed.
- * 
+ *
  * @author Arne Kepp
  */
 public class ParticipantDatabase {
@@ -44,13 +44,13 @@ public class ParticipantDatabase {
 
     /** The parent RTP Session */
     RTPSession rtpSession = null;
-    /** 
+    /**
      * A linked list to hold participants explicitly added by the application
-     * In unicast mode this is the list used for RTP and RTCP transmission, 
-     * in multicast it should not be in use. 
+     * In unicast mode this is the list used for RTP and RTCP transmission,
+     * in multicast it should not be in use.
      */
-    LinkedList<Participant> receivers = new LinkedList<Participant>();	
-    /** 
+    LinkedList<Participant> receivers = new LinkedList<Participant>();
+    /**
      * The hashtable holds participants added through received RTP and RTCP packets,
      * as well as participants that have been linked to an SSRC by ip address (in unicast mode).
      */
@@ -58,7 +58,7 @@ public class ParticipantDatabase {
 
     /**
      * Simple constructor
-     * 
+     *
      * @param parent parent RTPSession
      */
     protected ParticipantDatabase(RTPSession parent) {
@@ -66,10 +66,10 @@ public class ParticipantDatabase {
     }
 
     /**
-     * 
+     *
      * @param cameFrom 0: Application, 1: RTP packet, 2: RTCP
      * @param p the participant
-     * @return 0 if okay, -1 if not 
+     * @return 0 if okay, -1 if not
      */
     protected int addParticipant(int cameFrom, Participant p) {
         //Multicast or not?
@@ -83,14 +83,14 @@ public class ParticipantDatabase {
 
     /**
      * Add a multicast participant to the database
-     * 
+     *
      * @param cameFrom 0: Application, 1,2: discovered through RTP or RTCP
      * @param p the participant to add
      * @return 0 if okay, -2 if redundant, -1 if adding participant to multicast
      */
     private int addParticipantMulticast(int cameFrom, Participant p) {
         if( cameFrom == 0) {
-            LOGGER.warning("ParticipantDatabase.addParticipant() doesnt expect" 
+            LOGGER.warning("ParticipantDatabase.addParticipant() doesnt expect"
                     + " application to add participants to multicast session.");
             return -1;
         } else {
@@ -108,12 +108,12 @@ public class ParticipantDatabase {
 
     /**
      * Add a unicast participant to the database
-     * 
+     *
      * Result will be reported back through tpSession.appIntf.userEvent
-     * 
+     *
      * @param cameFrom 0: Application, 1,2: discovered through RTP or RTCP
      * @param p the participant to add
-     * @return 0 if new, 1 if 
+     * @return 0 if new, 1 if
      */
     private int addParticipantUnicast(int cameFrom, Participant p) {
         if(cameFrom == 0) {
@@ -123,8 +123,8 @@ public class ParticipantDatabase {
             Enumeration<Participant> enu = this.ssrcTable.elements();
             while(notDone && enu.hasMoreElements()) {
                 Participant part = enu.nextElement();
-                if(part.unexpected && 
-                        (part.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress()) 
+                if(part.unexpected &&
+                        (part.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress())
                                 || part.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))) {
 
                     part.rtpAddress = p.rtpAddress;
@@ -154,7 +154,7 @@ public class ParticipantDatabase {
                 Participant part = iter.next();
 
                 //System.out.println(part.rtpAddress.getAddress().toString()
-                //		+ " " + part.rtcpAddress.getAddress().toString() 
+                //		+ " " + part.rtcpAddress.getAddress().toString()
                 //		+ " " + p.rtpReceivedFromAddress.getAddress().toString()
                 //		+ " " + p.rtcpReceivedFromAddress.getAddress().toString());
 
@@ -186,14 +186,14 @@ public class ParticipantDatabase {
             }
 
             // No match? ok
-            this.ssrcTable.put(p.ssrc, p);				
+            this.ssrcTable.put(p.ssrc, p);
             return 0;
         }
     }
 
     /**
      * Remove a participant from all tables
-     * 
+     *
      * @param p the participant to be removed
      */
     protected void removeParticipant(Participant p) {
@@ -205,21 +205,21 @@ public class ParticipantDatabase {
 
     /**
      * Find a participant based on the ssrc
-     * 
+     *
      * @param ssrc of the participant to be found
      * @return the participant, null if unknonw
      */
     protected Participant getParticipant(long ssrc) {
         Participant p = null;
         p = ssrcTable.get(ssrc);
-        return p; 
+        return p;
     }
 
     /**
      * Iterator for all the unicast receivers.
-     * 
+     *
      * This one is used by both RTP for sending packets, as well as RTCP.
-     * 
+     *
      * @return iterator for unicast participants
      */
     protected Iterator<Participant> getUnicastReceivers() {
@@ -233,9 +233,9 @@ public class ParticipantDatabase {
 
     /**
      * Enumeration of all the participants with known ssrcs.
-     * 
+     *
      * This is primarily used for sending packets in multicast sessions.
-     * 
+     *
      * @return enumerator with all the participants with known SSRCs
      */
     protected Enumeration<Participant> getParticipants() {

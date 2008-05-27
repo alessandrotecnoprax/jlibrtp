@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,9 +22,9 @@ package org.jlibrtp;
  * This is a four-directional data structures used for
  * the frame buffer, i.e. buffer for pkts that need
  * to be assimilated into complete frames.
- * 
+ *
  * All the actual work is done by PktBuffer.
- * 
+ *
  * @author Arne Kepp
  *
  */
@@ -43,7 +43,7 @@ public class PktBufNode {
 	protected int seqNum;
 	/** The payload, a parsed RTP Packet */
 	protected RtpPkt pkt = null;
-	
+
 	/**
 	 * Create a new packet buffer node based on a packet
 	 * @param aPkt the packet

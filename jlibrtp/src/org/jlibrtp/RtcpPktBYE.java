@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 /**
  * RTCP packets for sending Bye messages
- * 
+ *
  * @author Arne Kepp
  */
 public class RtcpPktBYE extends RtcpPkt {
@@ -69,7 +69,7 @@ public class RtcpPktBYE extends RtcpPkt {
         }
     }
 
-    protected void encode() {			
+    protected void encode() {
         itemCount = ssrcArray.length;
         length = 4*ssrcArray.length;
 
@@ -87,14 +87,14 @@ public class RtcpPktBYE extends RtcpPkt {
         // SSRCs
         for(i=0; i<ssrcArray.length; i++ ) {
             someBytes = StaticProcs.uIntLongToByteWord(ssrcArray[i]);
-            System.arraycopy(someBytes, 0, rawPkt, 4 + 4*i, 4);			
+            System.arraycopy(someBytes, 0, rawPkt, 4 + 4*i, 4);
         }
 
         // Reason for leaving
         if(reason != null) {
             //System.out.println("Writing to:"+(4+4*ssrcArray.length)+ " reason.length:"+reason.length );
             rawPkt[(4 + 4*ssrcArray.length)] = (byte) reason.length;
-            System.arraycopy(reason, 0, rawPkt, 4+4*i +1, reason.length);		
+            System.arraycopy(reason, 0, rawPkt, 4+4*i +1, reason.length);
         }
         super.writeHeaders();
     }

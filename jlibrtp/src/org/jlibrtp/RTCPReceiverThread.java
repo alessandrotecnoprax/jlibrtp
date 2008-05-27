@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 /**
  * This thread hangs on the RTCP socket and waits for new packets
- * 
+ *
  * @author Arne Kepp
  *
  */
@@ -53,17 +53,17 @@ public class RTCPReceiverThread extends Thread {
 
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTCPReceiverThread created");
-        } 
+        }
 
     }
 
     /**
      * Find out whether a participant with this SSRC is known.
-     * 
+     *
      * If the user is unknown, and the system is operating in unicast mode,
      * try to match the ip-address of the sender to the ip address of a
      * previously unmatched target
-     * 
+     *
      * @param ssrc the SSRC of the participant
      * @param packet the packet that notified us
      * @return the relevant participant, possibly newly created
@@ -74,12 +74,12 @@ public class RTCPReceiverThread extends Thread {
             Enumeration<Participant> enu = rtpSession.partDb.getParticipants();
             while(enu.hasMoreElements()) {
                 Participant tmp = (Participant) enu.nextElement();
-                if(tmp.ssrc < 0 && 
+                if(tmp.ssrc < 0 &&
                         (tmp.rtcpAddress.getAddress().equals(packet.getAddress())
                                 || tmp.rtpAddress.getAddress().equals(packet.getAddress()))) {
 
                     // Best guess
-                    LOGGER.warning("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
+                    LOGGER.warning("RTCPReceiverThread: Got an unexpected packet from SSRC:"
                             + ssrc  + " @" + packet.getAddress().toString() + ", WAS able to match it." );
 
                     tmp.ssrc = ssrc;
@@ -87,7 +87,7 @@ public class RTCPReceiverThread extends Thread {
                 }
             }
             // Create an unknown sender
-            LOGGER.warning("RTCPReceiverThread: Got an unexpected packet from SSRC:" 
+            LOGGER.warning("RTCPReceiverThread: Got an unexpected packet from SSRC:"
                     + ssrc  + " @" + packet.getAddress().toString() + ", was NOT able to match it." );
             p = new Participant((InetSocketAddress) null, (InetSocketAddress) packet.getSocketAddress(), ssrc);
             rtpSession.partDb.addParticipant(2,p);
@@ -98,9 +98,9 @@ public class RTCPReceiverThread extends Thread {
 
     /**
      * Parse a received UDP packet
-     * 
+     *
      * Perform the header checks and extract the RTCP packets in it
-     * 
+     *
      * @param packet the packet to be parsed
      * @return -1 if there was a problem, 0 if successfully parsed
      */
@@ -115,11 +115,11 @@ public class RTCPReceiverThread extends Thread {
             byte[] rawPkt = packet.getData();
 
             // Parse the received compound RTCP (?) packet
-            CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(), 
+            CompRtcpPkt compPkt = new CompRtcpPkt(rawPkt, packet.getLength(),
                     (InetSocketAddress) packet.getSocketAddress(), rtpSession);
 
             if(this.rtpSession.debugAppIntf != null) {
-                String intfStr; 
+                String intfStr;
 
                 if(rtpSession.mcSession) {
                     intfStr = this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString();
@@ -128,18 +128,18 @@ public class RTCPReceiverThread extends Thread {
                 }
 
                 if( compPkt.problem == 0) {
-                    String str = new String("Received compound RTCP packet of size " + packet.getLength() + 
+                    String str = new String("Received compound RTCP packet of size " + packet.getLength() +
                             " from " + packet.getSocketAddress().toString() + " via " + intfStr
                             + " containing " + compPkt.rtcpPkts.size() + " packets" );
 
-                    this.rtpSession.debugAppIntf.packetReceived(1, 
+                    this.rtpSession.debugAppIntf.packetReceived(1,
                             (InetSocketAddress) packet.getSocketAddress(), str);
                 } else {
-                    String str = new String("Received invalid RTCP packet of size " + packet.getLength() + 
+                    String str = new String("Received invalid RTCP packet of size " + packet.getLength() +
                             " from " + packet.getSocketAddress().toString() + " via " +  intfStr
                             + ": " + this.debugErrorString(compPkt.problem) );
 
-                    this.rtpSession.debugAppIntf.packetReceived(-2, 
+                    this.rtpSession.debugAppIntf.packetReceived(-2,
                             (InetSocketAddress) packet.getSocketAddress(), str);
                 }
             }
@@ -165,7 +165,7 @@ public class RTCPReceiverThread extends Thread {
 
                 // Our own packets should already have been filtered out.
                 if(aPkt.ssrc == rtpSession.ssrc) {
-                    LOGGER.warning("RTCPReceiverThread() received RTCP packet" 
+                    LOGGER.warning("RTCPReceiverThread() received RTCP packet"
                             + " with conflicting SSRC from " + packet.getSocketAddress().toString());
                     rtpSession.resolveSsrcConflict();
                     return -1;
@@ -179,7 +179,7 @@ public class RTCPReceiverThread extends Thread {
                     p.lastRtcpPkt = curTime;
 
                     if(rtpSession.rtcpAppIntf != null) {
-                        rtpSession.rtcpAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc, 
+                        rtpSession.rtcpAppIntf.RRPktReceived(rrPkt.ssrc, rrPkt.reporteeSsrc,
                                 rrPkt.lossFraction, rrPkt.lostPktCount, rrPkt.extHighSeqRecv,
                                 rrPkt.interArvJitter, rrPkt.timeStampLSR, rrPkt.delaySR);
                     }
@@ -217,13 +217,13 @@ public class RTCPReceiverThread extends Thread {
 
                     if(rtpSession.rtcpAppIntf != null) {
                         if(srPkt.rReports != null) {
-                            rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+                            rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2,
                                     srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
                                     srPkt.rReports.reporteeSsrc, srPkt.rReports.lossFraction, srPkt.rReports.lostPktCount,
                                     srPkt.rReports.extHighSeqRecv, srPkt.rReports.interArvJitter, srPkt.rReports.timeStampLSR,
                                     srPkt.rReports.delaySR);
                         } else {
-                            rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2, 
+                            rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2,
                                     srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
                                     null, null, null,
                                     null, null, null,
@@ -240,7 +240,7 @@ public class RTCPReceiverThread extends Thread {
                     }
 
                     // The the participant database is updated
-                    // when the SDES packet is reconstructed by CompRtcpPkt	
+                    // when the SDES packet is reconstructed by CompRtcpPkt
                     if(rtpSession.rtcpAppIntf != null) {
                         rtpSession.rtcpAppIntf.SDESPktReceived(sdesPkt.participants);
                     }
@@ -285,7 +285,7 @@ public class RTCPReceiverThread extends Thread {
 
     /**
      * Returns a legible message when an error occurs
-     * 
+     *
      * @param errorCode the internal error code, commonly negative of packet type
      * @return a string that is hopefully somewhat informative
      */
@@ -310,9 +310,9 @@ public class RTCPReceiverThread extends Thread {
 
     /**
      * Start the RTCP receiver thread.
-     * 
+     *
      * It will
-     * 1) run when it receives a packet 
+     * 1) run when it receives a packet
      * 2) parse the packet
      * 3) call any relevant callback functions, update database
      * 4) block until the next one arrives.
@@ -380,7 +380,7 @@ public class RTCPReceiverThread extends Thread {
                 //System.out.println("Packet received from: " + packet.getSocketAddress().toString());
                 parsePacket(packet);
                 //rtpSession.partDb.debugPrint();
-            }			
+            }
         }
 
         if(LOGGER.isLoggable(Level.FINEST)) {

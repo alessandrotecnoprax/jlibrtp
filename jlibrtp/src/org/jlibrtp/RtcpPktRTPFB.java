@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,10 +22,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * RTCP packets for RTP Feedback Messages 
- * 
+ * RTCP packets for RTP Feedback Messages
+ *
  * In line with RFC 4585, this packet currently only supports NACKs
- * 
+ *
  * @author Arne Kepp
  */
 public class RtcpPktRTPFB extends RtcpPkt {
@@ -44,28 +44,28 @@ public class RtcpPktRTPFB extends RtcpPkt {
 
     /**
      * Constructor for RTP Feedback Message
-     * 
+     *
      * @param ssrcPacketSender SSRC of sender, taken from RTPSession
      * @param ssrcMediaSource SSRC of recipient of this message
      * @param FMT the Feedback Message Subtype
      * @param PID RTP sequence numbers of lost packets
-     * @param BLP bitmask of following lost packets, shared index with PID 
+     * @param BLP bitmask of following lost packets, shared index with PID
      */
     protected RtcpPktRTPFB(long ssrcPacketSender, long ssrcMediaSource, int FMT, int[] PID, int[] BLP) {
         super.packetType = 205; //RTPFB
-        super.itemCount = FMT; 
+        super.itemCount = FMT;
         this.PID = PID;
         this.BLP = BLP;
     }
 
     /**
      * Constructor that parses a raw packet to retrieve information
-     * 
+     *
      * @param aRawPkt the raw packet to be parsed
      * @param start the start of the packet, in bytes
      * @param rtpSession the session on which the callback interface resides
      */
-    protected RtcpPktRTPFB(byte[] aRawPkt, int start, RTPSession rtpSession) {		
+    protected RtcpPktRTPFB(byte[] aRawPkt, int start, RTPSession rtpSession) {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("  -> RtcpPktRTPFB(byte[], int start)");
         }
@@ -110,7 +110,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
     protected void encode() {
@@ -134,7 +134,7 @@ public class RtcpPktRTPFB extends RtcpPkt {
         writeHeaders();
     }
 
-    /** 
+    /**
      * Get the FMT (Feedback Message Type)
      * @return value stored in .itemcount, same field
      */

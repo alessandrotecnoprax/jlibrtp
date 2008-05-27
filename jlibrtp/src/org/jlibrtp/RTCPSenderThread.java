@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,11 +26,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This thread sends scheduled RTCP packets 
- * 
+ * This thread sends scheduled RTCP packets
+ *
  * It also performs maintenance of various queues and the participant
  * database.
- * 
+ *
  * @author Arne Kepp
  *
  */
@@ -57,7 +57,7 @@ public class RTCPSenderThread extends Thread {
         this.rtcpSession = rtcpSession;
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTCPSenderThread created");
-        } 
+        }
     }
 
     /**
@@ -69,7 +69,7 @@ public class RTCPSenderThread extends Thread {
         CompRtcpPkt compPkt = new CompRtcpPkt();
 
         //Need a SR for validation
-        RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
+        RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc,
                 this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
         compPkt.addPacket(srPkt);
 
@@ -103,7 +103,7 @@ public class RTCPSenderThread extends Thread {
 
     /**
      * Multicast version of sending a Compound RTCP packet
-     * 
+     *
      * @param pkt the packet to best
      * @return 0 is successful, -1 otherwise
      */
@@ -127,9 +127,9 @@ public class RTCPSenderThread extends Thread {
             rtcpSession.rtcpMCSock.send(packet);
             //Debug
             if(this.rtpSession.debugAppIntf != null) {
-                this.rtpSession.debugAppIntf.packetSent(3, (InetSocketAddress) packet.getSocketAddress(), 
-                        new String("Sent multicast RTCP packet of size " + packet.getLength() + 
-                                " to " + packet.getSocketAddress().toString() + " via " 
+                this.rtpSession.debugAppIntf.packetSent(3, (InetSocketAddress) packet.getSocketAddress(),
+                        new String("Sent multicast RTCP packet of size " + packet.getLength() +
+                                " to " + packet.getSocketAddress().toString() + " via "
                                 + this.rtcpSession.rtcpMCSock.getLocalSocketAddress().toString()));
             }
         } catch (Exception e) {
@@ -141,7 +141,7 @@ public class RTCPSenderThread extends Thread {
 
     /**
      * Unicast version of sending a Compound RTCP packet
-     * 
+     *
      * @param pkt the packet to best
      * @param receiver the socket address of the recipient
      * @return 0 is successful, -1 otherwise
@@ -173,9 +173,9 @@ public class RTCPSenderThread extends Thread {
             rtcpSession.rtcpSock.send(packet);
             //Debug
             if(this.rtpSession.debugAppIntf != null) {
-                this.rtpSession.debugAppIntf.packetSent(2, (InetSocketAddress) packet.getSocketAddress(), 
-                        new String("Sent unicast RTCP packet of size " + packet.getLength() + 
-                                " to " + packet.getSocketAddress().toString() + " via " 
+                this.rtpSession.debugAppIntf.packetSent(2, (InetSocketAddress) packet.getSocketAddress(),
+                        new String("Sent unicast RTCP packet of size " + packet.getLength() +
+                                " to " + packet.getSocketAddress().toString() + " via "
                                 + this.rtcpSession.rtcpSock.getLocalSocketAddress().toString()));
             }
         } catch (Exception e) {
@@ -203,13 +203,13 @@ public class RTCPSenderThread extends Thread {
                 //part.debugPrint();
                 datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
             }
-            /*********** Administrative tasks ***********/			
+            /*********** Administrative tasks ***********/
             //Update average packet size
             if(datagramLength > 0) {
                 rtcpSession.updateAvgPacket(datagramLength);
             }
-        } else if(part != null 
-                && this.rtcpSession.fbAllowEarly 
+        } else if(part != null
+                && this.rtcpSession.fbAllowEarly
                 && this.rtcpSession.fbSendEarly()) {
 
             // Make sure we dont do it too often
@@ -225,7 +225,7 @@ public class RTCPSenderThread extends Thread {
                 //part.debugPrint();
                 datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
             }
-            /*********** Administrative tasks ***********/			
+            /*********** Administrative tasks ***********/
             //Update average packet size
             if(datagramLength > 0) {
                 rtcpSession.updateAvgPacket(datagramLength);
@@ -241,10 +241,10 @@ public class RTCPSenderThread extends Thread {
 
     }
 
-    /** 
+    /**
      * Prepare a packet. The output depends on the participant and how the
      * packet is scheduled.
-     * 
+     *
      * @param part the participant to report to
      * @param regular whether this is a regularly, or early scheduled RTCP packet
      * @return compound RTCP packet
@@ -272,7 +272,7 @@ public class RTCPSenderThread extends Thread {
 
         //If we're sending packets we'll use a SR for header
         if(incSR) {
-            RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc, 
+            RtcpPktSR srPkt = new RtcpPktSR(this.rtpSession.ssrc,
                     this.rtpSession.sentPktCount, this.rtpSession.sentOctetCount, null);
             compPkt.addPacket(srPkt);
 
@@ -332,7 +332,7 @@ public class RTCPSenderThread extends Thread {
 
     /**
      * Start the RTCP sender thread.
-     * 
+     *
      * RFC 4585 is more complicated, but in general it will
      * 1) Wait a precalculated amount of time
      * 2) Determine the next RTCP recipient
@@ -346,7 +346,7 @@ public class RTCPSenderThread extends Thread {
         }
 
         // Give the application a chance to register some participants
-        try { Thread.sleep(10); } 
+        try { Thread.sleep(10); }
         catch (Exception e) { LOGGER.warning("RTCPSenderThread didn't get any initial rest."); }
 
         // Set up an iterator for the member list
@@ -364,8 +364,8 @@ public class RTCPSenderThread extends Thread {
                 LOGGER.finest("<-> RTCPSenderThread sleeping for " +rtcpSession.nextDelay+" ms");
             }
 
-            try { Thread.sleep(rtcpSession.nextDelay); } 
-            catch (Exception e) { 
+            try { Thread.sleep(rtcpSession.nextDelay); }
+            catch (Exception e) {
                 LOGGER.log(Level.FINEST, "RTCPSenderThread Exception message:" + e.getMessage(), e);
                 // Is the party over?
                 if(this.rtpSession.endSession) {
@@ -442,7 +442,7 @@ public class RTCPSenderThread extends Thread {
                 datagramLength = this.sendCompRtcpPkt(compPkt, part.rtcpAddress);
             }
 
-            /*********** Administrative tasks ***********/			
+            /*********** Administrative tasks ***********/
             //Update average packet size
             if(datagramLength > 0) {
                 rtcpSession.updateAvgPacket(datagramLength);

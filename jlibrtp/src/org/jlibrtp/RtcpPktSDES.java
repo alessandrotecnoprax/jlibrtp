@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 /**
  * RTCP packets for Source Descriptions
- * 
+ *
  * @author Arne Kepp
  */
 public class RtcpPktSDES extends RtcpPkt {
@@ -41,12 +41,12 @@ public class RtcpPktSDES extends RtcpPkt {
 
     /**
      * Constructor to create a new SDES packet
-     * 
+     *
      * TODO:
      * Currently the added participants are not actually encoded
      * because the library lacks some support for acting as mixer or
      * relay in other areas.
-     * 
+     *
      * @param reportThisSession include information from RTPSession as a participant
      * @param rtpSession the session itself
      * @param additionalParticipants additional participants to include
@@ -56,12 +56,12 @@ public class RtcpPktSDES extends RtcpPkt {
         // Fetch all the right stuff from the database
         reportSelf = reportThisSession;
         participants = additionalParticipants;
-        this.rtpSession = rtpSession; 
+        this.rtpSession = rtpSession;
     }
 
     /**
      * Constructor that parses a received packet
-     * 
+     *
      * @param aRawPkt the byte[] containing the packet
      * @param start where in the byte[] this packet starts
      * @param socket the address from which the packet was received
@@ -112,7 +112,7 @@ public class RtcpPktSDES extends RtcpPkt {
                     //System.out.println("endReached " + endReached + " curPos: " + curPos + " length:" + this.length);
                     curType = (int) aRawPkt[curPos];
 
-                    if(curType == 0) {	
+                    if(curType == 0) {
                         curPos += 4 - (curPos % 4);
                         endReached = true;
                     } else {
@@ -168,17 +168,17 @@ public class RtcpPktSDES extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
-    protected void encode() {	
+    protected void encode() {
         byte[] temp = new byte[1450];
         byte[] someBytes = StaticProcs.uIntLongToByteWord(this.rtpSession.ssrc);
         System.arraycopy(someBytes, 0, temp, 4, 4);
         int pos = 8;
 
         String tmpString = null;
-        for(int i=1; i<9;i++) {			
+        for(int i=1; i<9;i++) {
             switch(i) {
             case 1:  tmpString = this.rtpSession.cname; break;
             case 2:  tmpString = this.rtpSession.name; break;
@@ -204,16 +204,16 @@ public class RtcpPktSDES extends RtcpPkt {
         }
         int leftover = pos % 4;
         if(leftover == 1) {
-            temp[pos] = (byte) 0; 
-            temp[pos + 1] = (byte) 1; 
+            temp[pos] = (byte) 0;
+            temp[pos + 1] = (byte) 1;
             pos += 3;
         } else if(leftover == 2) {
-            temp[pos] = (byte) 0; 
-            temp[pos + 1] = (byte) 0; 
+            temp[pos] = (byte) 0;
+            temp[pos + 1] = (byte) 0;
             pos += 2;
         } else if(leftover == 3) {
-            temp[pos] = (byte) 0; 
-            temp[pos + 1] = (byte) 3; 
+            temp[pos] = (byte) 0;
+            temp[pos + 1] = (byte) 3;
             pos += 5;
         }
 

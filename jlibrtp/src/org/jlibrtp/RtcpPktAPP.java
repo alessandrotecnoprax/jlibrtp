@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 /**
  * Application specific RTCP packets
- * 
+ *
  * @author Arne Kepp
  */
 public class RtcpPktAPP extends RtcpPkt {
@@ -34,11 +34,11 @@ public class RtcpPktAPP extends RtcpPkt {
     /** Name of packet, 4 bytes ASCII */
     protected byte[] pktName = null;
     /** Data of packet */
-    protected byte[] pktData = null;	
+    protected byte[] pktData = null;
 
     /**
      * Constructor for a new Application RTCP packet
-     * 
+     *
      * @param ssrc the SSRC of the sender, presumably taken from RTPSession
      * @param subtype the subtype of packet, application specific
      * @param pktName byte[4] representing ASCII name of packet
@@ -55,7 +55,7 @@ public class RtcpPktAPP extends RtcpPkt {
 
     /**
      * Constructor that parses a received Application RTCP packet
-     * 
+     *
      * @param aRawPkt the raw packet containing the date
      * @param start where in the raw packet this packet starts
      */
@@ -83,10 +83,10 @@ public class RtcpPktAPP extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
-    protected void encode() {	
+    protected void encode() {
         super.rawPkt = new byte[12 + this.pktData.length];
         byte[] tmp = StaticProcs.uIntLongToByteWord(super.ssrc);
         System.arraycopy(tmp, 0, super.rawPkt, 4, 4);

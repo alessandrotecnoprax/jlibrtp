@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -20,7 +20,7 @@ package org.jlibrtp;
 
 import java.util.logging.Logger;
 
-/** 
+/**
  * Generic functions for converting between unsigned integers and byte[]s.
  *
  * @author Arne Kepp
@@ -30,25 +30,25 @@ public class StaticProcs {
     private static final Logger LOGGER =
         Logger.getLogger(RTPReceiverThread.class.getName());
 
-    /** 
-     * Converts an integer into an array of bytes. 
+    /**
+     * Converts an integer into an array of bytes.
      * Primarily used for 16 bit unsigned integers, ignore the first two octets.
-     * 
+     *
      * @param i a 16 bit unsigned integer in an int
-     * @return byte[2] representing the integer as unsigned, most significant bit first. 
+     * @return byte[2] representing the integer as unsigned, most significant bit first.
      */
-    public static byte[] uIntIntToByteWord(int i) {		
+    public static byte[] uIntIntToByteWord(int i) {
         byte[] byteWord = new byte[2];
         byteWord[0] = (byte) ((i >> 8) & 0x000000FF);
         byteWord[1] = (byte) (i & 0x00FF);
         return byteWord;
     }
 
-    /** 
+    /**
      * Converts an unsigned 32 bit integer, stored in a long, into an array of bytes.
-     * 
+     *
      * @param j a long
-     * @return byte[4] representing the unsigned integer, most significant bit first. 
+     * @return byte[4] representing the unsigned integer, most significant bit first.
      */
     public static byte[] uIntLongToByteWord(long j) {
         int i = (int) j;
@@ -60,9 +60,9 @@ public class StaticProcs {
         return byteWord;
     }
 
-    /** 
+    /**
      * Combines two bytes (most significant bit first) into a 16 bit unsigned integer.
-     * 
+     *
      * @param index of most significant byte
      * @return int with the 16 bit unsigned integer
      */
@@ -76,9 +76,9 @@ public class StaticProcs {
         return accum;
     }
 
-    /** 
+    /**
      * Combines four bytes (most significant bit first) into a 32 bit unsigned integer.
-     * 
+     *
      * @param bytes
      * @param index of most significant byte
      * @return long with the 32 bit unsigned integer
@@ -136,12 +136,12 @@ public class StaticProcs {
     /**
      * Recreates a UNIX timestamp based on the NTP representation used
      * in RTCP SR packets
-     * 
+     *
      * @param ntpTs1 from RTCP SR packet
      * @param ntpTs2 from RTCP SR packet
      * @return the UNIX timestamp
      */
-    public static long undoNtpMess(long ntpTs1, long ntpTs2) {		
+    public static long undoNtpMess(long ntpTs1, long ntpTs2) {
         long timeVal = (ntpTs1 - 2208988800L)*1000;
 
         double tmp = (1000.0*(double)ntpTs2)/((double)4294967295L);
@@ -154,9 +154,9 @@ public class StaticProcs {
 
 
 
-    /** 
+    /**
      * Get the bits of a byte
-     * 
+     *
      * @param aByte the byte you wish to convert
      * @return a String of 1's and 0's
      */
@@ -171,9 +171,9 @@ public class StaticProcs {
         return out;
     }
 
-    /** 
+    /**
      * Get the hex representation of a byte
-     * 
+     *
      * @param aByte the byte you wish to convert
      * @return a String of two chars 0-1,A-F
      */
@@ -207,9 +207,9 @@ public class StaticProcs {
         return out;
     }
 
-    /** 
+    /**
      * Get the hex representation of a byte
-     * 
+     *
      * @param hex 4 bytes  the byte you wish to convert
      * @return a String of two chars 0-1,A-F
      */
@@ -246,9 +246,9 @@ public class StaticProcs {
     }
 
 
-    /** 
+    /**
      * Print the bits of a byte to standard out. For debugging.
-     * 
+     *
      * @param aByte the byte you wish to print out.
      */
     public static void printBits(byte aByte) {
