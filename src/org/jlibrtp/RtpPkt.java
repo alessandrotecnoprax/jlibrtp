@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,19 +23,19 @@ import java.util.logging.Logger;
 
 /**
  * RtpPkt is the basic class for creating and parsing RTP packets.
- * 
+ *
  * There are two ways of instantiating an RtpPkt. One is for packets that you wish to send,
  * which requires that you provide basic information about the packet and a payload. Upon calling
  * encode() the fields of the structure are written into a bytebuffer, in the form that it would
  * sent across the network, excluding the UDP headers.
- * 
+ *
  * The other way is by passing a bytebuffer. The assumption is that this is a packet
  * that has been received from the network, excluding UDP headers, and the bytebuffer will
- * be parsed into the correct fields. 
- * 
+ * be parsed into the correct fields.
+ *
  * The class keeps track of changes. Therefore, modifications are possible after calling encode(),
  * if necessary, the raw version of the packet will be regenerated on subsequent requests.
- * 
+ *
  * @author Arne Kepp
  */
 public class RtpPkt {
@@ -61,7 +61,7 @@ public class RtpPkt {
     private long timeStamp;			//32 bits
     /** The SSRC of the packet sender, 32 bits*/
     private long ssrc;				//32 bits
-    /** SSRCs of contributing sources, 32xn bits, n<16 */ 
+    /** SSRCs of contributing sources, 32xn bits, n<16 */
     private long[] csrcArray = null;//
 
     /** Contains the actual data (eventually) */
@@ -90,18 +90,18 @@ public class RtpPkt {
         }
         rawPktCurrent = true;
         if(LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("<--> RtpPkt(aTimeStamp, syncSource, seqNum, plt, pl)"); 
+            LOGGER.finest("<--> RtpPkt(aTimeStamp, syncSource, seqNum, plt, pl)");
         }
     }
     /**
      * Construct a packet-instance from an raw packet (believed to be RTP). The UDP-headers must be removed before invoking this method. Call checkPkt on the instance to verify that it was successfully parsed.
      *
-     * @param aRawPkt The data-part of a UDP-packet believed to be RTP 
+     * @param aRawPkt The data-part of a UDP-packet believed to be RTP
      * @param packetSize the number of valid octets in the packet, should be aRawPkt.length
      */
     protected RtpPkt(byte[] aRawPkt, int packetSize){
         if(LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("-> RtpPkt(aRawPkt)"); 
+            LOGGER.finest("-> RtpPkt(aRawPkt)");
         }
         //Check size, need to have at least a complete header
         if(aRawPkt == null) {
@@ -143,7 +143,7 @@ public class RtpPkt {
     }
 
     /*********************************************************************************************************
-     *                                                Reading stuff 
+     *                                                Reading stuff
      *********************************************************************************************************/
     protected int checkPkt() {
         //TODO, check for version 2 etc
@@ -200,13 +200,13 @@ public class RtpPkt {
         return csrcArray;
     }
 
-    /** 
+    /**
      *  Encodes the a
      */
     protected byte[] encode() {
         if(! rawPktCurrent || rawPkt == null) {
             writePkt();
-        } 
+        }
         return rawPkt;
     }
 
@@ -223,7 +223,7 @@ public class RtpPkt {
         LOGGER.finest("Payload, first four bytes: " + payload[0] + " " + payload[1] + " " + payload[2] + " " + payload[3]);
     }
     /*********************************************************************************************************
-     *                                                Setting stuff 
+     *                                                Setting stuff
      *********************************************************************************************************/
     protected void setMarked(boolean mark) {
         rawPktCurrent = false;
@@ -235,7 +235,7 @@ public class RtpPkt {
     }
     //public int setHeaderExtension() {
     //TODO
-    //}	
+    //}
     protected int setPayloadType(int plType) {
         int temp = (plType & 0x0000007F); // 7 bits, checks in RTPSession as well.
         if(temp == plType) {
@@ -296,7 +296,7 @@ public class RtpPkt {
     }
 
     /*********************************************************************************************************
-     *                                           Private functions 
+     *                                           Private functions
      *********************************************************************************************************/
     //Generate a bytebyffer representing the packet, store it.
     private void writePkt() {
@@ -361,7 +361,7 @@ public class RtpPkt {
     private void sliceSSRC() {
         ssrc = StaticProcs.bytesToUIntLong(rawPkt,8);
     }
-    //Check the length of the csrcArray (set during sliceFirstLine) 
+    //Check the length of the csrcArray (set during sliceFirstLine)
     private void  sliceCSRCs() {
         for(int i=0; i< csrcArray.length; i++) {
             ssrc = StaticProcs.bytesToUIntLong(rawPkt, i*4 + 12);
@@ -374,4 +374,4 @@ public class RtpPkt {
 
         System.arraycopy(rawPkt, headerLen, payload, 0, bytes);
     }
-}	
+}

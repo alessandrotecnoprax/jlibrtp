@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * RTCP packets for Receiver Reports 
- * 
+ * RTCP packets for Receiver Reports
+ *
  * @author Arne Kepp
  */
 public class RtcpPktRR extends RtcpPkt {
@@ -50,7 +50,7 @@ public class RtcpPktRR extends RtcpPkt {
 
     /**
      * Constructor for a packet with receiver reports
-     * 
+     *
      * @param reportees the participants on which to generate reports
      * @param ssrc the SSRC of the sender, from the RTPSession
      */
@@ -63,12 +63,12 @@ public class RtcpPktRR extends RtcpPkt {
 
 
     /**
-     * 
-     * 
+     *
+     *
      * If rcount < 0 we assume we have to parse the entire packet,
      * otherwise we'll just parse the receiver report blocks
      * (ie. the data came from a Sender Report packet)
-     * 
+     *
      * @param aRawPkt the byte[] with the report(s)
      * @param start where in the raw packet to start reading
      * @param rrCount the number of receiver reports, -1 if this does not come from an SR
@@ -118,7 +118,7 @@ public class RtcpPktRR extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
     protected void encode() {
@@ -135,7 +135,7 @@ public class RtcpPktRR extends RtcpPkt {
             super.itemCount = reportees.length;
         } else {
             super.rawPkt = new byte[8];
-            super.itemCount = 0;	
+            super.itemCount = 0;
         }
 
         //Write the common header
@@ -153,10 +153,10 @@ public class RtcpPktRR extends RtcpPkt {
     }
 
     /**
-     * Encodes the individual Receiver Report blocks, 
-     * 
+     * Encodes the individual Receiver Report blocks,
+     *
      * so they can be used either in RR packets or appended to SR
-     * 
+     *
      * @return the encoded packets
      */
     protected byte[] encodeRR() {
@@ -187,8 +187,8 @@ public class RtcpPktRR extends RtcpPkt {
             // Interarrival jitter
             if(reportees[i].interArrivalJitter >= 0) {
                 someBytes = StaticProcs.uIntLongToByteWord((long)reportees[i].interArrivalJitter);
-            } else { 
-                someBytes = StaticProcs.uIntLongToByteWord((long) 0); 
+            } else {
+                someBytes = StaticProcs.uIntLongToByteWord((long) 0);
             }
             System.arraycopy(someBytes, 0, ret, 12 + offset, 4);
 

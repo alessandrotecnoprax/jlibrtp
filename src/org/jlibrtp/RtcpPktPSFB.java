@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * RTCP packets for Payload-Specific Feedback Messages 
- * 
+ * RTCP packets for Payload-Specific Feedback Messages
+ *
  * @author Arne Kepp
  */
 public class RtcpPktPSFB extends RtcpPkt {
@@ -58,7 +58,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Generic constructor, then call make<something>
-     * 
+     *
      * @param ssrcPacketSender
      * @param ssrcMediaSource
      */
@@ -77,7 +77,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Make this packet a Slice Loss Indication
-     * 
+     *
      * @param sliFirst macroblock (MB) address of the first lost macroblock
      * @param sliNumber number of lost macroblocks
      * @param sliPictureId six least significant bits of the codec-specific identifier
@@ -91,7 +91,7 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Make this packet a Reference Picture Selection Indication
-     * 
+     *
      * @param bitPadding number of padded bits at end of bitString
      * @param payloadType RTP payload type for codec
      * @param bitString RPSI information as natively defined by the video codec
@@ -103,24 +103,24 @@ public class RtcpPktPSFB extends RtcpPkt {
         this.rpsiBitString = bitString;
     }
 
-    /** 
+    /**
      * Make this packet an Application specific feedback message
-     * 
+     *
      * @param bitString the original application message
      */
     protected void makeAppLayerFeedback(byte[] bitString) {
         super.itemCount = 15; //FMT
-        this.alfBitString = bitString; 
+        this.alfBitString = bitString;
     }
 
     /**
      * Constructor that parses a raw packet to retrieve information
-     * 
+     *
      * @param aRawPkt the raw packet to be parsed
      * @param start the start of the packet, in bytes
      * @param rtpSession the session on which the callback interface resides
      */
-    protected RtcpPktPSFB(byte[] aRawPkt, int start, RTPSession rtpSession) {		
+    protected RtcpPktPSFB(byte[] aRawPkt, int start, RTPSession rtpSession) {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("  -> RtcpPktPSFB(byte[], int start)");
         }
@@ -141,19 +141,19 @@ public class RtcpPktPSFB extends RtcpPkt {
                 super.ssrc = StaticProcs.bytesToUIntLong(aRawPkt,4+start);
 
                 switch(super.itemCount) {
-                case 1: // Picture Loss Indication 
+                case 1: // Picture Loss Indication
                     decPictureLossIndic();
-                    break; 
-                case 2: // Slice Loss Indication
-                    decSliceLossIndic(aRawPkt, start + 12); 
                     break;
-                case 3: // Reference Picture Selection Indication 
-                    decRefPictureSelIndic(aRawPkt, start + 12); 
+                case 2: // Slice Loss Indication
+                    decSliceLossIndic(aRawPkt, start + 12);
+                    break;
+                case 3: // Reference Picture Selection Indication
+                    decRefPictureSelIndic(aRawPkt, start + 12);
                     break;
                 case 15: // Application Layer Feedback Messages
-                    decAppLayerFB(aRawPkt, start + 12); 
+                    decAppLayerFB(aRawPkt, start + 12);
                     break;
-                default: 
+                default:
                     LOGGER.warning("!!!! RtcpPktPSFB(byte[], int start) unexpected FMT " + super.itemCount);
                 }
             } else {
@@ -178,11 +178,11 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Decode Slice Loss Indication
-     * 
+     *
      * @param aRawPkt
      * @param start
      */
-    private void decSliceLossIndic(byte[] aRawPkt, int start) {	
+    private void decSliceLossIndic(byte[] aRawPkt, int start) {
         // 13 bit off-boundary numbers? That's rather cruel
         //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
         //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -212,11 +212,11 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Decode Reference Picture Selection Indication
-     * 
+     *
      * @param aRawPkt
      * @param start
      */
-    private void decRefPictureSelIndic(byte[] aRawPkt, int start) {	
+    private void decRefPictureSelIndic(byte[] aRawPkt, int start) {
         //  0                   1                   2                   3
         //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
         // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -228,13 +228,13 @@ public class RtcpPktPSFB extends RtcpPkt {
         rpsiPadding = aRawPkt[start];
 
         if(rpsiPadding  > 32) {
-            LOGGER.warning("!!!! RtcpPktPSFB.decRefPictureSelcIndic paddingBits: " 
+            LOGGER.warning("!!!! RtcpPktPSFB.decRefPictureSelcIndic paddingBits: "
                     + rpsiPadding);
         }
 
         rpsiPayloadType = (int) rawPkt[start];
         if(rpsiPayloadType < 0) {
-            LOGGER.warning("!!!! RtcpPktPSFB.decRefPictureSelcIndic 8th bit not zero: " 
+            LOGGER.warning("!!!! RtcpPktPSFB.decRefPictureSelcIndic 8th bit not zero: "
                     + rpsiPayloadType);
         }
 
@@ -251,11 +251,11 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Decode Application specific feedback message
-     * 
+     *
      * @param aRawPkt
      * @param start
      */
-    private void decAppLayerFB(byte[] aRawPkt, int start) {	
+    private void decAppLayerFB(byte[] aRawPkt, int start) {
         //Application Message (FCI): variable length
         int stringLength = (super.length - 2)*4;
 
@@ -298,7 +298,7 @@ public class RtcpPktPSFB extends RtcpPkt {
      * Encode a Reference Picture Selection Indication
      *
      */
-    private void encRefPictureSelIndic() {	
+    private void encRefPictureSelIndic() {
         byte[] someBytes;
         someBytes = StaticProcs.uIntIntToByteWord(rpsiPadding);
         super.rawPkt[8] = someBytes[1];
@@ -313,12 +313,12 @@ public class RtcpPktPSFB extends RtcpPkt {
      * Encode Application Layer Feedback
      *
      */
-    private void encAppLayerFB() {	
+    private void encAppLayerFB() {
         //Application Message (FCI): variable length
         System.arraycopy(alfBitString, 0, super.rawPkt, 8, alfBitString.length);
     }
 
-    /** 
+    /**
      * Get the FMT (Feedback Message Type)
      * @return value stored in .itemcount, same field
      */
@@ -328,18 +328,18 @@ public class RtcpPktPSFB extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
     protected void encode() {
         switch(super.itemCount) {
-        case 1: // Picture Loss Indication 
+        case 1: // Picture Loss Indication
             //Nothing to do really
             super.rawPkt = new byte[24];
-            break; 
+            break;
         case 2: // Slice Loss Indication
             super.rawPkt = new byte[24 + 4*this.sliFirst.length];
-            encSliceLossIndic(); 
+            encSliceLossIndic();
             break;
         case 3: // Reference Picture Selection Indication
             super.rawPkt = new byte[24 + 2 + this.rpsiBitString.length/4];
@@ -367,9 +367,9 @@ public class RtcpPktPSFB extends RtcpPkt {
 
         String str;
         switch(super.itemCount) {
-        case 1: // Picture Loss Indication 
+        case 1: // Picture Loss Indication
             LOGGER.finest("  FMT: Picture Loss Indication");
-            break; 
+            break;
         case 2: // Slice Loss Indication
             if(sliFirst != null) {
                 str = "sliFirst[].length: " + sliFirst.length;
@@ -384,7 +384,7 @@ public class RtcpPktPSFB extends RtcpPkt {
             } else {
                 str = "rpsiBitString[] is null";
             }
-            LOGGER.finest("  FMT: Reference Picture Selection Indication, " 
+            LOGGER.finest("  FMT: Reference Picture Selection Indication, "
                     + str + " payloadType: " + this.rpsiPayloadType);
             break;
         case 15: // Application Layer Feedback Messages

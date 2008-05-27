@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A participant represents a peer in an RTPSession. Based on the information stored on 
+ * A participant represents a peer in an RTPSession. Based on the information stored on
  * these objects, packets are processed and statistics generated for RTCP.
  */
 public class Participant {
@@ -34,7 +34,7 @@ public class Participant {
     /** Whether the participant is unexpected, e.g. arrived through unicast with SDES */
     protected boolean unexpected = false;
     /** Where to send RTP packets (unicast)*/
-    protected InetSocketAddress rtpAddress = null; 
+    protected InetSocketAddress rtpAddress = null;
     /** Where to send RTCP packets (unicast) */
     protected InetSocketAddress rtcpAddress = null;
     /** Where the first RTP packet was received from */
@@ -115,9 +115,9 @@ public class Participant {
     protected long secondLastRtcpRRPkt = -1; //Timestamp of 2nd to last time we sent this person an RR Packet
 
     /**
-     * Create a basic participant. If this is a <b>unicast</b> session you must provide network address (ipv4 or ipv6) and ports for RTP and RTCP, 
+     * Create a basic participant. If this is a <b>unicast</b> session you must provide network address (ipv4 or ipv6) and ports for RTP and RTCP,
      * as well as a cname for this contact. These things should be negotiated through SIP or a similar protocol.
-     * 
+     *
      * jlibrtp will listen for RTCP packets to obtain a matching SSRC for this participant, based on cname.
      * @param networkAddress string representation of network address (ipv4 or ipv6). Use "127.0.0.1" for multicast session.
      * @param rtpPort port on which peer expects RTP packets. Use 0 if this is a sender-only, or this is a multicast session.
@@ -138,7 +138,7 @@ public class Participant {
             //isReceiver = true;
         }
 
-        // RTCP 
+        // RTCP
         if(rtcpPort > 0) {
             try {
                 rtcpAddress = new InetSocketAddress(networkAddress, rtcpPort);
@@ -166,7 +166,7 @@ public class Participant {
 
     /**
      * RTP Address registered with this participant.
-     * 
+     *
      * @return address of participant
      */
     InetSocketAddress getRtpSocketAddress() {
@@ -176,7 +176,7 @@ public class Participant {
 
     /**
      * RTCP Address registered with this participant.
-     * 
+     *
      * @return address of participant
      */
     InetSocketAddress getRtcpSocketAddress() {
@@ -186,7 +186,7 @@ public class Participant {
     /**
      * InetSocketAddress this participant has used to
      * send us RTP packets.
-     * 
+     *
      * @return address of participant
      */
     InetSocketAddress getRtpReceivedFromAddress() {
@@ -198,7 +198,7 @@ public class Participant {
     /**
      * InetSocketAddress this participant has used to
      * send us RTCP packets.
-     * 
+     *
      * @return address of participant
      */
     InetSocketAddress getRtcpReceivedFromAddress() {
@@ -208,7 +208,7 @@ public class Participant {
 
     /**
      * CNAME registered for this participant.
-     * 
+     *
      * @return the cname
      */
     public String getCNAME() {
@@ -218,7 +218,7 @@ public class Participant {
 
     /**
      * NAME registered for this participant.
-     * 
+     *
      * @return the name
      */
     public String getNAME() {
@@ -227,7 +227,7 @@ public class Participant {
 
     /**
      * EMAIL registered for this participant.
-     * 
+     *
      * @return the email address
      */
     public String getEmail() {
@@ -236,7 +236,7 @@ public class Participant {
 
     /**
      * PHONE registered for this participant.
-     * 
+     *
      * @return the phone number
      */
     public String getPhone() {
@@ -245,7 +245,7 @@ public class Participant {
 
     /**
      * LOCATION registered for this participant.
-     * 
+     *
      * @return the location
      */
     public String getLocation() {
@@ -254,7 +254,7 @@ public class Participant {
 
     /**
      * NOTE registered for this participant.
-     * 
+     *
      * @return the note
      */
     public String getNote() {
@@ -263,7 +263,7 @@ public class Participant {
 
     /**
      * PRIVATE something registered for this participant.
-     * 
+     *
      * @return the private-string
      */
     public String getPriv() {
@@ -272,7 +272,7 @@ public class Participant {
 
     /**
      * TOOL something registered for this participant.
-     * 
+     *
      * @return the tool
      */
     public String getTool() {
@@ -281,16 +281,16 @@ public class Participant {
 
     /**
      * SSRC for participant, determined through RTCP SDES
-     * 
+     *
      * @return SSRC (32 bit unsigned integer as long)
      */
     public long getSSRC() {
         return this.ssrc;
     }
 
-    /** 
+    /**
      * Updates the participant with information for receiver reports.
-     * 
+     *
      * @param packetLength to keep track of received octets
      * @param pkt the most recently received packet
      */
@@ -335,10 +335,10 @@ public class Participant {
     }
 
     /**
-     * Calculates the extended highest sequence received by adding 
-     * the last sequence number to 65536 times the number of times 
+     * Calculates the extended highest sequence received by adding
+     * the last sequence number to 65536 times the number of times
      * the sequence counter has rolled over.
-     * 
+     *
      * @return extended highest sequence
      */
     protected long getExtHighSeqRecv() {
@@ -348,7 +348,7 @@ public class Participant {
     /**
      * Get the fraction of lost packets, calculated as described
      * in RFC 3550 as a fraction of 256.
-     * 
+     *
      * @return the fraction of lost packets since last SR received
      */
     protected int getFractionLost() {
@@ -363,7 +363,7 @@ public class Participant {
             fraction = 0;
         }
 
-        //Clear counters 
+        //Clear counters
         receivedSinceLastSR = 0;
         lastSRRseqNumber = lastSeqNumber;
 
@@ -372,9 +372,9 @@ public class Participant {
 
     /**
      * The total number of packets lost during the session.
-     * 
+     *
      * Returns zero if loss is negative, i.e. duplicates have been received.
-     * 
+     *
      * @return number of lost packets, or zero.
      */
     protected long getLostPktCount() {
@@ -385,8 +385,8 @@ public class Participant {
         return lost;
     }
 
-    /** 
-     * 
+    /**
+     *
      * @return the interArrivalJitter, calculated continuously
      */
     protected double getInterArrivalJitter() {
@@ -395,7 +395,7 @@ public class Participant {
 
     /**
      * Set the timestamp for last sender report
-     * 
+     *
      * @param ntp1 high order bits
      * @param ntp2 low order bits
      */
@@ -414,11 +414,11 @@ public class Participant {
     /**
      * Calculate the delay between the last received sender report
      * and now.
-     * 
+     *
      * @return the delay in units of 1/65.536ms
      */
     protected long delaySinceLastSR() {
-        if(this.timeReceivedLSR < 1) 
+        if(this.timeReceivedLSR < 1)
             return 0;
 
         long delay = System.currentTimeMillis() - this.timeReceivedLSR;

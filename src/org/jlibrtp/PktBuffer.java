@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -24,14 +24,14 @@ import java.util.logging.Logger;
 /**
  * A PktBuffer stores packets either for buffering purposes,
  * or because they need to be assimilated to create a complete frame.
- * 
+ *
  * This behavior can be controlled through rtpSession.pktBufBehavior()
- * 
+ *
  * It optionally drops duplicate packets.
- * 
+ *
  * Note that newest is the most recently received, i.e. highest timeStamp
- * Next means new to old (from recently received to previously received) 
- * 
+ * Next means new to old (from recently received to previously received)
+ *
  * @author Arne Kepp
  */
 public class PktBuffer {
@@ -57,12 +57,12 @@ public class PktBuffer {
     /** The last timestamp */
     long lastTimestamp = -1;
 
-    /** 
+    /**
      * Creates a new PktBuffer, a linked list of PktBufNode
-     * 
+     *
      * @param rtpSession the parent RTPSession
      * @param p the participant to which this packetbuffer belongs.
-     * @param aPkt The first RTP packet, to be added to the buffer 
+     * @param aPkt The first RTP packet, to be added to the buffer
      */
     protected PktBuffer(RTPSession rtpSession, Participant p, RtpPkt aPkt) {
         this.rtpSession = rtpSession;
@@ -79,7 +79,7 @@ public class PktBuffer {
     /**
      * Adds a packet, this happens in constant time if they arrive in order.
      * Optimized for the case where each pkt is a complete frame.
-     * 
+     *
      * @param aPkt the packet to be added to the buffer.
      * @return integer, negative if operation failed (see code)
      */
@@ -120,7 +120,7 @@ public class PktBuffer {
     /**
      * Adds packets in the same order that they arrive,
      * doesn't do any filering or processing.
-     * 
+     *
      * @param newNode the node to add to the packet buffer
      * @return 0 if everything is okay, -1 otherwise
      */
@@ -131,7 +131,7 @@ public class PktBuffer {
         //No magic, just add to the end
         if(oldest != null) {
             oldest.nextFrameQueueNode = newNode;
-            newNode.prevFrameQueueNode = oldest; 
+            newNode.prevFrameQueueNode = oldest;
             oldest = newNode;
         } else {
             oldest = newNode;
@@ -142,7 +142,7 @@ public class PktBuffer {
 
     /**
      * Takes care of duplicate packets
-     * 
+     *
      * @param newNode the node to add to the packet buffer
      * @return 0 if everything is okay, -1 otherwise
      */
@@ -166,7 +166,7 @@ public class PktBuffer {
                 length++;
             } else {
                 if(LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.finest("PktBuffer.filteredAddPkt Dropped a packet due to lag! " +  newNode.timeStamp + " " 
+                    LOGGER.finest("PktBuffer.filteredAddPkt Dropped a packet due to lag! " +  newNode.timeStamp + " "
                             + newNode.seqNum + " vs "+ oldest.timeStamp + " " + oldest.seqNum);
                 }
                 return -1;
@@ -179,10 +179,10 @@ public class PktBuffer {
     /**
      * Does most of the packet organization for the application.
      * Packets are put in order, duplicate packets or late arrivals are discarded
-     * 
+     *
      * If multiple packets make up a frame, these will also be organized
      * by RTP timestamp and sequence number, and returned as a complete frame.
-     * 
+     *
      * @param newNode the node to add to the packet buffer
      * @return 0 if everything is okay, -1 otherwise
      */
@@ -206,7 +206,7 @@ public class PktBuffer {
                 if(! pktOnTime(newNode.timeStamp, newNode.seqNum) && rtpSession.pktBufBehavior > -1) {
                     // We got this too late, can't put it in order anymore.
                     if(LOGGER.isLoggable(Level.FINEST)) {
-                        LOGGER.finest("PktBuffer.addPkt Dropped a packet due to lag! " +  newNode.timeStamp + " " 
+                        LOGGER.finest("PktBuffer.addPkt Dropped a packet due to lag! " +  newNode.timeStamp + " "
                                 + newNode.seqNum + " vs "+ oldest.timeStamp + " " + oldest.seqNum);
                     }
                     return -1;
@@ -234,7 +234,7 @@ public class PktBuffer {
                     // Check that it's not a duplicate
                     if(tmpNode.timeStamp == newNode.timeStamp && newNode.seqNum == tmpNode.seqNum) {
                         if(LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("PktBuffer.addPkt Dropped a duplicate packet! " 
+                            LOGGER.finest("PktBuffer.addPkt Dropped a duplicate packet! "
                                     +  newNode.timeStamp + " " + newNode.seqNum );
                         }
                         return -1;
@@ -251,7 +251,7 @@ public class PktBuffer {
                     tmpNode.prevFrameQueueNode = newNode;
 
                     if(newNode.timeStamp > newest.timeStamp) {
-                        newest = newNode; 
+                        newest = newNode;
                     }
                 }
             }
@@ -262,7 +262,7 @@ public class PktBuffer {
     }
 
     /**
-     * 
+     *
      * @param frameNode the node currently representing the frame in the packet buffer
      * @param newNode the new node to be added to the frame
      * @return 0 if no error, -2 if this is a duplicate packet
@@ -275,13 +275,13 @@ public class PktBuffer {
             frameNode.pktCount++;
 
             // Find the right spot
-            while( frameNode.nextFrameNode != null 
+            while( frameNode.nextFrameNode != null
                     && frameNode.nextFrameNode.seqNum < newNode.seqNum) {
                 frameNode = frameNode.nextFrameNode;
             }
 
             // Check whether packet is duplicate
-            if(frameNode.nextFrameNode != null 
+            if(frameNode.nextFrameNode != null
                     && frameNode.nextFrameNode.seqNum == newNode.seqNum) {
                 if(LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.finest("PktBuffer.addPkt Dropped a duplicate packet!");
@@ -316,7 +316,7 @@ public class PktBuffer {
         return 0;
     }
 
-    /** 
+    /**
      * Checks the oldest frame, if there is one, sees whether it is complete.
      * @return Returns null if there are no complete frames available.
      */
@@ -336,7 +336,7 @@ public class PktBuffer {
     /**
      * Will return the oldest frame without checking whether it is in
      * the right order, or whether we should wate for late arrivals.
-     * 
+     *
      * @return the first frame on the queue, null otherwise
      */
     private DataFrame unbufferedPopFrame() {
@@ -345,7 +345,7 @@ public class PktBuffer {
 
             popFrameQueueCleanup(retNode, retNode.seqNum);
 
-            return new DataFrame(retNode, this.p, 
+            return new DataFrame(retNode, this.p,
                     rtpSession.appIntf.frameSize(retNode.pkt.getPayloadType()));
         } else {
             return null;
@@ -356,7 +356,7 @@ public class PktBuffer {
      * Only returns if the buffer is full, i.e. length exceeds
      * rtpSession.pktBufBehavior, or if the next packet directly
      * follows the previous one returned to the application.
-     * 
+     *
      * @return first frame in order, null otherwise
      */
     private DataFrame bufferedPopFrame() {
@@ -374,7 +374,7 @@ public class PktBuffer {
         //		+ " " + (this.lastSeqNumber < 0));
 
         // Pop it off, null all references.
-        if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0 
+        if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0
                 || this.length > this.rtpSession.pktBufBehavior || this.lastSeqNumber < 0)) {
 
 
@@ -383,7 +383,7 @@ public class PktBuffer {
                 LOGGER.finest("<- PktBuffer.popOldestFrame() returns frame");
             }
 
-            DataFrame df = new DataFrame(retNode, this.p, 
+            DataFrame df = new DataFrame(retNode, this.p,
                     rtpSession.appIntf.frameSize(oldest.pkt.getPayloadType()));
 
             //DataFrame df = new DataFrame(retNode, this.p, 1);
@@ -404,7 +404,7 @@ public class PktBuffer {
     /**
      * Cleans the packet buffer before returning the frame,
      * i.e. making sure the queue has a head etc.
-     * 
+     *
      * @param retNode the node that is about to be popped
      * @param highestSeq the highest sequence number returned to the application
      */
@@ -427,7 +427,7 @@ public class PktBuffer {
         this.lastTimestamp = retNode.timeStamp;
     }
 
-    /** 
+    /**
      * Returns the length of the packetbuffer.
      * @return number of frames (complete or not) in packetbuffer.
      */
@@ -437,7 +437,7 @@ public class PktBuffer {
 
     /**
      * Checks whether a packet is not too late, i.e. the next packet has already been returned.
-     * @param timeStamp the RTP timestamp of the packet under consideration 
+     * @param timeStamp the RTP timestamp of the packet under consideration
      * @param seqNum the sequence number of the packet under consideration
      * @return true if newer packets have not been handed to the application
      */
@@ -445,7 +445,7 @@ public class PktBuffer {
         if(this.lastSeqNumber == -1) {
             // First packet
             return true;
-        } else {			
+        } else {
             if(seqNum >= this.lastSeqNumber) {
                 if(this.lastSeqNumber < 3 && timeStamp < this.lastTimestamp ) {
                     return false;
@@ -459,7 +459,7 @@ public class PktBuffer {
         return true;
     }
 
-    /** 
+    /**
      * Prints out the packet buffer, oldest node first (on top).
      */
     protected void debugPrint() {

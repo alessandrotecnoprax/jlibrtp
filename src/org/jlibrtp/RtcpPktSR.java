@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * RTCP packets for Sender Reports 
- * 
+ * RTCP packets for Sender Reports
+ *
  * @author Arne Kepp
  */
 public class RtcpPktSR extends RtcpPkt {
@@ -46,7 +46,7 @@ public class RtcpPktSR extends RtcpPkt {
 
     /**
      * Constructor for a new Sender Report packet
-     * 
+     *
      * @param ssrc the senders SSRC, presumably from RTPSession
      * @param pktCount packets sent in this session
      * @param octCount octets sent in this session
@@ -63,7 +63,7 @@ public class RtcpPktSR extends RtcpPkt {
 
     /**
      * Constructor that parses a received packet
-     * 
+     *
      * @param aRawPkt the raw packet
      * @param start the position at which SR starts
      * @param length used to determine number of included receiver reports
@@ -106,10 +106,10 @@ public class RtcpPktSR extends RtcpPkt {
 
     /**
      * Encode the packet into a byte[], saved in .rawPkt
-     * 
+     *
      * CompRtcpPkt will call this automatically
      */
-    protected void encode() {		
+    protected void encode() {
         if(LOGGER.isLoggable(Level.FINEST)) {
             if(this.rReports != null) {
                 LOGGER.finest("  -> RtcpPktSR.encode() receptionReports.length: " + this.rReports.length );
@@ -175,7 +175,7 @@ public class RtcpPktSR extends RtcpPkt {
                 +" senderPktCount:"+Long.toString(sendersPktCount)+" sendersOctetCount:"
                 +Long.toString(sendersOctCount));
         if(this.rReports != null) {
-            System.out.print("  Part of Sender Report: ");	
+            System.out.print("  Part of Sender Report: ");
             this.rReports.debugPrint();
             LOGGER.finest("  End Sender Report");
         } else {

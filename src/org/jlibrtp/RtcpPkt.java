@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -21,7 +21,7 @@ package org.jlibrtp;
 import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-/** 
+/**
  * Common RTCP packet headers.
  *
  * @author Arne Kepp
@@ -57,9 +57,9 @@ public class RtcpPkt {
 
     /**
      * Parses the common header of an RTCP packet
-     * 
+     *
      * @param start where in this.rawPkt the headers start
-     * @return true if parsing succeeded and header cheks 
+     * @return true if parsing succeeded and header cheks
      */
     protected boolean parseHeaders(int start) {
         version = ((rawPkt[start+0] & 0xC0) >>> 6);
@@ -76,7 +76,7 @@ public class RtcpPkt {
                     +" packetType:"+packetType+" length:"+length);
         }
 
-        if(packetType > 207 || packetType < 200) 
+        if(packetType > 207 || packetType < 200)
             LOGGER.warning("RtcpPkt.parseHeaders problem discovered, packetType " + packetType);
 
         if(version == 2 && length < 65536) {
@@ -88,7 +88,7 @@ public class RtcpPkt {
         }
     }
     /**
-     * Writes the common header of RTCP packets. 
+     * Writes the common header of RTCP packets.
      * The values should be filled in when the packet is initiliazed and this function
      * called at the very end of .encode()
      */
@@ -117,9 +117,9 @@ public class RtcpPkt {
 
     /**
      * Check whether this packet came from the source we expected.
-     * 
+     *
      * Not currently used!
-     * 
+     *
      * @param adr address that packet came from
      * @param partDb the participant database for the session
      * @return true if this packet came from the expected source

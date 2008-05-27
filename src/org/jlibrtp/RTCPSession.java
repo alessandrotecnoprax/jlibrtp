@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 
 /**
  * This class acts as an organizer for most of the information
- * and functions pertaining to RTCP packet generation and reception 
- * 
+ * and functions pertaining to RTCP packet generation and reception
+ *
  * @author Arne Kepp
  *
  */
@@ -77,7 +77,7 @@ public class RTCPSession {
 
     /**
      * Constructor for unicast sessions
-     * 
+     *
      * @param parent RTPSession that started this
      * @param rtcpSocket the socket to use for listening and sending
      */
@@ -88,7 +88,7 @@ public class RTCPSession {
 
     /**
      * Constructor for multicast sessions
-     * 
+     *
      * @param parent parent RTPSession
      * @param rtcpSocket parent RTPSession that started this
      * @param multicastGroup multicast group to bind the socket to
@@ -192,7 +192,7 @@ public class RTCPSession {
         // preflight check
         if(this.nextDelay < 1000) {
             int rand = rtpSession.random.nextInt(1000) - 500; //between -500 and +500
-            LOGGER.info("RTCPSession.calculateDelay() nextDelay was too short (" 
+            LOGGER.info("RTCPSession.calculateDelay() nextDelay was too short ("
                     +this.nextDelay+"ms), setting to "+(this.nextDelay = 2000 + rand));
         }
         this.prevTime = curTime;
@@ -213,7 +213,7 @@ public class RTCPSession {
      * Adds an RTCP APP (application) packet to the queue
      *
      * @param targetSsrc the SSRC of the recipient
-     * @param aPkt 
+     * @param aPkt
      */
     synchronized protected void addToAppQueue(long targetSsrc, RtcpPktAPP aPkt) {
         aPkt.time = System.currentTimeMillis();
@@ -236,9 +236,9 @@ public class RTCPSession {
      * Adds an RTCP APP (application) packet to the queue
      *
      * @param targetSsrc the SSRC of the recipient
-     * @return array of RTCP Application packets 
+     * @return array of RTCP Application packets
      */
-    synchronized protected RtcpPktAPP[] getFromAppQueue(long targetSsrc) {		
+    synchronized protected RtcpPktAPP[] getFromAppQueue(long targetSsrc) {
         if(this.appQueue == null)
             return null;
 
@@ -261,7 +261,7 @@ public class RTCPSession {
     /**
      * Cleans the TCP APP (application) packet queues of any packets that are
      * too old, defined as 60 seconds since insertion.
-     * 
+     *
      * @param ssrc The SSRC of the user who has left, negative value -> general cleanup
      */
     synchronized protected void cleanAppQueue(long ssrc) {
@@ -284,7 +284,7 @@ public class RTCPSession {
                         li.remove();
                     }
                 }
-            }	
+            }
         }
     }
 
@@ -293,7 +293,7 @@ public class RTCPSession {
     /**
      * Check the feedback queue for similar packets and adds
      * the new packet if it is not redundant
-     * 
+     *
      * @param aPkt
      * @return 0 if the packet was added, 1 if it was dropped
      */
@@ -323,7 +323,7 @@ public class RTCPSession {
     /**
      * Checks whether there are ny feedback packets waiting
      * to be sent.
-     * 
+     *
      * @param ssrc of the participant we are notifying
      * @return all relevant feedback packets, or null
      */
@@ -371,7 +371,7 @@ public class RTCPSession {
                 while(count > 0) {
                     RtcpPkt aPkt = li.next();
                     if(! aPkt.received) {
-                        ret[ret.length - count] = aPkt; 
+                        ret[ret.length - count] = aPkt;
                         count--;
                     }
                 }
@@ -385,7 +385,7 @@ public class RTCPSession {
     /**
      * Cleans the feeback queue of any packets that have expired,
      * ie feedback packet that are no longer relevant.
-     * 
+     *
      * @param ssrc The SSRC of the user who has left, negative value -> general cleanup
      */
     synchronized protected void cleanFbQueue(long ssrc) {
@@ -394,7 +394,7 @@ public class RTCPSession {
 
         if(ssrc > 0) {
             this.fbQueue.remove(ssrc);
-        } else { 
+        } else {
             Enumeration<LinkedList<RtcpPkt>> enu = this.fbQueue.elements();
             long curTime = System.currentTimeMillis();
             long maxDelay = curTime - rtpSession.fbMaxDelay;
@@ -421,11 +421,11 @@ public class RTCPSession {
 
     /**
      * Check whether the conditions are satisfied to send a feedbkac packet immediately.
-     * 
+     *
      * @return true if they are, false otherwise
      */
     protected boolean fbSendImmediately() {
-        if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbEarlyThreshold 
+        if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbEarlyThreshold
                 && rtpSession.partDb.receivers.size() > this.rtpSession.fbEarlyThreshold)
             return false;
 
@@ -435,11 +435,11 @@ public class RTCPSession {
 
     /**
      * Check whether the conditions are satisfied to send a feedbkac packet immediately.
-     * 
+     *
      * @return true if they are, false otherwise
      */
     protected boolean fbSendEarly() {
-        if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbRegularThreshold 
+        if(rtpSession.partDb.ssrcTable.size() > this.rtpSession.fbRegularThreshold
                 && rtpSession.partDb.receivers.size() > this.rtpSession.fbRegularThreshold)
             return false;
 
@@ -448,7 +448,7 @@ public class RTCPSession {
 
     /**
      * Wake the sender thread because of this ssrc
-     * 
+     *
      * @param ssrc that has feedback waiting.
      */
     protected void wakeSenderThread(long ssrc) {
@@ -462,12 +462,12 @@ public class RTCPSession {
     /**
      * Compares two packets to check whether they are equivalent feedback messages,
      * to avoid sending the same feedback to a host twice.
-     * 
+     *
      * Expect false negatives, but not false positives.
-     * 
+     *
      * @param one packet
      * @param two packet
-     * @return true if they are equivalent, false otherwise 
+     * @return true if they are equivalent, false otherwise
      */
     private boolean equivalent(RtcpPkt one, RtcpPkt two) {
         // Cheap checks
@@ -485,7 +485,7 @@ public class RTCPSession {
             if(pktone.ssrcMediaSource != pkttwo.ssrcMediaSource)
                 return false;
 
-            if(Arrays.equals(pktone.BLP,pkttwo.BLP) 
+            if(Arrays.equals(pktone.BLP,pkttwo.BLP)
                     && Arrays.equals(pktone.BLP,pkttwo.BLP))
                 return true;
 
@@ -498,18 +498,18 @@ public class RTCPSession {
                 return false;
 
             switch(one.itemCount) {
-            case 1: // Picture Loss Indication 
+            case 1: // Picture Loss Indication
                 return true;
 
             case 2: // Slice Loss Indication
                 // This will not work if the slice loss indicators are in different order
                 if(pktone.sliFirst.length == pkttwo.sliFirst.length
-                        && Arrays.equals(pktone.sliFirst, pkttwo.sliFirst) 
+                        && Arrays.equals(pktone.sliFirst, pkttwo.sliFirst)
                         && Arrays.equals(pktone.sliNumber, pkttwo.sliNumber)
                         && Arrays.equals(pktone.sliPictureId, pkttwo.sliPictureId))
                     return true;
                 break;
-            case 3: // Reference Picture Selection Indication 
+            case 3: // Reference Picture Selection Indication
                 if(Arrays.equals(pktone.rpsiBitString, pkttwo.rpsiBitString))
                     return true;
                 break;
