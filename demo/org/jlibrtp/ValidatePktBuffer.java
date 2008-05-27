@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -29,7 +29,7 @@ import org.jlibrtp.RtpPkt;
 
 /**
  * Validates the PktBuffer and associated classes.
- * 
+ *
  * @author Arne Kepp
  *
  */
@@ -50,8 +50,8 @@ public class ValidatePktBuffer {
 			System.out.println("RTPSession failed to obtain port");
 		}
 		RTPSession rtpSession = new RTPSession(rtpSocket, rtcpSocket);
-		
-		
+
+
 		String str1 = "ab";
 		String str2 = "cd";
 		String str3 = "ef";
@@ -59,7 +59,7 @@ public class ValidatePktBuffer {
 		String str5 = "ij";
 		String str6 = "kl";
 		//String str7 = "mn";
-		
+
 		long syncSource1 = 1;
 		int seqNumber1 = 1;
 		//int seqNumber2 = 1;
@@ -69,9 +69,9 @@ public class ValidatePktBuffer {
 		RtpPkt pkt4 = new RtpPkt(40, syncSource1, 4, 0, str4.getBytes());
 		RtpPkt pkt6 = new RtpPkt(60, syncSource1, 6, 0, str5.getBytes());
 		RtpPkt pkt7 = new RtpPkt(70, syncSource1, 7, 0, str6.getBytes());
-		
+
 		Participant p = new Participant();
-		
+
 		PktBuffer pktBuf = new PktBuffer(rtpSession, p, pkt1);
 		pktBuf.addPkt(pkt3); //2
 		pktBuf.addPkt(pkt2); //3
@@ -80,7 +80,7 @@ public class ValidatePktBuffer {
 		System.out.println("** 1 Data from first frame: " + outStr + ", should be ab");
 		pktBuf.addPkt(pkt4); //3
 		pktBuf.addPkt(pkt7); //4
-		System.out.println("** 1.5 sixth");		
+		System.out.println("** 1.5 sixth");
 		pktBuf.addPkt(pkt6); //5
 		System.out.println("** 2 Duplicate, should be dropped");
 		pktBuf.addPkt(pkt3); //5
@@ -88,20 +88,20 @@ public class ValidatePktBuffer {
 		aFrame = pktBuf.popOldestFrame(); //4
 		outStr = new String(aFrame.getConcatenatedData());
 		System.out.println("** 3 Data from second frame: " + outStr + ", should be cd");
-		
+
 		// Pop third frame
 		aFrame = pktBuf.popOldestFrame(); //3
 		outStr = new String(aFrame.getConcatenatedData());
 		System.out.println("** 4 Data from third frame: " + outStr + ", should be ef");
 		System.out.println("** 5 pktBuf.getLength is " + pktBuf.getLength() + ", should be 3");
-		
+
 		System.out.println("** 6 Late arrival, should be dropped");
 		pktBuf.addPkt(pkt2);
-		
+
 		aFrame = pktBuf.popOldestFrame();
 		outStr = new String(aFrame.getConcatenatedData());
 		System.out.println("** 7 Data from fourth frame: " + outStr + ", should be gh");
-		
+
 		aFrame = pktBuf.popOldestFrame();
 		outStr = new String(aFrame.getConcatenatedData());
 		System.out.println("** 8 Data from fifth frame: " + outStr + ", should be ij");

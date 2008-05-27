@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,7 +11,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
@@ -23,7 +23,7 @@ import org.jlibrtp.StaticProcs;
 
 /**
  * Validates the StaticProcs.
- * 
+ *
  * @author Arne Kepp
  *
  */
@@ -37,29 +37,29 @@ public class ValidateStaticProcs {
 		long one = 100;
 		long two = 1;
 		long three = 9999000;
-		
+
 		byte aByte = (byte) 7;
 		System.out.println("aByte.hex: " + StaticProcs.hexOfByte(aByte));
-			
+
 		//byte[] oneb = StaticProcs.longToByteWord(one);
 		byte[] twob = StaticProcs.uIntLongToByteWord(two);
 		//byte[] threeb = StaticProcs.longToByteWord(three);
-		
+
 		for(int i = 0; i< 4; i++) {
 			StaticProcs.printBits(twob[i]);
 		}
 		//one = StaticProcs.combineBytes(oneb[0], oneb[1], oneb[2], oneb[3]);
 		two = StaticProcs.bytesToUIntLong(twob,0);
 		//three = StaticProcs.combineBytes(threeb[0], threeb[1], threeb[2], threeb[3]);
-		
+
 		System.out.println("  one " + one + "  two " + two + "  three " + three);
-		
+
 		twob = StaticProcs.uIntLongToByteWord(two);
-		
+
 		for(int i = 0; i< 4; i++) {
 			StaticProcs.printBits(twob[i]);
 		}
-		
+
 		byte[] bytes = new byte[2];
 		int check = 0;
 		for(int i=0; i< 65536; i++) {
@@ -77,7 +77,7 @@ public class ValidateStaticProcs {
 		StaticProcs.printBits(bytes[1]);
 		check = StaticProcs.bytesToUIntInt(bytes, 0);
 		System.out.println(check);
-		
+
 		byte[] arbytes = new byte[22];
 		arbytes[13] = -127;
 		arbytes[14] = 127;
@@ -95,29 +95,29 @@ public class ValidateStaticProcs {
 		//StaticProcs.printBits(reArBytes[1]);
 		//StaticProcs.printBits(reArBytes[2]);
 		//StaticProcs.printBits(reArBytes[3]);
-		
+
 		byte[] tmp = new byte[4];
 		tmp[0] = -127;
 		tmp[1] = 127;
 		tmp[2] = -49;
-		tmp[3] = -1; 
-		
+		tmp[3] = -1;
+
 		String str2 = "";
 		for(int i=0; i<tmp.length; i++) {
 			str2 += StaticProcs.hexOfByte(tmp[i]);
 		}
 		System.out.println(str2);
-		
+
 		byte temp2[] = str2.getBytes();
 		byte temp4[] = new byte[temp2.length / 2];
-		byte[] temp3 = new byte[2]; 
-		
+		byte[] temp3 = new byte[2];
+
 		for(int i=0; i<temp4.length; i++) {
 			temp3[0] = temp2[i*2];
 			temp3[1] = temp2[i*2+1];
 			temp4[i] = StaticProcs.byteOfHex(temp3);
 		}
-		
+
 		for(int i=0; i<tmp.length; i++) {
 			if(tmp[i] == temp4[i]) {
 				System.out.println("ok");

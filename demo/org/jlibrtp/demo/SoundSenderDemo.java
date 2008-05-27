@@ -1,8 +1,8 @@
-/* This file is based on 
+/* This file is based on
  * http://www.anyexample.com/programming/java/java_play_wav_sound_file.xml
  * Please see the site for license information.
  */
-	 
+
 package org.jlibrtp.demo;
 
 
@@ -104,7 +104,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
     public void run() {
         if(LOGGER.isLoggable(Level.FINER)) {
             LOGGER.finer("-> Run()");
-        } 
+        }
         File soundFile = new File(filename);
         if (!soundFile.exists()) {
             System.err.println("Wave file not found: " + filename);
@@ -165,7 +165,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
 
                 if (nBytesRead >= 0) {
                     rtpSession.sendData(abData);
-                    //if(!this.local) {	
+                    //if(!this.local) {
                     auline.write(abData, 0, abData.length);
 
                     //dataCount += abData.length;
@@ -221,7 +221,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
         try { Thread.sleep(2000);} catch(Exception e) {}
         if(LOGGER.isLoggable(Level.FINER)) {
             LOGGER.finer("<- Run()");
-        } 
+        }
     }
 
 }
