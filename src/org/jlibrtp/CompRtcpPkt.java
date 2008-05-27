@@ -1,7 +1,7 @@
 /**
  * Java RTP Library (jlibrtp)
  * Copyright (C) 2006 Arne Kepp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -11,28 +11,29 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package org.jlibrtp;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.InetSocketAddress;
 
 /**
  * Compound RTCP packet class.
- * 
+ *
  * It basically holds a list of packets. This list can either be constructed
  * by providing a byte[] of a compound packet, or by adding individual packets.
- * 
+ *
  * Upon encode(), the packet will call encode on all the added packets.
- * 
+ *
  * problem == 0 indicates the parsing succeeded.
- * 
- * 
+ *
+ *
  * @author Arne Kepp
  */
 
@@ -40,7 +41,7 @@ public class CompRtcpPkt {
     /** Logger instance. */
     private static final Logger LOGGER =
         Logger.getLogger(CompRtcpPkt.class.getName());
-    
+
     /** Problem indicator, negative values denote packet type that cause problem */
     protected int problem = 0;
     /** Stores the different subclasses of RtcpPkt that make up the compound packet */
@@ -58,9 +59,9 @@ public class CompRtcpPkt {
 
     /**
      * Add a RTCP packet to the compound packet. Packets are added in order,
-     * so you have to ensure that a Sender Report or Receiver Report is 
+     * so you have to ensure that a Sender Report or Receiver Report is
      * added first.
-     * 
+     *
      * @param aPkt the packet to be added
      */
     protected void addPacket(RtcpPkt aPkt) {
@@ -77,13 +78,13 @@ public class CompRtcpPkt {
 
     /**
      * Picks a received Compound RTCP packet apart.
-     * 
+     *
      * Only SDES packets are processed directly, other packets are
-     * parsed and put into aComptRtcpPkt.rtcpPkts, but not 
-     * 
+     * parsed and put into aComptRtcpPkt.rtcpPkts, but not
+     *
      * Check the aComptRtcpPkt.problem , if the value is non-zero
      * the packets should probably be discarded.
-     * 
+     *
      * @param rawPkt the byte array received from the socket
      * @param packetSize the actual number of used bytes
      * @param adr the socket address from which the packet was received
@@ -128,7 +129,7 @@ public class CompRtcpPkt {
                 }
             }
 
-            //System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );			
+            //System.out.println("start: " + start + "   pktType: " + pktType + "  length:" + length );
             if(pktType == 200) {
                 addPacket(new RtcpPktSR(rawPkt,start,length*4));
             } else if(pktType == 201 ) {
@@ -164,9 +165,9 @@ public class CompRtcpPkt {
     /**
      * Encode combines the RTCP packets in this.rtcpPkts into a byte[]
      * by calling the encode() function on each of them individually.
-     * 
+     *
      * The order of rtcpPkts is preserved, so a RR or SR packet must be first.
-     * 
+     *
      * @return the trimmed byte[] representation of the packet, ready to go into a UDP packet.
      */
     protected byte[] encode() {
@@ -222,7 +223,7 @@ public class CompRtcpPkt {
                 LOGGER.warning("CompRtcpPkt aPkt.packetType:" + aPkt.packetType);
             }
             //System.out.println(" packetType:" + aPkt.packetType + " length:" + aPkt.rawPkt.length + " index:" + index);
-        } 
+        }
 
         byte[] output = new byte[index];
 
