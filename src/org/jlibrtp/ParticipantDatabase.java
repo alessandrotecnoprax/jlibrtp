@@ -124,8 +124,8 @@ public class ParticipantDatabase {
             while(notDone && enu.hasMoreElements()) {
                 Participant part = enu.nextElement();
                 if(part.unexpected &&
-                        (part.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress())
-                                || part.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress()))) {
+                        ((part.rtcpReceivedFromAddress!=null && part.rtcpAddress!=null && part.rtcpReceivedFromAddress.equals(part.rtcpAddress.getAddress())) ||
+                        ( part.rtpReceivedFromAddress!=null && part.rtpAddress!=null && part.rtpReceivedFromAddress.equals(part.rtpAddress.getAddress())))) {
 
                     part.rtpAddress = p.rtpAddress;
                     part.rtcpAddress = p.rtcpAddress;
