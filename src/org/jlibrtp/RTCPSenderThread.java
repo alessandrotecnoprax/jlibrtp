@@ -430,7 +430,7 @@ public class RTCPSenderThread extends Thread {
                 if(iter.hasNext() ) {
                     while (iter.hasNext() &&
                            (part == null || part.rtcpAddress == null)) {
-                        part = iter.next();//Some time there's a ConcurrentModificationException here
+                        part = iter.next();//Some times there's a ConcurrentModificationException here
                     }
                 }
 
