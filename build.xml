@@ -26,13 +26,13 @@ This file builds jlibrtp.
   <target name="-init">
   	<!-- Allow to override settings.-->
   	<propertyfile file="jlibrtp.properties"/>
-  	
+
     <property name="src.dir" value="src" />
     <property name="demo.dir" value="demo" />
     <property name="bin.dir" value="bin" />
     <property name="lib.dir" value="lib" />
     <property name="api.dir" value="api" />
-  	
+
   	<property name="jar" value="jlibrtp.jar" />
   	<mkdir dir="${bin.dir}"/>
   </target>
@@ -49,6 +49,7 @@ This file builds jlibrtp.
       <classpath>
         <fileset dir="${lib.dir}">
           <include name="jdom.jar" />
+          <include name="ostermillerutils_1_07_00.jar" />
         </fileset>
       </classpath>
     </javac>
@@ -67,12 +68,13 @@ This file builds jlibrtp.
     <jar destfile="${jar}">
       <fileset dir="${bin.dir}">
         <include name="org/jlibrtp/*.class" />
+         <include name="org/jlibrtp/protocols/rtp/*.class" />
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${user.name}" />
         <section name="common">
           <attribute name="Implementation-Vendor" value="${user.name}" />
-          <attribute name="Implementation-Title" 
+          <attribute name="Implementation-Title"
             value="Java library for the Real-Time Transport Protocol (RTP)" />
         </section>
       </manifest>
@@ -82,8 +84,8 @@ This file builds jlibrtp.
   <target name="apidoc" depends="-init"
     description="Create JAVADOC documentation">
     <mkdir dir="${api.dir}"/>
-    
-    <javadoc destdir="${api.dir}" windowtitle="jlibrtp" author="true" 
+
+    <javadoc destdir="${api.dir}" windowtitle="jlibrtp" author="true"
       version="true" access="protected" use="true">
       <packageset dir="${src.dir}" />
       <group title="Core classes of jlibrtp">
@@ -91,6 +93,6 @@ This file builds jlibrtp.
       </group>
     </javadoc>
   </target>
-   
+
   <target name="all" depends="jar,apidoc"/>
 </project>
