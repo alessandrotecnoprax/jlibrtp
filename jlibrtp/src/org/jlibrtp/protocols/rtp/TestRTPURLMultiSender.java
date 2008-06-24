@@ -14,7 +14,7 @@ import java.io.OutputStream;
  *
  * <p>Copyright: Copyright (c) 2007-2008</p>
  *
- * <p>Company: L2F / INESC-ID</p>
+ * <p>Company: VoiceInteraction</p>
  *
  * @author Renato Cassaca
  * @version 1.0

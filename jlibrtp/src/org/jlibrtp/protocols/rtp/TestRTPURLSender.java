@@ -1,7 +1,6 @@
 package org.jlibrtp.protocols.rtp;
 
 import java.net.URL;
-import java.io.InputStream;
 import java.net.URLConnection;
 import java.io.FileInputStream;
 import java.io.OutputStream;
@@ -21,7 +20,7 @@ import java.util.logging.SimpleFormatter;
  *
  * <p>Copyright: Copyright (c) 2007-2008</p>
  *
- * <p>Company: L2F / INESC-ID</p>
+ * <p>Company: VoiceInteraction</p>
  *
  * @author Renato Cassaca
  * @version 1.0
