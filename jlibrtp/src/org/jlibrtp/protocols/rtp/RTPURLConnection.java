@@ -6,8 +6,6 @@ import javax.sound.sampled.AudioFormat;
 import org.jlibrtp.RTPAppIntf;
 import java.net.DatagramSocket;
 import org.jlibrtp.RTPSession;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URI;
@@ -19,6 +17,7 @@ import org.jlibrtp.DataFrame;
 import java.util.UUID;
 import com.Ostermiller.util.CircularByteBuffer;
 import java.util.logging.Logger;
+import org.jlibrtp.RTCPAppIntf;
 
 
 /**
@@ -28,12 +27,13 @@ import java.util.logging.Logger;
  *
  * <p>Copyright: Copyright (c) 2007-2008</p>
  *
- * <p>Company: L2F / INESC-ID </p>
+ * <p>Company: VoiceInteraction </p>
  *
  * @author Renato Cassaca
  * @version 1.0
  */
-public class RTPURLConnection extends URLConnection implements RTPAppIntf {
+public class RTPURLConnection extends URLConnection implements RTPAppIntf,
+        RTCPAppIntf {
 
     // Logger instance.
     private static final Logger LOGGER =
@@ -59,11 +59,10 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
     private int pktsReceivedCount = 0;
 
     //Send packets
-    private CircularByteBufferAdapter sendPktsBuffer = null;
     private boolean sendingData = false;
-    private int pktsSentCount = 0;
-    private InputStream rtIS = null;
-    private int bufferSize = 1024;
+
+    //Packets-per-seconds that should be sent
+    private int pps = 50;
 
     //AudioFormat that wil transmitted
     private final AudioFormat audioFormat;
@@ -107,10 +106,10 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
         //Initialize audio format
         audioFormat = getAudioFormat();
 
-        //Initialize bufferSize
-        String bufferStr = parameters.get("buffer");
-        if (bufferStr != null) {
-            bufferSize = Integer.valueOf(bufferStr);
+        //Initialize PacketsPerSecond
+        String ppsStr = parameters.get("pps");
+        if (ppsStr != null) {
+            pps = Integer.valueOf(ppsStr);
         }
 
         //Get keep alive value
@@ -153,7 +152,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
             rtpSession = new RTPSession(rtpSocket, rtcpSocket);
             rtpSession.registerRTPSession(this, null, null);
             rtpSession.sessionBandwidth(getAudioFormatBytesPerSecond());
-            rtpSession.packetBufferBehavior(10);
+            rtpSession.packetBufferBehavior(0);
             rtpSession.frameReconstruction(true);
             rtpSession.payloadType(getPayloadType());
 
@@ -194,24 +193,17 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
         if (sendingData)
             throw new IOException("Already configured outputStream");
 
-        //Create pipe to send RTP data
-        sendPktsBuffer = new CircularByteBufferAdapter(
-                getAudioFormatBytesPerSecond() * 40);
-
-        //rtIS = sendPktsInputStream;
-        rtIS = sendPktsBuffer.getInputStream();
-
         //Configure RTPSession participants
-        String participant = parameters.get("participant");
+        final String participant = parameters.get("participant");
         if (participant == null) {
             throw new IOException("No participant defined in URL");
         } else {
-            int splitOffset = participant.indexOf(':');
+            final int splitOffset = participant.indexOf(':');
             if (splitOffset == -1) {
                 throw new IOException("Invalid participant specified");
             }
-            String partHost = participant.substring(0, splitOffset);
-            String partPort = participant.substring(splitOffset + 1);
+            final String partHost = participant.substring(0, splitOffset);
+            final String partPort = participant.substring(splitOffset + 1);
             int partRtpPort = 0;
             try {
                 partRtpPort = Integer.parseInt(partPort);
@@ -220,18 +212,18 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
             }
 
             //Create participant
-            Participant p = new Participant(partHost, partRtpPort,
-                                            partRtpPort + 1);
+            final Participant p = new Participant(partHost, partRtpPort,
+                                                  partRtpPort + 1);
             rtpSession.addParticipant(p);
         }
 
         sendingData = true;
 
-        //Start thread that will send the data
-        OutputStreamRTPSender osRTPs = new OutputStreamRTPSender(rtpSession,
-                getAudioFormatBytesPerSecond(), bufferSize);
+        //Builds an OutputStream for this RTPSession
+        final RTPOutputStream rtpOS = new RTPOutputStream(rtpSession,
+                getAudioFormatBytesPerSecond(), pps);
 
-        return osRTPs;
+        return rtpOS;
     }
 
     /**
@@ -391,10 +383,13 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
         }
 
         //Constructs the AudioFormat
-        AudioFormat audioFormat = new AudioFormat(encoding, sampleRate, bits,
-                                                  channels, bits / 8,
-                                                  sampleRate,
-                                                  endian);
+        final AudioFormat audioFormat = new AudioFormat(encoding,
+                sampleRate,
+                bits,
+                channels,
+                bits / 8,
+                sampleRate,
+                endian);
 
         return audioFormat;
     }
@@ -410,7 +405,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
     /**
      * See {@link http://www.ietf.org/rfc/rfc3551.txt} section 6
      *
-     * @return long
+     * @return long Pakload type for this session
      */
     private int getPayloadType() {
         if (audioFormat.getEncoding() == AudioFormat.Encoding.ULAW) {
@@ -436,6 +431,36 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
                     "Unknow audio format. Cannot guess payload type");
         }
         return 1;
+    }
+
+    public void SRPktReceived(long ssrc, long ntpHighOrder, long ntpLowOrder,
+                              long rtpTimestamp, long packetCount,
+                              long octetCount, long[] reporteeSsrc,
+                              int[] lossFraction, int[] cumulPacketsLost,
+                              long[] extHighSeq, long[] interArrivalJitter,
+                              long[] lastSRTimeStamp, long[] delayLastSR) {
+        System.err.println("SRPktReceived");
+    }
+
+    public void RRPktReceived(long reporterSsrc, long[] reporteeSsrc,
+                              int[] lossFraction, int[] cumulPacketsLost,
+                              long[] extHighSeq, long[] interArrivalJitter,
+                              long[] lastSRTimeStamp, long[] delayLastSR) {
+        System.err.println("RRPktReceived");
+    }
+
+    public void SDESPktReceived(Participant[] relevantParticipants) {
+        System.err.println("SDESPktReceived");
+    }
+
+    public void BYEPktReceived(Participant[] relevantParticipants,
+                               String reason) {
+        System.err.println("BYEPktReceived");
+    }
+
+    public void APPPktReceived(Participant part, int subtype, byte[] name,
+                               byte[] data) {
+        System.err.println("APPPktReceived");
     }
 
 
@@ -533,34 +558,45 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf {
                                 System.err.println(
                                         "\n------------> DRAIN, RTPURL.close(): still growing!!! " +
                                         uuid + "\n");
-                                prevAval = nowAval;
                                 eqlCnt = 0;
+                                try {
+                                    Thread.sleep(20);
+                                } catch (InterruptedException ex1) {
+                                }
                             } else if (nowAval == prevAval) {
                                 eqlCnt += 1;
+                                try {
+                                    Thread.sleep(50);
+                                } catch (InterruptedException ex1) {
+                                }
+
                                 //LOGGER.debug("RTPURL.close(): stalled with: "+eqlCnt + " " + uuid);
 
-                                if (eqlCnt > 200) {
+                                if (eqlCnt > 10) {
                                     LOGGER.severe(
-                                            "RTPURL.close(): bailing out after nRetries " +
+                                            "RTPURL.close(): bailing out after nRetries aval:" +
+                                            nowAval + " " +
                                             uuid);
                                     System.err.println(
-                                            "\n------------> DRAIN, RTPURL.close(): bailing out after nRetries " +
+                                            "\n------------> DRAIN, RTPURL.close(): bailing out after nRetries aval: " +
+                                            nowAval + "  " +
                                             uuid + "\n");
                                     break;
                                 }
 
                             } else {
+                                eqlCnt = 0;
                                 //Expected situation.....
                                 //LOGGER.debug("RTPURL.close(): Expected situation");
                                 //System.out.print(nowAval + ", ");
+                                try {
+                                    Thread.sleep(2);
+                                } catch (InterruptedException ex1) {
+                                }
                             }
+                            prevAval = nowAval;
                         }
 
-                        try {
-                            Thread.currentThread().sleep(30);
-                        } catch (InterruptedException ie) {
-                            ie.printStackTrace();
-                        }
                     } while (true);
 
                 } catch (IOException ex) {
