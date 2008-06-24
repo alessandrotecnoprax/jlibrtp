@@ -24,7 +24,7 @@ import javax.sound.sampled.AudioInputStream;
  *
  * <p>Copyright: Copyright (c) 2007</p>
  *
- * <p>Company: L2F / INESC-ID</p>
+ * <p>Company: VoiceInteraction</p>
  *
  * @author Renato Cassaca
  * @version 1.0
