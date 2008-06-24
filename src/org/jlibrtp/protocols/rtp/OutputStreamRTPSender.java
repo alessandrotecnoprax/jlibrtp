@@ -2,10 +2,9 @@ package org.jlibrtp.protocols.rtp;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.util.UUID;
 import org.jlibrtp.RTPSession;
+import com.Ostermiller.util.CircularByteBuffer;
 
 /**
  * <p>Title: jlibrtp</p>
@@ -14,7 +13,7 @@ import org.jlibrtp.RTPSession;
  *
  * <p>Copyright: Copyright (c) 2007-2008</p>
  *
- * <p>Company: L2F / INESC-ID</p>
+ * <p>Company: VoiceInteraction</p>
  *
  * @author Renato Cassaca
  * @version 1.0
@@ -23,23 +22,17 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
 
     private static final int numBuffersBeforeSend = 3;
 
-    //private static final int bufferSize = 1400;
     private int bufferSize = 1024;
 
-    private final PipedInputStream inputStream;
-
-    private final PipedOutputStream outputStream;
+    private final CircularByteBuffer circularByteBuffer = new CircularByteBuffer(-1);
 
     private final long bytesPerSecond;
 
-    private long nextTimeStamp = 0;
-    private int nextSequenceNumber = 1;
     private long rtpTimeStamp = 0;
-    private long lastTimeStamp = 0;
-
 
     private Thread thread = null;
     private boolean started = false;
+    private boolean stopRequested = false;
 
     private boolean flushing;
     private final UUID uuid = UUID.randomUUID();
@@ -52,10 +45,6 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
 
         this.bytesPerSecond = bytesPerSecond;
         this.rtpSession = rtpSession;
-
-        //Build storage buffer
-        inputStream = new PipedInputStream((int) bytesPerSecond * 5);
-        outputStream = new PipedOutputStream(inputStream);
 
         flushing = false;
 
@@ -71,10 +60,6 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         this.bytesPerSecond = bytesPerSecond;
         this.rtpSession = rtpSession;
         bufferSize = bufSize;
-
-        //Build storage buffer
-        inputStream = new PipedInputStream((int) bytesPerSecond * 5);
-        outputStream = new PipedOutputStream(inputStream);
 
         flushing = false;
 
@@ -96,8 +81,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         if (started == false)
             throw new IOException("Sender is closed");
 
-        /** @todo This is an infinite pipe, so it can introduce 1000 msecs of wait for space */
-        outputStream.write(b);
+        circularByteBuffer.getOutputStream().write(b);
 
         long dataTime = (long) Math.ceil(1000 / bytesPerSecond);
         if (dataTime > 0) {
@@ -114,13 +98,13 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
             throw new IOException("Sender is closed");
 
         int bw = len - off;
-        outputStream.write(b, off, len);
+        circularByteBuffer.getOutputStream().write(b, off, len);
     }
 
 
     public void flush() throws IOException {
         flushing = true;
-        while (inputStream.available() > 0) {
+        while (circularByteBuffer.getInputStream().available() > 0) {
             try {
                 Thread.currentThread().sleep(5);
             } catch (InterruptedException ex) {
@@ -133,7 +117,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         if (started == false)
             return;
         else {
-            stop();
+            stopRequested = true;
             while (started == true) {
                 try {
                     Thread.currentThread().sleep(10);
@@ -161,16 +145,14 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         //This way, packages are always multiples of 1 ms
         int correctedBufferSize = bufferSize -
                                   bufferSize % ((int) bytesPerSecond / 1000);
-        final byte[] buffer = new byte[correctedBufferSize];
         int br = -1;
         int available;
         int numberBuffers;
-        long rtpTimeStamp;
 
-        while (started) {
+        while ((started) && (stopRequested == false)) {
             try {
                 //Calculo o numero de buffers
-                available = inputStream.available();
+                available = circularByteBuffer.getInputStream().available();
                 if (available < 1) {
                     try {
                         Thread.currentThread().sleep(100);
@@ -196,7 +178,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
                     //Vou preencher os buffers
                     for (int i = 0; i < numberBuffers; i++) {
                         try {
-                            br = inputStream.read(buffers[i]);
+                            br = circularByteBuffer.getInputStream().read(buffers[i]);
                         } catch (IOException ex) {
                             ex.printStackTrace();
                             br = -1;
@@ -213,7 +195,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
                     else
                         buffers = new byte[1][correctedBufferSize];
                     try {
-                        br = inputStream.read(buffers[0]);
+                        br = circularByteBuffer.getInputStream().read(buffers[0]);
                     } catch (IOException ex) {
                         ex.printStackTrace();
                         br = -1;
@@ -225,7 +207,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
                     }
                 }
 
-                //Send datat
+                //Send data
                 long[][] ret = null;
                 ret = rtpSession.sendData(buffers, null, null, -1, null);
                 if (ret != null) {
@@ -244,8 +226,8 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         started = false;
 
         try {
-            inputStream.close();
-            outputStream.close();
+            circularByteBuffer.getOutputStream().close();
+            circularByteBuffer.getInputStream().close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
