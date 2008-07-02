@@ -1,10 +1,16 @@
-package org.jlibrtp.protocols.rtp;
+package org.jlibrtp.test.protocols.rtp;
 
 import java.net.URL;
-import java.io.InputStream;
 import java.net.URLConnection;
 import java.io.FileInputStream;
 import java.io.OutputStream;
+import java.io.BufferedInputStream;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.logging.SimpleFormatter;
 
 
 /**
@@ -19,7 +25,7 @@ import java.io.OutputStream;
  * @author Renato Cassaca
  * @version 1.0
  */
-public class TestRTPURLMultiSender {
+public class TestRTPURLSender {
 
     static {
         registerProtocolHandlers();
@@ -43,14 +49,14 @@ public class TestRTPURLMultiSender {
     }
 
 
-    public TestRTPURLMultiSender() {
+    public TestRTPURLSender() {
         super();
     }
 
     public static void main(String[] args) {
 
-        TestRTPURLMultiSender testrtpurlmultisender = new TestRTPURLMultiSender();
-        testrtpurlmultisender.doIt();
+        TestRTPURLSender testrtpurlsender = new TestRTPURLSender();
+        testrtpurlsender.doIt();
     }
 
     /**
@@ -59,43 +65,34 @@ public class TestRTPURLMultiSender {
     private void doIt() {
         try {
             // This block configure the logger with handler and formatter
-        /*    FileHandler fh = new FileHandler("Sender.log", false);
+            FileHandler fh = new FileHandler("Sender.log", false);
             Logger logger = Logger.getLogger("org.jlibrtp");
             logger.addHandler(fh);
             logger.setLevel(Level.ALL);
             SimpleFormatter formatter = new SimpleFormatter();
-            fh.setFormatter(formatter);*/
+            fh.setFormatter(formatter);
 
             long sTime = System.currentTimeMillis();
 
-            URL sendURL = new URL("rtp://172.16.4.42:29000/audio?participant=localhost:30000");
+            URL sendURL = new URL("rtp://172.16.4.42:29000/audio?participant=localhost:30000&rate=8000");
             URLConnection sendC = sendURL.openConnection();
             sendC.connect();
             OutputStream rtpOS = sendC.getOutputStream();
 
-            for (int i = 0; i < 5; i++) {
+            FileInputStream fis = new FileInputStream("capture.wav");
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            AudioInputStream is = AudioSystem.getAudioInputStream(bis);
 
-                InputStream is = new FileInputStream("capture.raw");
-
-                byte[] buffer = new byte[1024];
-                int br;
-                while ((br = is.read(buffer)) != -1) {
-                    rtpOS.write(buffer, 0, br);
-                }
-
-                is.close();
-
-                System.out.println("Will sleep before sending ith: " + (i+1));
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex1) {
-                }
+            byte[] buffer = new byte[1024];
+            int br;
+            while ((br = is.read(buffer)) != -1) {
+                rtpOS.write(buffer, 0, br);
             }
-
             rtpOS.flush();
             rtpOS.close();
 
             System.out.println("Finished Sender: " + (System.currentTimeMillis() - sTime) / 1000);
+
 
         } catch (Exception ex) {
             ex.printStackTrace();

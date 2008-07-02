@@ -1,4 +1,4 @@
-package org.jlibrtp.protocols.rtp;
+package org.jlibrtp.test.protocols.rtp;
 
 import java.net.URL;
 import java.net.URLConnection;

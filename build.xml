@@ -44,7 +44,7 @@ This file builds jlibrtp.
 
   <target name="compile" depends="-init" description="Compile everything">
     <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true"
-        optimize="false" source="1.6" target="1.6">
+        optimize="false" source="1.5" target="1.5">
       <include name="**/*.java" />
       <classpath>
         <fileset dir="${lib.dir}">

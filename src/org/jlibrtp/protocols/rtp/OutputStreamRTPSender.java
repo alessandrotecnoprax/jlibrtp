@@ -86,7 +86,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         long dataTime = (long) Math.ceil(1000 / bytesPerSecond);
         if (dataTime > 0) {
             try {
-                Thread.currentThread().sleep(dataTime);
+                Thread.sleep(dataTime);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
@@ -106,7 +106,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
         flushing = true;
         while (circularByteBuffer.getInputStream().available() > 0) {
             try {
-                Thread.currentThread().sleep(5);
+                Thread.sleep(5);
             } catch (InterruptedException ex) {
             }
         }
@@ -120,7 +120,7 @@ public class OutputStreamRTPSender extends OutputStream implements Runnable {
             stopRequested = true;
             while (started == true) {
                 try {
-                    Thread.currentThread().sleep(10);
+                    Thread.sleep(10);
                 } catch (InterruptedException ex) {
                 }
             }

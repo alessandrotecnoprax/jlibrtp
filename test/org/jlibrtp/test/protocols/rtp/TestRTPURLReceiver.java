@@ -1,4 +1,4 @@
-package org.jlibrtp.protocols.rtp;
+package org.jlibrtp.test.protocols.rtp;
 
 import java.net.URL;
 import java.io.InputStream;
@@ -56,7 +56,7 @@ public class TestRTPURLReceiver {
     }
 
     public static void main(String[] args) {
-        Logger.getLogger(Logger.GLOBAL_LOGGER_NAME).setLevel(Level.FINEST);
+        Logger.getLogger("").setLevel(Level.FINEST);
         TestRTPURLReceiver testrtpurlreceiver = new TestRTPURLReceiver();
         testrtpurlreceiver.doIt();
     }

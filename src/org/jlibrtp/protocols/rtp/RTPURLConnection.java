@@ -1,23 +1,26 @@
 package org.jlibrtp.protocols.rtp;
 
-import java.util.HashMap;
-import java.net.URLConnection;
-import javax.sound.sampled.AudioFormat;
-import org.jlibrtp.RTPAppIntf;
-import java.net.DatagramSocket;
-import org.jlibrtp.RTPSession;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URI;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import org.jlibrtp.Participant;
-import org.jlibrtp.DataFrame;
+import java.net.DatagramSocket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.UUID;
-import com.Ostermiller.util.CircularByteBuffer;
 import java.util.logging.Logger;
+
+import javax.sound.sampled.AudioFormat;
+
+import org.jlibrtp.DataFrame;
+import org.jlibrtp.Participant;
 import org.jlibrtp.RTCPAppIntf;
+import org.jlibrtp.RTPAppIntf;
+import org.jlibrtp.RTPSession;
+
+import com.Ostermiller.util.CircularByteBuffer;
 
 
 /**
@@ -134,9 +137,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
             try {
                 rtpSocket = new DatagramSocket(rtpPort);
             } catch (Exception ex) {
-                ex.printStackTrace();
-                throw new IOException("RTPSession failed to obtain port: " +
-                                      rtpPort, ex);
+                throw new IOException(ex.getMessage());
             }
 
             //Initialize RTCP socket
@@ -144,7 +145,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                 try {
                     rtcpSocket = new DatagramSocket(rtcpPort);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    throw new IOException(ex.getMessage());
                 }
             }
 
@@ -283,7 +284,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                     counter = 0;
                 } else if (available == previouslyAvailable) {
                     try {
-                        Thread.currentThread().sleep(50);
+                        Thread.sleep(50);
                     } catch (InterruptedException ex1) {
                     }
                     counter += 1;
