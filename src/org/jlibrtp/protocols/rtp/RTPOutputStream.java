@@ -59,19 +59,29 @@ public class RTPOutputStream extends OutputStream {
     public void write(int b) throws IOException {
         circularByteBuffer.getOutputStream().write(b);
 
-        flush();
+        drain();
     }
 
     public void write(byte b[], int off, int len) throws IOException {
         circularByteBuffer.getOutputStream().write(b, off, len);
 
-        flush();
+        drain();
     }
 
-    public void flush() throws IOException {
+    private void drain() throws IOException {
         while (circularByteBuffer.getInputStream().available() >= packetSize) {
             sendData();
         }
+    }
+
+    public void flush() throws IOException {
+        drain();
+
+        //Make sure that buffer is empty
+        if (circularByteBuffer.getInputStream().available() > 0) {
+            circularByteBuffer.clear();
+        }
+
         pktTmestamp = -1;
     }
 
