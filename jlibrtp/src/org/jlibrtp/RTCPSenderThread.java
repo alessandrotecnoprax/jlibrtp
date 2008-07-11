@@ -58,6 +58,7 @@ public class RTCPSenderThread extends Thread {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTCPSenderThread created");
         }
+        setName("RTCPSenderThread");
     }
 
     /**
