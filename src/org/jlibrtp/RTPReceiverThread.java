@@ -47,6 +47,7 @@ public class RTPReceiverThread extends Thread {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTPReceiverThread created");
         }
+        setName("RTPReceiverThread");
     }
 
     public void run() {

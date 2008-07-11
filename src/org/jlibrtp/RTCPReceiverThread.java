@@ -54,7 +54,7 @@ public class RTCPReceiverThread extends Thread {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTCPReceiverThread created");
         }
-
+        setName("RTCPReceiverThread");
     }
 
     /**

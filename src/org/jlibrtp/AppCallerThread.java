@@ -55,6 +55,7 @@ public class AppCallerThread extends Thread {
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> AppCallerThread created");
         }
+        setName("AppCallerThread");
     }
 
     /**
