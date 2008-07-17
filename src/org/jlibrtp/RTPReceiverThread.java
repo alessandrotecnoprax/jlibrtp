@@ -40,9 +40,9 @@ public class RTPReceiverThread extends Thread {
         Logger.getLogger(RTPReceiverThread.class.getName());
 
     /** Parent RTP Session */
-    RTPSession rtpSession = null;
+    private RTPSession rtpSession = null;
 
-    RTPReceiverThread(RTPSession session) {
+    public RTPReceiverThread(RTPSession session) {
         rtpSession = session;
         if(LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("<-> RTPReceiverThread created");
