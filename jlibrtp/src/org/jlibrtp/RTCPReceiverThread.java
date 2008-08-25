@@ -218,13 +218,13 @@ public class RTCPReceiverThread extends Thread {
                     if(rtpSession.rtcpAppIntf != null) {
                         if(srPkt.rReports != null) {
                             rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2,
-                                    srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
+                                    srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersOctCount,
                                     srPkt.rReports.reporteeSsrc, srPkt.rReports.lossFraction, srPkt.rReports.lostPktCount,
                                     srPkt.rReports.extHighSeqRecv, srPkt.rReports.interArvJitter, srPkt.rReports.timeStampLSR,
                                     srPkt.rReports.delaySR);
                         } else {
                             rtpSession.rtcpAppIntf.SRPktReceived(srPkt.ssrc, srPkt.ntpTs1, srPkt.ntpTs2,
-                                    srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersPktCount,
+                                    srPkt.rtpTs, srPkt.sendersPktCount, srPkt.sendersOctCount,
                                     null, null, null,
                                     null, null, null,
                                     null);

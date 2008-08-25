@@ -137,6 +137,7 @@ public class PktBuffer {
             oldest = newNode;
             newest = newNode;
         }
+        length++;              // add this or no packet will be ever popped out!
         return 0;
     }
 
