@@ -429,7 +429,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
             }
         } else {
             throw new RuntimeException(
-                    "Unknow audio format. Cannot guess payload type");
+                    "Unknown audio format. Cannot guess payload type");
         }
         return 1;
     }
@@ -601,7 +601,8 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                     } while (true);
 
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    //ex.printStackTrace();
+                    return;
                 }
             }
 

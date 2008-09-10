@@ -413,7 +413,7 @@ public class XmlPacketRecorder implements RTPAppIntf, RTCPAppIntf, DebugAppIntf 
 
 		    	rtpPortNum = 16384;
 		    	rtcpPortNum = 16385;
-		    	filename =  "/home/ak/jlibrtp_packets.xml";
+		    	filename =  "test.xml";
 		    	maxPacketCount = 1300;
 
 				run = true;
