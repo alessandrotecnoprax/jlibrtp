@@ -244,7 +244,7 @@ public class XmlPacketPlayer implements RTPAppIntf {
 			hostname = "127.0.0.1";
 			rtpPortNum = 16384;
 	    	rtcpPortNum = 16385;
-	    	filename =  "/home/ak/jlibrtp_packets.xml";
+	    	filename =  "test.xml";
 			run = true;
 		} else {
 			System.out.println("Syntax: ");
