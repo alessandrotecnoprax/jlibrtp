@@ -22,8 +22,8 @@ This file builds jlibrtp.
   </description>
 
   <target name="-init">
-  	<!-- Allow to override settings.-->
-  	<propertyfile file="jlibrtp.properties"/>
+    <!-- Allow to override settings.-->
+    <!-- propertyfile file="jlibrtp.properties"/ -->
 
     <property name="src.dir" value="src" />
     <property name="demo.dir" value="demo" />
@@ -47,7 +47,6 @@ This file builds jlibrtp.
       <classpath>
         <fileset dir="${lib.dir}">
           <include name="jdom.jar" />
-          <include name="ostermillerutils_1_07_00.jar" />
         </fileset>
       </classpath>
     </javac>
