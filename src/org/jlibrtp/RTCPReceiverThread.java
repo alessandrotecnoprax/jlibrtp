@@ -156,12 +156,12 @@ public class RTCPReceiverThread extends Thread {
 
 
             //Loop over the information
-            Iterator iter = compPkt.rtcpPkts.iterator();
+            Iterator<RtcpPkt> iter = compPkt.rtcpPkts.iterator();
 
             long curTime = System.currentTimeMillis();
 
             while(iter.hasNext()) {
-                RtcpPkt aPkt = (RtcpPkt) iter.next();
+                RtcpPkt aPkt = iter.next();
 
                 // Our own packets should already have been filtered out.
                 if(aPkt.ssrc == rtpSession.ssrc) {

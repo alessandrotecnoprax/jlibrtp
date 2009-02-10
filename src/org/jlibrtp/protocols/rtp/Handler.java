@@ -17,13 +17,14 @@
  */
 package org.jlibrtp.protocols.rtp;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.net.InetAddress;
-import java.io.IOException;
+import java.util.logging.Logger;
 
 
 /**
@@ -39,6 +40,9 @@ import java.io.IOException;
  * @version 1.0
  */
 public class Handler extends URLStreamHandler {
+    /** Logger instance. */
+    private static final Logger LOGGER =
+        Logger.getLogger(Handler.class.getName());
 
     public Handler() {
         super();
@@ -71,7 +75,7 @@ public class Handler extends URLStreamHandler {
         try {
             return InetAddress.getLocalHost();
         } catch (UnknownHostException ex) {
-            ex.printStackTrace();
+            LOGGER.warning(ex.getMessage());
             return null;
         }
     }

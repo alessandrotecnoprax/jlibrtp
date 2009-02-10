@@ -18,10 +18,12 @@
 
 package org.jlibrtp.protocols.rtp;
 
-import org.jlibrtp.CircularByteBuffer;
-import org.jlibrtp.RTPSession;
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.jlibrtp.RTPSession;
 
 /**
  * <p>Title: RTPOutputStream </p>
@@ -36,6 +38,9 @@ import java.io.IOException;
  * @version 1.0
  */
 public class RTPOutputStream extends OutputStream {
+    /** Logger instance. */
+    private static final Logger LOGGER =
+        Logger.getLogger(RTPOutputStream.class.getName());
 
     //RTPSession
     private final RTPSession rtpSession;
@@ -105,11 +110,15 @@ public class RTPOutputStream extends OutputStream {
     }
 
     public void close() throws IOException {
-        System.err.println("RTPOutputStream.close() called");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("RTPOutputStream.close() called");
+        }
         circularByteBuffer.getOutputStream().close();
         circularByteBuffer.getInputStream().close();
         rtpSession.endSession();
-        System.err.println("RTPOutputStream.close() done! (rtpEndSession)");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("RTPOutputStream.close() done! (rtpEndSession)");
+        }
         pktTmestamp = -1;
     }
 
@@ -118,7 +127,7 @@ public class RTPOutputStream extends OutputStream {
      *
      * @todo Should reset timestamp if current time has long passed
      */
-    private void sendData() {
+    private void sendData() throws IOException {
 
         //Initialize timestamp
         if (pktTmestamp < 0) {
@@ -126,23 +135,17 @@ public class RTPOutputStream extends OutputStream {
         }
 
         //Fill buffer to send
-        int bytesRead = 0;
-        try {
-            bytesRead = circularByteBuffer.getInputStream().read(buffer);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        int bytesRead = circularByteBuffer.getInputStream().read(buffer);
         if (bytesRead != packetSize) {
             if (bytesRead < 0) {
                 //ENDED??
-                System.err.println("bytesRead != packetSize... @ RTPOutputStream");
+                LOGGER.info("bytesRead != packetSize... @ RTPOutputStream");
             }
         }
 
         //Send data
-        long[][] ret = null;
         byte[][] pkt = {buffer};
-        ret = rtpSession.sendData(pkt, null, null, pktTmestamp, null);
+        rtpSession.sendData(pkt, null, null, pktTmestamp, null);
 
         //Try to keep send rate as "real time" as possible...
         long sleepTime = pktTmestamp - (long) (System.nanoTime() * 1E-6);
@@ -150,8 +153,11 @@ public class RTPOutputStream extends OutputStream {
             try {
                 Thread.sleep(0, 999999);
                 sleepTime--;
-            } catch (InterruptedException ex1) {
-                ex1.printStackTrace();
+            } catch (InterruptedException ex) {
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine(ex.getLocalizedMessage());
+                }
+                return;
             }
         }
 
