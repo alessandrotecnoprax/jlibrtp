@@ -498,7 +498,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
 
 
         public CircularByteBufferAdapter(int size) {
-            super( -1); //Can be improved!!!
+            super(size); //Can be improved!!!
             outputStreamAdapter = new OutputStreamAdapter(super.getOutputStream());
             inputStreamAdapter = new InputStreamAdapter(super.getInputStream(),
                     outputStreamAdapter);
