@@ -28,11 +28,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.sound.sampled.AudioFormat;
 
-import org.jlibrtp.CircularByteBuffer;
 import org.jlibrtp.DataFrame;
 import org.jlibrtp.Participant;
 import org.jlibrtp.RTCPAppIntf;
@@ -54,7 +54,6 @@ import org.jlibrtp.RTPSession;
  */
 public class RTPURLConnection extends URLConnection implements RTPAppIntf,
         RTCPAppIntf {
-
     // Logger instance.
     private static final Logger LOGGER =
             Logger.getLogger(RTPURLConnection.class.getName());
@@ -306,9 +305,8 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                     }
                     counter += 1;
                     if (counter == 50) {
-                        System.err.println(
-                                "Stream wasn't consumed until the end " +
-                                uuid);
+                        LOGGER.warning("Stream wasn't consumed until the end "
+                                + uuid);
                         break;
                     }
                 } else if (available < previouslyAvailable) {
@@ -317,7 +315,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                     previouslyAvailable = available;
                 } else if (available > previouslyAvailable) {
                     counter = 0;
-                    System.err.println("av > pA: How is it possible?? " +
+                    LOGGER.warning("av > pA: How is it possible?? " +
                                        uuid);
                     break;
                 }
@@ -372,7 +370,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                 encoding = AudioFormat.Encoding.ULAW;
             } else if (encodingStr.equals("gsm")) {
                 /** @todo GSM not supported by AudioFormat */
-                System.err.println("GSM not supported by AudioFormat... review");
+                LOGGER.warning("GSM not supported by AudioFormat... review");
             }
         }
 
@@ -457,28 +455,38 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                               int[] lossFraction, int[] cumulPacketsLost,
                               long[] extHighSeq, long[] interArrivalJitter,
                               long[] lastSRTimeStamp, long[] delayLastSR) {
-        System.err.println("SRPktReceived");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("SRPktReceived");
+        }
     }
 
     public void RRPktReceived(long reporterSsrc, long[] reporteeSsrc,
                               int[] lossFraction, int[] cumulPacketsLost,
                               long[] extHighSeq, long[] interArrivalJitter,
                               long[] lastSRTimeStamp, long[] delayLastSR) {
-        System.err.println("RRPktReceived");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("RRPktReceived");
+        }
     }
 
     public void SDESPktReceived(Participant[] relevantParticipants) {
-        System.err.println("SDESPktReceived");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("SDESPktReceived");
+        }
     }
 
     public void BYEPktReceived(Participant[] relevantParticipants,
                                String reason) {
-        System.err.println("BYEPktReceived");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("BYEPktReceived");
+        }
     }
 
     public void APPPktReceived(Participant part, int subtype, byte[] name,
                                byte[] data) {
-        System.err.println("APPPktReceived");
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine("APPPktReceived");
+        }
     }
 
 
@@ -541,8 +549,9 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
 
 
             public void close() throws IOException {
-                if (calledClosed == true)
+                if (calledClosed) {
                     return;
+                }
                 calledClosed = true;
 
                 rtpSession.endSession(); //Guarantees that the session is ended
@@ -557,70 +566,61 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                 }
             }
 
-            private void drain() {
-                try {
-                    int nowAval = 0;
-                    int prevAval = -1;
-                    int eqlCnt = 0;
-                    do {
-                        nowAval = inputStream.available();
-                        //System.out.println("RTPURL.drain(), nowAval: " + nowAval + ", prevAval: " + prevAval);
-                        if (nowAval < 1)
-                            break;
-                        if (prevAval < 0)
-                            prevAval = nowAval;
-                        else {
-                            if (nowAval > prevAval) {
-                                LOGGER.warning("RTPURL.close(): still growing " +
-                                               uuid);
-                                System.err.println(
-                                        "\n------------> DRAIN, RTPURL.close(): still growing!!! " +
-                                        uuid + "\n");
-                                eqlCnt = 0;
-                                try {
-                                    Thread.sleep(20);
-                                } catch (InterruptedException ex1) {
-                                }
-                            } else if (nowAval == prevAval) {
-                                eqlCnt += 1;
-                                try {
-                                    Thread.sleep(50);
-                                } catch (InterruptedException ex1) {
-                                }
-
-                                //LOGGER.debug("RTPURL.close(): stalled with: "+eqlCnt + " " + uuid);
-
-                                if (eqlCnt > 10) {
-                                    LOGGER.severe(
-                                            "RTPURL.close(): bailing out after nRetries aval:" +
-                                            nowAval + " " +
-                                            uuid);
-                                    System.err.println(
-                                            "\n------------> DRAIN, RTPURL.close(): bailing out after nRetries aval: " +
-                                            nowAval + "  " +
-                                            uuid + "\n");
-                                    break;
-                                }
-
-                            } else {
-                                eqlCnt = 0;
-                                //Expected situation.....
-                                //LOGGER.debug("RTPURL.close(): Expected situation");
-                                //System.out.print(nowAval + ", ");
-                                try {
-                                    Thread.sleep(2);
-                                } catch (InterruptedException ex1) {
-                                }
+            private void drain() throws IOException {
+                int nowAval = 0;
+                int prevAval = -1;
+                int eqlCnt = 0;
+                do {
+                    nowAval = inputStream.available();
+                    if (nowAval < 1)
+                        break;
+                    if (prevAval < 0)
+                        prevAval = nowAval;
+                    else {
+                        if (nowAval > prevAval) {
+                            LOGGER.warning("RTPURL.close(): still growing " +
+                                    uuid);
+                            LOGGER.warning(
+                                    "\n------------> DRAIN, RTPURL.close(): still growing!!! " +
+                                    uuid + "\n");
+                            eqlCnt = 0;
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException ex1) {
+                                return;
                             }
-                            prevAval = nowAval;
+                        } else if (nowAval == prevAval) {
+                            eqlCnt += 1;
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException ex1) {
+                                return;
+                            }
+
+                            if (eqlCnt > 10) {
+                                LOGGER.severe(
+                                        "RTPURL.close(): bailing out after nRetries aval:" +
+                                        nowAval + " " +
+                                        uuid);
+                                LOGGER.severe(
+                                        "\n------------> DRAIN, RTPURL.close(): bailing out after nRetries aval: " +
+                                        nowAval + "  " +
+                                        uuid + "\n");
+                                break;
+                            }
+
+                        } else {
+                            eqlCnt = 0;
+                            try {
+                                Thread.sleep(2);
+                            } catch (InterruptedException ex) {
+                                return;
+                            }
                         }
+                        prevAval = nowAval;
+                    }
 
-                    } while (true);
-
-                } catch (IOException ex) {
-                    //ex.printStackTrace();
-                    return;
-                }
+                } while (true);
             }
 
             public int available() throws IOException {
@@ -637,8 +637,27 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
                 outputStream = os;
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                outputStream.write(b, off, len);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void write(byte[] b) throws IOException {
+                outputStream.write(b);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
             public void write(int b) throws IOException {
-                //if (stopWrite == false)
                 outputStream.write(b);
             }
 

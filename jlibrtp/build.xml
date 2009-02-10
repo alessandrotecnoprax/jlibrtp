@@ -27,7 +27,7 @@ This file builds jlibrtp.
 
     <property name="src.dir" value="src" />
     <property name="demo.dir" value="demo" />
-    <property name="bin.dir" value="bin" />
+    <property name="bin.dir" value="classes" />
     <property name="lib.dir" value="lib" />
     <property name="api.dir" value="api" />
 
@@ -64,8 +64,7 @@ This file builds jlibrtp.
   	description="Create a redistributable jar">
     <jar destfile="${jar}">
       <fileset dir="${bin.dir}">
-        <include name="org/jlibrtp/*.class" />
-         <include name="org/jlibrtp/protocols/rtp/*.class" />
+         <include name="org/jlibrtp/**/*.class" />
       </fileset>
       <manifest>
         <attribute name="Built-By" value="${user.name}" />

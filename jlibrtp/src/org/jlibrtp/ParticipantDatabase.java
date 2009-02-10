@@ -245,9 +245,9 @@ public class ParticipantDatabase {
     protected void debugPrint() {
         LOGGER.finest("   ParticipantDatabase.debugPrint()");
         Participant p;
-        Enumeration enu = ssrcTable.elements();
+        Enumeration<Participant> enu = ssrcTable.elements();
         while(enu.hasMoreElements()) {
-            p = (Participant) enu.nextElement();
+            p = enu.nextElement();
             LOGGER.finest("           ssrcTable ssrc:"+p.ssrc+" cname:"+p.cname
                     +" loc:"+p.loc+" rtpAddress:"+p.rtpAddress+" rtcpAddress:"+p.rtcpAddress);
         }
