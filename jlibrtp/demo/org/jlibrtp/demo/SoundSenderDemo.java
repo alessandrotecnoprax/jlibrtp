@@ -82,7 +82,7 @@ public class SoundSenderDemo implements RTPAppIntf  {
         }
 
         SoundSenderDemo aDemo = new SoundSenderDemo(false);
-        Participant p = new Participant("127.0.0.1",Integer.parseInt(args[2]),Integer.parseInt(args[2]) + 1);
+        Participant p = new Participant(args[1],Integer.parseInt(args[2]),Integer.parseInt(args[2]) + 1);
         aDemo.rtpSession.addParticipant(p);
         aDemo.filename = args[0];
         aDemo.run();
