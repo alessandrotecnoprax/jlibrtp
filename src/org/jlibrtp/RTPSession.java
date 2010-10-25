@@ -226,6 +226,15 @@ public class RTPSession {
     }
 
     /**
+     * Checks if an application has been registered with this session.
+     * @return <code>true</code> if an application has been registered with
+     *         this session.
+     */
+    protected boolean isRegistered() {
+        return registered;
+    }
+
+    /**
      * Send data to all participants registered as receivers, using the current timeStamp,
      * dynamic sequence number and the current payload type specified for the session.
      *
