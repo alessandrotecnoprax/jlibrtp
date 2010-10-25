@@ -98,13 +98,6 @@ public class RTPReceiverThread extends Thread {
 
             // Parse the received RTP (?) packet
             RtpPkt pkt = new RtpPkt(rawPkt, packet.getLength());
-
-            // Check whether it was valid.
-            if(pkt == null) {
-                LOGGER.info("Received invalid RTP packet. Ignoring");
-                continue;
-            }
-
             long pktSsrc = pkt.getSsrc();
 
             // Check for loops and SSRC collisions
@@ -114,13 +107,14 @@ public class RTPReceiverThread extends Thread {
             long[] csrcArray = pkt.getCsrcArray();
             if( csrcArray != null) {
                 for(int i=0; i< csrcArray.length; i++) {
-                    if(csrcArray[i] == rtpSession.ssrc);
-                    rtpSession.resolveSsrcConflict();
+                    if(csrcArray[i] == rtpSession.ssrc) {
+                        rtpSession.resolveSsrcConflict();
+                    }
                 }
             }
 
             if(LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest("-> RTPReceiverThread.run() rcvd packet, seqNum " + pktSsrc );
+                LOGGER.finest("-> RTPReceiverThread.run() rcvd packet, seqNum " + rtpSession.seqNum + ", ssrc " + pktSsrc);
                 String str = new String(pkt.getPayload());
                 LOGGER.finest("-> RTPReceiverThread.run() payload is " + str );
             }
@@ -132,7 +126,11 @@ public class RTPReceiverThread extends Thread {
                 InetSocketAddress nullSocket = null;
                 part = new Participant((InetSocketAddress) packet.getSocketAddress(), nullSocket, pkt.getSsrc());
                 part.unexpected = true;
-                rtpSession.partDb.addParticipant(1,part);
+                rtpSession.partDb.addParticipant(1, part);
+                // Note: when adding participant, the result may be an updated pre-existing participant that lacked
+                // a ssrc. Thus, we need to find the participant that is really stored in the partDb after adding.
+                // Otherwise the packet will be added to a participant not connected to a rtpSession.
+                part = rtpSession.partDb.getParticipant(pktSsrc);
             }
 
             // Do checks on whether the datagram came from the expected source for that SSRC.
