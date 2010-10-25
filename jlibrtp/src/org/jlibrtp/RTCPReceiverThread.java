@@ -262,7 +262,8 @@ public class RTCPReceiverThread extends Thread {
                         rtpSession.appIntf.userEvent(1, partArray);
                     }
                     if(rtpSession.rtcpAppIntf != null) {
-                        rtpSession.rtcpAppIntf.BYEPktReceived(partArray, new String(byePkt.reason));
+                        String reason = (byePkt.reason == null ? null : new String(byePkt.reason));
+                        rtpSession.rtcpAppIntf.BYEPktReceived(partArray, reason);
                     }
 
                     /**        Application specific Packets       **/
@@ -372,6 +373,11 @@ public class RTCPReceiverThread extends Thread {
                         continue;
                     }
                 }
+            }
+
+            if (rtpSession.endSession) {
+                // Socket may be closed, do not parse any more packets
+                break;
             }
 
             // Check whether this is one of our own

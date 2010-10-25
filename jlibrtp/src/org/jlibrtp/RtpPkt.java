@@ -365,7 +365,7 @@ public class RtpPkt {
     //Check the length of the csrcArray (set during sliceFirstLine)
     private void  sliceCSRCs() {
         for(int i=0; i< csrcArray.length; i++) {
-            ssrc = StaticProcs.bytesToUIntLong(rawPkt, i*4 + 12);
+            csrcArray[i] = StaticProcs.bytesToUIntLong(rawPkt, i*4 + 12);
         }
     }
     //Extensions //TODO
