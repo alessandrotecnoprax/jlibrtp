@@ -98,6 +98,12 @@ public class RTPReceiverThread extends Thread {
 
             // Parse the received RTP (?) packet
             RtpPkt pkt = new RtpPkt(rawPkt, packet.getLength());
+            if(pkt.getVersion() != 2) {
+                // Some old phones, like the SNOM 190, are transmitting one
+                // Version=0 RTP packet before sending Version=2 RTP packets.
+                System.out.println("Received invalid RTP packet. Ignoring");
+                continue;
+            }
             long pktSsrc = pkt.getSsrc();
 
             // Check for loops and SSRC collisions
