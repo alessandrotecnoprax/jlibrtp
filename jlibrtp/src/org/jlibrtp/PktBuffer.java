@@ -370,9 +370,6 @@ public class PktBuffer {
          * 		a) We have exceeded the wait buffer
          * 		b) We wait
          */
-        //System.out.println(" Debug:" +(retNode != null) + " " + (retNode.seqNum == this.lastSeqNumber + 1)
-        //		+ " " + ( retNode.seqNum == 0 ) + " " +  (this.length > this.rtpSession.maxReorderBuffer)
-        //		+ " " + (this.lastSeqNumber < 0));
 
         // Pop it off, null all references.
         if( retNode != null && (retNode.seqNum == this.lastSeqNumber + 1 || retNode.seqNum == 0
@@ -384,10 +381,13 @@ public class PktBuffer {
                 LOGGER.finest("<- PktBuffer.popOldestFrame() returns frame");
             }
 
-            DataFrame df = new DataFrame(retNode, this.p,
+            DataFrame df;
+            if (rtpSession.isRegistered()) {
+                df = new DataFrame(retNode, this.p,
                     rtpSession.appIntf.frameSize(oldest.pkt.getPayloadType()));
-
-            //DataFrame df = new DataFrame(retNode, this.p, 1);
+            } else {
+                df = new DataFrame(retNode, this.p, 1);
+            }
             popFrameQueueCleanup(retNode, df.lastSeqNum);
 
             return df;
