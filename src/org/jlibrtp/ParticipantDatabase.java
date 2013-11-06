@@ -44,12 +44,12 @@ public class ParticipantDatabase {
 
     /** The parent RTP Session */
     RTPSession rtpSession = null;
-    /**
-     * A linked list to hold participants explicitly added by the application
-     * In unicast mode this is the list used for RTP and RTCP transmission,
-     * in multicast it should not be in use.
-     */
-    LinkedList<Participant> receivers = new LinkedList<Participant>();
+    /** 
+	  * A copy on write list to hold participants explicitly added by the application
+	  * In unicast mode this is the list used for RTP and RTCP transmission, 
+	  * in multicast it should not be in use. 
+	  */
+	CopyOnWriteArrayList<Participant> receivers = new CopyOnWriteArrayList<Participant>();
     /**
      * The hashtable holds participants added through received RTP and RTCP packets,
      * as well as participants that have been linked to an SSRC by ip address (in unicast mode).
