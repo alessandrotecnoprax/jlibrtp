@@ -135,7 +135,7 @@ public class RTPSession {
     public String priv = null;
 
     // RFC 4585 stuff. This should live on RTCPSession, but we need to have this
-    // infromation ready by the time the RTCP Session starts
+    // information ready by the time the RTCP Session starts
     // 0 = RFC 3550 , -1 = ACK , 1 = Immediate feedback, 2 = Early RTCP,
     protected int rtcpMode = 0;
     protected int fbEarlyThreshold = -1;		// group size, immediate -> early transition point
