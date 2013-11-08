@@ -21,6 +21,7 @@ package org.jlibrtp;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -95,6 +96,14 @@ public class RTCPReceiverThread extends Thread {
         return p;
     }
 
+    
+    private DatagramPacket tryFixingPacket(DatagramPacket packet) {
+      byte[] bytes = new byte[packet.getLength() % 4 + 4];
+      bytes = Arrays.copyOf(packet.getData(), (packet.getLength() - (packet.getLength() % 4)) + 4);
+      packet.setData(bytes);
+      packet.setLength(bytes.length);
+      return packet;
+    }
 
     /**
      * Parse a received UDP packet
@@ -105,6 +114,10 @@ public class RTCPReceiverThread extends Thread {
      * @return -1 if there was a problem, 0 if successfully parsed
      */
     private int parsePacket(DatagramPacket packet) {
+    	
+    	  if(packet.getLength() % 4 != 0) {
+    		    packet = tryFixingPacket(packet);
+    	  }
 
         if(packet.getLength() % 4 != 0) {
             if(LOGGER.isLoggable(Level.FINEST)) {
