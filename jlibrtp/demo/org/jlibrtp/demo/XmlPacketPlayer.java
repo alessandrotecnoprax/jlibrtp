@@ -74,12 +74,12 @@ public class XmlPacketPlayer implements RTPAppIntf {
 
 		//RTPSession
 		Element elm = document.getRootElement();
-		List children = elm.getChildren();
+		List<Element> children = elm.getChildren();
 
-		Iterator iter = children.iterator();
+		Iterator<Element> iter = children.iterator();
 
 		//sessionInformation
-		elm = (Element) iter.next();
+		elm = iter.next();
 
 		parseSessionInfo(elm);
 
@@ -100,12 +100,12 @@ public class XmlPacketPlayer implements RTPAppIntf {
 	public void parseSessionInfo(Element elm) {
 		System.out.println("Parsing Session Information");
 
-		List children = elm.getChildren();
-		Iterator iter = children.iterator();
+		List<Element> children = elm.getChildren();
+		Iterator<Element> iter = children.iterator();
 
 		int i = 0;
 		while(i < 3 && iter.hasNext()) {
-			elm = (Element) iter.next();
+			elm = iter.next();
 			if(elm.getName().equals("SSRC")) {
 				//Ignore
 			} else if(elm.getName().equals("CNAME")) {
@@ -128,11 +128,11 @@ public class XmlPacketPlayer implements RTPAppIntf {
 		int payloadType = -1;
 		byte[] buf = null;
 
-		List children = elm.getChildren();
-		Iterator iter = children.iterator();
+		List<Element> children = elm.getChildren();
+		Iterator<Element> iter = children.iterator();
 
 		while(iter.hasNext()) {
-			elm = (Element) iter.next();
+			elm = iter.next();
 			if(elm.getName().equals("SSRC")) {
 				ssrc = Long.parseLong(elm.getValue());
 
