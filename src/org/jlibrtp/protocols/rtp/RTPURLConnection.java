@@ -244,7 +244,7 @@ public class RTPURLConnection extends URLConnection implements RTPAppIntf,
     }
 
     /**
-     * @todo PipeOutputStream.write blocks until data is written! work around it
+     * TODO PipeOutputStream.write blocks until data is written! work around it
      * @param frame DataFrame
      * @param p Participant
      */
