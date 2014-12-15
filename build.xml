@@ -42,7 +42,7 @@ This file builds jlibrtp.
 
   <target name="compile" depends="-init" description="Compile everything">
     <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true"
-        optimize="false" source="1.5" target="1.5">
+        optimize="false" includeantruntime="false">
       <include name="**/*.java" />
       <classpath>
         <fileset dir="${lib.dir}">
@@ -50,7 +50,7 @@ This file builds jlibrtp.
         </fileset>
       </classpath>
     </javac>
-    <javac srcdir="${demo.dir}" destdir="${bin.dir}">
+    <javac srcdir="${demo.dir}" destdir="${bin.dir}" includeantruntime="false">
       <include name="**/*.java" />
       <classpath>
         <fileset dir="${lib.dir}">
